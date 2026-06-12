@@ -1,6 +1,10 @@
+using System.Security.Claims;
+using MahanShop.Application.Common.Interfaces;
 using MahanShop.Infra.IoC;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +48,8 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(60);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 // سبد خرید session-based
@@ -58,10 +64,32 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/Login";
+        options.AccessDeniedPath = "/"; // عدم افشای مسیر ادمین برای کاربر غیرمجاز
         options.LogoutPath = "/Account/Logout";
         options.ExpireTimeSpan = TimeSpan.FromDays(10);
         options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        // === ADMIN-PANEL START (Phase 9) — remove this whole block to rollback ===
+        // revoke فوری نقش Admin: اگر IsAdmin/IsActive در DB برداشته شد، کوکی ۱۰روزه دیگر معتبر نیست
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnValidatePrincipal = async ctx =>
+            {
+                if (ctx.Principal?.IsInRole("Admin") != true) return; // فقط ادمین‌ها re-check می‌شوند
+                var idStr = ctx.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                var db = ctx.HttpContext.RequestServices.GetRequiredService<IApplicationDbContext>();
+                var stillAdmin = int.TryParse(idStr, out var id)
+                    && await db.Users.AnyAsync(u => u.Id == id && u.IsAdmin && u.IsActive);
+                if (!stillAdmin)
+                {
+                    ctx.RejectPrincipal();
+                    await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                }
+            }
+        };
+        // === ADMIN-PANEL END ===
     });
 
 var app = builder.Build();
@@ -81,6 +109,16 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// هدرهای امنیتی پایه (ضد clickjacking / MIME-sniffing / نشت referrer)
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    await next();
+});
+
 app.UseStaticFiles();
 
 app.UseRouting();
