@@ -1,0 +1,68 @@
+@page "{id:int}"
+@model MahanShop.Web.Areas.Admin.Pages.Variants.ValuesModel
+@{
+    ViewData["Title"] = "مقادیر ویژگی";
+    ViewData["AdminActive"] = "variants";
+}
+
+@if (TempData["AdminOk"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["AdminErr"] is string err) { <div class="alert alert-danger">@err</div> }
+
+<div class="admin-toolbar">
+    <h3 class="admin-section-title">مقادیر «@Model.AttributeName»</h3>
+    <a asp-page="Index" class="btn btn-outline-secondary">بازگشت</a>
+</div>
+
+<div class="admin-panel-box admin-form">
+    <form method="post" asp-page-handler="Add">
+        <input type="hidden" asp-for="Id" />
+        <div class="row align-items-end">
+            <div class="col-md-5 mb-2">
+                <label class="form-label">مقدار جدید</label>
+                <input asp-for="NewValue" class="form-control" />
+            </div>
+            @if (Model.IsColor)
+            {
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">کد رنگ</label>
+                    <input asp-for="NewColorHex" type="color" class="form-control form-control-color" />
+                </div>
+            }
+            <div class="col-md-2 mb-2">
+                <label class="form-label">ترتیب</label>
+                <input asp-for="NewDisplayOrder" type="number" class="form-control" />
+            </div>
+            <div class="col-md-2 mb-2">
+                <button type="submit" class="btn btn-success w-100">افزودن</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="admin-panel-box">
+    @foreach (var v in Model.Values)
+    {
+        <div class="admin-value-row">
+            <form method="post" asp-page-handler="Update" class="admin-inline-form">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" name="valueId" value="@v.Id" />
+                <input type="text" name="value" value="@v.Value" class="form-control form-control-sm" />
+                @if (Model.IsColor)
+                {
+                    <input type="color" name="colorHex" value="@(v.ColorHex ?? "#000000")" class="form-control form-control-color form-control-sm" />
+                }
+                <input type="number" name="displayOrder" value="@v.DisplayOrder" class="form-control form-control-sm admin-stock-input" />
+                <button type="submit" class="btn btn-sm btn-outline-primary">ذخیره</button>
+            </form>
+            <form method="post" asp-page-handler="Delete" class="d-inline">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" name="valueId" value="@v.Id" />
+                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف شود؟')">حذف</button>
+            </form>
+        </div>
+    }
+    @if (Model.Values.Count == 0)
+    {
+        <p class="admin-muted text-center">مقداری ثبت نشده است.</p>
+    }
+</div>

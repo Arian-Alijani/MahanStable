@@ -129,3 +129,110 @@
         <button type="submit" class="btn btn-success">افزودن عکس</button>
     </form>
 </div>
+
+@if (Model.VariantsView is not null)
+{
+    <div class="admin-panel-box admin-form">
+        <h3 class="admin-section-title">گزینه‌ها و موجودی</h3>
+        @if (!Model.VariantsView.HasVariants)
+        {
+            <p class="admin-muted">این محصول «ساده» است (تیک «دارای واریانت» را بزنید و ذخیره کنید تا گزینه‌ها فعال شوند). در حالت ساده موجودی از خود محصول خوانده می‌شود.</p>
+        }
+
+        <table class="table admin-table">
+            <thead>
+                <tr><th>گزینه</th><th>کد (Sku)</th><th>قیمت</th><th>تخفیف</th><th>موجودی</th><th>وضعیت</th><th></th></tr>
+            </thead>
+            <tbody>
+            @foreach (var v in Model.VariantsView.Variants)
+            {
+                <tr>
+                    <td>@(string.IsNullOrEmpty(v.Title) ? "—" : v.Title)</td>
+                    <td>@(v.Sku ?? "—")</td>
+                    <td>@v.Price.ToString("N0")</td>
+                    <td>@(v.DiscountPrice?.ToString("N0") ?? "—")</td>
+                    <td>
+                        <form method="post" asp-page-handler="QuickStock" asp-route-variantId="@v.Id" class="admin-inline-form">
+                            <input type="hidden" asp-for="Id" />
+                            <input type="number" name="QuickStock" value="@v.Stock" class="form-control form-control-sm admin-stock-input" min="0" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">ثبت</button>
+                        </form>
+                    </td>
+                    <td>
+                        @if (v.IsActive) { <span class="badge bg-success">فعال</span> }
+                        else { <span class="badge bg-secondary">غیرفعال</span> }
+                    </td>
+                    <td class="admin-actions">
+                        <form method="post" asp-page-handler="ToggleVariant" asp-route-variantId="@v.Id" class="d-inline">
+                            <input type="hidden" asp-for="Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-warning">@(v.IsActive ? "غیرفعال" : "فعال")</button>
+                        </form>
+                        <form method="post" asp-page-handler="DeleteVariant" asp-route-variantId="@v.Id" class="d-inline">
+                            <input type="hidden" asp-for="Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف شود؟')">حذف</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            @if (Model.VariantsView.Variants.Count == 0)
+            {
+                <tr><td colspan="7" class="admin-muted text-center">هنوز گزینه‌ای ثبت نشده است.</td></tr>
+            }
+            </tbody>
+        </table>
+
+        <h4 class="admin-section-title">افزودن گزینه جدید</h4>
+        @if (Model.VariantsView.Attributes.Count == 0)
+        {
+            <p class="admin-muted">ابتدا از بخش «ویژگی‌های متغیر» ویژگی و مقادیر بسازید.</p>
+        }
+        else
+        {
+            <form method="post" asp-page-handler="AddVariant">
+                <input type="hidden" asp-for="Id" />
+                <div class="row">
+                    @foreach (var attr in Model.VariantsView.Attributes)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">@attr.Name</label>
+                            <select name="VariantValueIds" class="form-select">
+                                <option value="">—</option>
+                                @foreach (var val in attr.Values)
+                                {
+                                    <option value="@val.Id">@val.Value</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">کد (Sku)</label>
+                        <input asp-for="VariantSku" class="form-control" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">قیمت (تومان)</label>
+                        <input asp-for="VariantPrice" type="number" class="form-control" />
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">تخفیف</label>
+                        <input asp-for="VariantDiscountPrice" type="number" class="form-control" />
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">موجودی</label>
+                        <input asp-for="VariantStock" type="number" class="form-control" />
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">ترتیب</label>
+                        <input asp-for="VariantDisplayOrder" type="number" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-check mb-3">
+                    <input asp-for="VariantIsActive" class="form-check-input" />
+                    <label class="form-check-label">فعال</label>
+                </div>
+                <button type="submit" class="btn btn-success">افزودن گزینه</button>
+            </form>
+        }
+    </div>
+}

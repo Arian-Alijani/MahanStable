@@ -93,6 +93,9 @@
 .admin-form { max-width:880px; }
 .admin-form__actions { display:flex; gap:8px; margin-top:8px; }
 .admin-section-title { font-size:16px; font-weight:700; margin-bottom:12px; }
+.admin-inline-form { display:inline-flex; gap:6px; align-items:center; }
+.admin-stock-input { width:90px; }
+.admin-value-row { display:flex; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid #eef2f7; }
 .admin-gallery { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
 .admin-gallery__item { position:relative; width:120px; }
 .admin-gallery__item img { width:120px; height:120px; object-fit:cover; border-radius:10px; border:1px solid #e2e8f0; }

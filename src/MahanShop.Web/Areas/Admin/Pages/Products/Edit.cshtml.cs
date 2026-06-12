@@ -2,6 +2,7 @@ using FluentValidation;
 using MahanShop.Application.Features.Admin.Brands;
 using MahanShop.Application.Features.Admin.Categories;
 using MahanShop.Application.Features.Admin.Products;
+using MahanShop.Application.Features.Admin.ProductVariants;
 using MahanShop.Web.Services;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -42,6 +43,18 @@ public class EditModel : PageModel
     public List<ProductImageDto> Images { get; private set; } = new();
     public List<BrandListItemDto> Brands { get; private set; } = new();
     public List<CategoryOptionDto> Categories { get; private set; } = new();
+    public ProductVariantsViewDto? VariantsView { get; private set; }
+
+    // فرم گزینه/موجودی
+    [BindProperty] public int VariantId { get; set; }
+    [BindProperty] public string? VariantSku { get; set; }
+    [BindProperty] public long VariantPrice { get; set; }
+    [BindProperty] public long? VariantDiscountPrice { get; set; }
+    [BindProperty] public int VariantStock { get; set; }
+    [BindProperty] public bool VariantIsActive { get; set; } = true;
+    [BindProperty] public int VariantDisplayOrder { get; set; }
+    [BindProperty] public List<int> VariantValueIds { get; set; } = new();
+    [BindProperty] public int QuickStock { get; set; }
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
@@ -49,6 +62,7 @@ public class EditModel : PageModel
         if (p is null) return NotFound();
         MapFrom(p);
         await LoadOptionsAsync();
+        await LoadVariantsAsync();
         return Page();
     }
 
@@ -99,6 +113,73 @@ public class EditModel : PageModel
         return RedirectToPage(new { id = Id });
     }
 
+    // افزودن گزینه فروش جدید
+    public async Task<IActionResult> OnPostAddVariantAsync()
+    {
+        try
+        {
+            var valueIds = VariantValueIds.Where(x => x > 0).ToList();
+            await _mediator.Send(new CreateProductVariantCommand(
+                Id, VariantSku, VariantPrice, VariantDiscountPrice, VariantStock,
+                VariantIsActive, VariantDisplayOrder, valueIds));
+            TempData["AdminOk"] = "گزینه اضافه شد.";
+        }
+        catch (ValidationException ex)
+        {
+            TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا.";
+        }
+        return RedirectToPage(new { id = Id });
+    }
+
+    // ویرایش گزینه فروش
+    public async Task<IActionResult> OnPostUpdateVariantAsync()
+    {
+        try
+        {
+            await _mediator.Send(new UpdateProductVariantCommand(
+                VariantId, VariantSku, VariantPrice, VariantDiscountPrice, VariantStock,
+                VariantIsActive, VariantDisplayOrder, VariantValueIds));
+            TempData["AdminOk"] = "گزینه به‌روزرسانی شد.";
+        }
+        catch (ValidationException ex)
+        {
+            TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا.";
+        }
+        return RedirectToPage(new { id = Id });
+    }
+
+    // ویرایش سریع موجودی
+    public async Task<IActionResult> OnPostQuickStockAsync(int variantId)
+    {
+        try
+        {
+            await _mediator.Send(new UpdateVariantStockCommand(variantId, QuickStock));
+            TempData["AdminOk"] = "موجودی به‌روزرسانی شد.";
+        }
+        catch (ValidationException ex)
+        {
+            TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا.";
+        }
+        return RedirectToPage(new { id = Id });
+    }
+
+    public async Task<IActionResult> OnPostToggleVariantAsync(int variantId)
+    {
+        await _mediator.Send(new ToggleVariantActiveCommand(variantId));
+        TempData["AdminOk"] = "وضعیت گزینه تغییر کرد.";
+        return RedirectToPage(new { id = Id });
+    }
+
+    public async Task<IActionResult> OnPostDeleteVariantAsync(int variantId)
+    {
+        await _mediator.Send(new DeleteProductVariantCommand(variantId));
+        TempData["AdminOk"] = "گزینه حذف شد.";
+        return RedirectToPage(new { id = Id });
+    }
+
+    private async Task LoadVariantsAsync() =>
+        VariantsView = await _mediator.Send(new GetProductVariantsQuery(Id));
+
     private void MapFrom(ProductEditDto p)
     {
         Id = p.Id; Title = p.Title; Slug = p.Slug; ShortDescription = p.ShortDescription;
@@ -113,6 +194,7 @@ public class EditModel : PageModel
         var p = await _mediator.Send(new GetProductForEditQuery(Id));
         if (p is not null) Images = p.Images;
         await LoadOptionsAsync();
+        await LoadVariantsAsync();
     }
 
     private async Task LoadOptionsAsync()

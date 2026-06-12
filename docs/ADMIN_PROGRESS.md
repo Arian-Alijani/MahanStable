@@ -7,17 +7,22 @@
 ---
 
 ## وضعیت فعلی
-**مرحله: ۲ — کاتالوگ پایه CRUD DONE (کد نوشته شد؛ بیلد/تست طبق درخواست کاربر اجرا نشد).**
+**مرحله: ۳ — Variant/موجودی + ویژگی/تگ DONE (کد نوشته شد؛ بیلد/تست طبق درخواست کاربر اجرا نشد).**
 
-ساخته‌شد:
-- `Application/Features/Admin/Brands|Categories|Products` (CQRS کامل: list/getForEdit/create/update/toggle + ProductImage commands) + `Admin/Common/SlugHelper`.
-- `Areas/Admin/Pages/Brands|Categories|Products` (Index/Create/Edit + toggle + گالری عکس محصول).
-- `Web/Services/ImageUploadService` (whitelist پسوند/content-type + حد ۳MB → `wwwroot/AdminPanel/Photo`).
-- لینک‌های sidebar (محصولات/دسته/برند) + CSS اجزای CRUD در `admin.css`.
-- بلوک نشان‌دار `Program.cs`: ثبت `ImageUploadService` (داخل ADMIN-PANEL block).
-- `.gitignore`: عکس‌های آپلودی dev نادیده گرفته شد (`AdminPanel/Photo/*` + `.gitkeep`).
+تصمیم Phase 8.5: entityهای Variant (`ProductVariant/ProductVariantValue/VariantAttribute/VariantAttributeValue/Feature/ProductFeature/Tag/ProductTag`) و migration `Add_ProductVariants` از قبل موجود بودند → نسخهٔ **کامل** مرحله ۳ پیاده شد (نه نسخهٔ سادهٔ per-product). **هیچ migration جدیدی لازم نشد** (روی schema موجود).
 
-قدم بعد = **مرحلهٔ ۳ (Variant/موجودی + ویژگی/تگ)**. سوال باز Phase 8.5 هنوز باز است.
+ساخته‌شد (مرحله ۳):
+- `Application/Features/Admin/Variants` (CQRS کامل: attribute pool + value pool — list/getForEdit/create/update/delete).
+- `Application/Features/Admin/Features` (CRUD مشخصه فنی) + `Application/Features/Admin/Tags` (CRUD برچسب با slug).
+- `Application/Features/Admin/ProductVariants` (per-product: Get view + Create/Update/QuickStock/Toggle/Delete variant، با بررسی قیمت/مقادیر معتبر).
+- `Areas/Admin/Pages/Variants` (Index/Create/Edit + Values=مدیریت pool مقادیر، swatch رنگ).
+- `Areas/Admin/Pages/Features` و `/Tags` (Index/Create/Edit + حذف).
+- تب «گزینه‌ها/موجودی» در `Products/Edit` (گرید variant + ویرایش سریع موجودی inline + toggle/delete + فرم افزودن گزینه با انتخابگر مقادیر).
+- لینک‌های sidebar (ویژگی‌های متغیر/مشخصات فنی/برچسب‌ها) + CSS `admin-inline-form/admin-stock-input/admin-value-row` در `admin.css`.
+
+**مرحله ۲ (قبلی):** CRUD برند/دسته/محصول + آپلود عکس + ImageUploadService + بلوک نشان‌دار Program.cs — بدون تغییر.
+
+قدم بعد = **مرحلهٔ ۴ (سفارش‌ها/کاربران/داشبورد آمار)** = تکمیل Phase 9.
 
 ---
 
@@ -43,7 +48,7 @@ git checkout main && git reset --hard baseline-before-admin-panel
 
 - [x] **مرحله ۱ — Shell + Auth Gate** — Areas/Admin layout + داشبورد خالی + policy `AdminOnly`.
 - [x] **مرحله ۲ — کاتالوگ پایه** — CRUD محصول/دسته/برند + آپلود عکس.
-- [ ] **مرحله ۳ — Variant/موجودی + ویژگی/تگ** — (نیاز به Phase 8.5؛ تصمیم را اینجا ثبت کن).
+- [x] **مرحله ۳ — Variant/موجودی + ویژگی/تگ** — pool ویژگی/مقادیر + CRUD مشخصه/برچسب + گرید variant per-product (بدون migration جدید؛ Phase 8.5 از قبل موجود بود).
 - [ ] **مرحله ۴ — سفارش‌ها/کاربران/داشبورد آمار** — تکمیل Phase 9.
 
 ---

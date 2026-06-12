@@ -1,0 +1,45 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Features.IndexModel
+@{
+    ViewData["Title"] = "مشخصه‌های فنی";
+    ViewData["AdminActive"] = "features";
+}
+
+@if (TempData["AdminOk"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["AdminErr"] is string err) { <div class="alert alert-danger">@err</div> }
+
+<div class="admin-toolbar">
+    <form method="get" class="admin-search">
+        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="جستجوی مشخصه..." />
+        <button type="submit" class="btn btn-outline-secondary">جستجو</button>
+    </form>
+    <a asp-page="Create" class="btn btn-primary">مشخصه جدید</a>
+</div>
+
+<div class="admin-panel-box">
+    <table class="table admin-table">
+        <thead>
+            <tr><th>نام</th><th>تعداد استفاده</th><th>ترتیب</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var f in Model.Features)
+        {
+            <tr>
+                <td>@f.Name</td>
+                <td>@f.UsageCount</td>
+                <td>@f.DisplayOrder</td>
+                <td class="admin-actions">
+                    <a asp-page="Edit" asp-route-id="@f.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@f.Id" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف شود؟')">حذف</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.Features.Count == 0)
+        {
+            <tr><td colspan="4" class="admin-muted text-center">مشخصه‌ای یافت نشد.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

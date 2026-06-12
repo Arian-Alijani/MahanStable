@@ -1,0 +1,45 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Tags.IndexModel
+@{
+    ViewData["Title"] = "برچسب‌ها";
+    ViewData["AdminActive"] = "tags";
+}
+
+@if (TempData["AdminOk"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["AdminErr"] is string err) { <div class="alert alert-danger">@err</div> }
+
+<div class="admin-toolbar">
+    <form method="get" class="admin-search">
+        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="جستجوی برچسب..." />
+        <button type="submit" class="btn btn-outline-secondary">جستجو</button>
+    </form>
+    <a asp-page="Create" class="btn btn-primary">برچسب جدید</a>
+</div>
+
+<div class="admin-panel-box">
+    <table class="table admin-table">
+        <thead>
+            <tr><th>نام</th><th>نامک</th><th>تعداد استفاده</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var t in Model.Tags)
+        {
+            <tr>
+                <td>@t.Name</td>
+                <td><code>@t.Slug</code></td>
+                <td>@t.UsageCount</td>
+                <td class="admin-actions">
+                    <a asp-page="Edit" asp-route-id="@t.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@t.Id" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف شود؟')">حذف</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.Tags.Count == 0)
+        {
+            <tr><td colspan="4" class="admin-muted text-center">برچسبی یافت نشد.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

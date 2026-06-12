@@ -1,0 +1,28 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Variants.CreateModel
+@{
+    ViewData["Title"] = "ویژگی جدید";
+    ViewData["AdminActive"] = "variants";
+}
+
+<div class="admin-panel-box admin-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">نام ویژگی (برند، مدل، رنگ، ...)</label>
+            <input asp-for="Name" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">ترتیب نمایش</label>
+            <input asp-for="DisplayOrder" type="number" class="form-control" />
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="IsColor" class="form-check-input" />
+            <label class="form-check-label">ویژگی رنگ است (نمایش swatch)</label>
+        </div>
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+</div>

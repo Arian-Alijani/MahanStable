@@ -1,0 +1,47 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Variants.IndexModel
+@{
+    ViewData["Title"] = "ویژگی‌های متغیر";
+    ViewData["AdminActive"] = "variants";
+}
+
+@if (TempData["AdminOk"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["AdminErr"] is string err) { <div class="alert alert-danger">@err</div> }
+
+<div class="admin-toolbar">
+    <form method="get" class="admin-search">
+        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="جستجوی ویژگی..." />
+        <button type="submit" class="btn btn-outline-secondary">جستجو</button>
+    </form>
+    <a asp-page="Create" class="btn btn-primary">ویژگی جدید</a>
+</div>
+
+<div class="admin-panel-box">
+    <table class="table admin-table">
+        <thead>
+            <tr><th>نام</th><th>نوع</th><th>تعداد مقادیر</th><th>ترتیب</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var a in Model.Attributes)
+        {
+            <tr>
+                <td>@a.Name</td>
+                <td>@(a.IsColor ? "رنگ" : "متن")</td>
+                <td>@a.ValueCount</td>
+                <td>@a.DisplayOrder</td>
+                <td class="admin-actions">
+                    <a asp-page="Values" asp-route-id="@a.Id" class="btn btn-sm btn-outline-success">مقادیر</a>
+                    <a asp-page="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@a.Id" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف شود؟')">حذف</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.Attributes.Count == 0)
+        {
+            <tr><td colspan="5" class="admin-muted text-center">ویژگی‌ای یافت نشد.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>
