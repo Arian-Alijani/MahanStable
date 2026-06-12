@@ -26,3 +26,6 @@ run-local.ps1
 # OS
 Thumbs.db
 .DS_Store
+
+# Admin uploads (dev data — never commit)
+src/MahanShop.Web/wwwroot/AdminPanel/

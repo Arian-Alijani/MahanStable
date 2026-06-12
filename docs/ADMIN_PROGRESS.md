@@ -7,7 +7,18 @@
 ---
 
 ## وضعیت فعلی
-**مرحله: ۳ — Variant/موجودی + ویژگی/تگ DONE (کد نوشته شد؛ بیلد/تست طبق درخواست کاربر اجرا نشد).**
+**مرحله: ۳ DONE + ممیزی امنیتی پنل ادمین DONE (کد نوشته شد؛ بیلد/تست طبق درخواست کاربر اجرا نشد).**
+
+### ممیزی امنیتی (Security Hardening — این سشن)
+بررسی‌شده و **سالم** بود: policy `AdminOnly` روی کل Area، anti-forgery گلوبال، همهٔ عملیات تغییردهنده POST (هیچ GET-state-change)، بدون SQL خام، بدون `Html.Raw` در ادمین، OTP با هش constant-time + MaxAttempts، آپلود whitelist پسوند/Content-Type/حجم + نام فایل GUID، `Url.IsLocalUrl` روی returnUrl، حذف عکس فقط از DB (بدون path traversal).
+
+اصلاح‌شده:
+1. **Program.cs**: `OnValidatePrincipal` → revoke فوری نقش Admin اگر `IsAdmin/IsActive` در DB برداشته شود (کوکی ۱۰روزه دیگر تا انقضا معتبر نمی‌ماند) — فقط برای ادمین‌ها re-check (بدون هزینهٔ DB برای کاربر عادی).
+2. **Program.cs**: کوکی auth/session → `Secure=Always` + `SameSite=Lax` + `HttpOnly` صریح.
+3. **Program.cs**: هدرهای امنیتی `X-Content-Type-Options: nosniff` / `X-Frame-Options: DENY` / `Referrer-Policy`.
+4. **Program.cs**: `AccessDeniedPath = "/"` (عدم افشای وجود پنل ادمین به کاربر لاگین‌شدهٔ غیرادمین).
+5. **ImageUploadService**: اعتبارسنجی magic bytes (JPEG/PNG/GIF/WEBP) — جلوگیری از آپلود فایل جعلی با پسوند عکس.
+6. **.gitignore**: `wwwroot/AdminPanel/` (آپلودهای dev کامیت نشوند).
 
 تصمیم Phase 8.5: entityهای Variant (`ProductVariant/ProductVariantValue/VariantAttribute/VariantAttributeValue/Feature/ProductFeature/Tag/ProductTag`) و migration `Add_ProductVariants` از قبل موجود بودند → نسخهٔ **کامل** مرحله ۳ پیاده شد (نه نسخهٔ سادهٔ per-product). **هیچ migration جدیدی لازم نشد** (روی schema موجود).
 
