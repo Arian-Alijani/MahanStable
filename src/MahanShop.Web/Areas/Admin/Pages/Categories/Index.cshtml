@@ -1,0 +1,53 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Categories.IndexModel
+@{
+    ViewData["Title"] = "دسته‌بندی‌ها";
+    ViewData["AdminActive"] = "categories";
+}
+
+@if (TempData["AdminOk"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+
+<div class="admin-toolbar">
+    <div></div>
+    <a asp-page="Create" class="btn btn-primary">دستهٔ جدید</a>
+</div>
+
+<div class="admin-panel-box">
+    <table class="table admin-table">
+        <thead>
+            <tr><th>نام</th><th>نامک</th><th>محصولات</th><th>منو</th><th>صفحه اصلی</th><th>وضعیت</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var c in Model.Categories)
+        {
+            <tr>
+                <td style="padding-right:@(c.Depth * 20 + 8)px">
+                    @if (c.Depth > 0) { <span class="admin-muted">└ </span> }
+                    @c.Name
+                </td>
+                <td><code>@c.Slug</code></td>
+                <td>@c.ProductCount</td>
+                <td>@(c.ShowInMenu ? "✓" : "—")</td>
+                <td>@(c.ShowOnHome ? "✓" : "—")</td>
+                <td>
+                    @if (c.IsActive) { <span class="badge bg-success">فعال</span> }
+                    else { <span class="badge bg-secondary">غیرفعال</span> }
+                </td>
+                <td class="admin-actions">
+                    <a asp-page="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    <form method="post" asp-page-handler="Toggle" asp-route-id="@c.Id" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">@(c.IsActive ? "غیرفعال" : "فعال")</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.Categories.Count == 0)
+        {
+            <tr><td colspan="7" class="admin-muted text-center">دسته‌ای یافت نشد.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

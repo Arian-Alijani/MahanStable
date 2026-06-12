@@ -1,0 +1,60 @@
+@page "{id:int}"
+@model MahanShop.Web.Areas.Admin.Pages.Categories.EditModel
+@{
+    ViewData["Title"] = "ویرایش دسته";
+    ViewData["AdminActive"] = "categories";
+}
+
+<div class="admin-panel-box admin-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="Id" />
+        <div class="mb-3">
+            <label class="form-label">نام دسته</label>
+            <input asp-for="Name" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">نامک</label>
+            <input asp-for="Slug" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">دستهٔ والد</label>
+            <select asp-for="ParentId" class="form-select">
+                <option value="">— بدون والد (ریشه) —</option>
+                @foreach (var o in Model.ParentOptions)
+                {
+                    <option value="@o.Id">@(new string('—', o.Depth)) @o.Name</option>
+                }
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">تصویر</label>
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <div><img src="@Model.ImageUrl" alt="" class="admin-thumb admin-thumb--lg" /></div>
+            }
+            <input asp-for="ImageFile" type="file" accept="image/*" class="form-control mt-2" />
+            <input type="hidden" asp-for="ImageUrl" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">ترتیب نمایش</label>
+            <input asp-for="DisplayOrder" type="number" class="form-control" />
+        </div>
+        <div class="form-check mb-2">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">فعال</label>
+        </div>
+        <div class="form-check mb-2">
+            <input asp-for="ShowInMenu" class="form-check-input" />
+            <label class="form-check-label">نمایش در منو</label>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="ShowOnHome" class="form-check-input" />
+            <label class="form-check-label">نمایش در صفحهٔ اصلی</label>
+        </div>
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+</div>

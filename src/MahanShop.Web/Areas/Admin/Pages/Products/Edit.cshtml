@@ -1,0 +1,131 @@
+@page "{id:int}"
+@model MahanShop.Web.Areas.Admin.Pages.Products.EditModel
+@{
+    ViewData["Title"] = "ویرایش محصول";
+    ViewData["AdminActive"] = "products";
+}
+
+@if (TempData["AdminOk"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["AdminErr"] is string err) { <div class="alert alert-danger">@err</div> }
+
+<div class="admin-panel-box admin-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <form method="post" asp-page-handler="Save">
+        <input type="hidden" asp-for="Id" />
+        <div class="mb-3">
+            <label class="form-label">عنوان</label>
+            <input asp-for="Title" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">نامک</label>
+            <input asp-for="Slug" class="form-control" />
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">برند</label>
+                <select asp-for="BrandId" class="form-select">
+                    <option value="">— انتخاب برند —</option>
+                    @foreach (var b in Model.Brands)
+                    {
+                        <option value="@b.Id" selected="@(Model.BrandId == b.Id)">@b.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">دسته</label>
+                <select asp-for="CategoryId" class="form-select">
+                    <option value="">— انتخاب دسته —</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@(new string('—', c.Depth)) @c.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">قیمت (تومان)</label>
+                <input asp-for="Price" type="number" class="form-control" />
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">قیمت با تخفیف</label>
+                <input asp-for="DiscountPrice" type="number" class="form-control" />
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">موجودی</label>
+                <input asp-for="Stock" type="number" class="form-control" />
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">توضیح کوتاه</label>
+            <input asp-for="ShortDescription" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">توضیحات</label>
+            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">عنوان متا</label>
+                <input asp-for="MetaTitle" class="form-control" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">توضیح متا</label>
+                <input asp-for="MetaDescription" class="form-control" />
+            </div>
+        </div>
+        <div class="form-check mb-2">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">فعال</label>
+        </div>
+        <div class="form-check mb-2">
+            <input asp-for="IsFeatured" class="form-check-input" />
+            <label class="form-check-label">محصول منتخب</label>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="HasVariants" class="form-check-input" />
+            <label class="form-check-label">دارای واریانت</label>
+        </div>
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">بازگشت</a>
+        </div>
+    </form>
+</div>
+
+<div class="admin-panel-box admin-form">
+    <h3 class="admin-section-title">گالری عکس</h3>
+    <div class="admin-gallery">
+        @foreach (var img in Model.Images)
+        {
+            <div class="admin-gallery__item">
+                <img src="@img.Url" alt="@img.Alt" />
+                @if (img.IsMain) { <span class="badge bg-primary admin-gallery__main">اصلی</span> }
+                <div class="admin-gallery__actions">
+                    @if (!img.IsMain)
+                    {
+                        <form method="post" asp-page-handler="SetMainImage" asp-route-imageId="@img.Id">
+                            <input type="hidden" asp-for="Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">اصلی</button>
+                        </form>
+                    }
+                    <form method="post" asp-page-handler="DeleteImage" asp-route-imageId="@img.Id">
+                        <input type="hidden" asp-for="Id" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                    </form>
+                </div>
+            </div>
+        }
+        @if (Model.Images.Count == 0)
+        {
+            <p class="admin-muted">هنوز عکسی اضافه نشده است.</p>
+        }
+    </div>
+
+    <form method="post" asp-page-handler="AddImage" enctype="multipart/form-data" class="admin-gallery__upload">
+        <input type="hidden" asp-for="Id" />
+        <input type="file" asp-for="ImageFile" accept="image/*" class="form-control" />
+        <input type="text" asp-for="ImageAlt" class="form-control" placeholder="متن جایگزین (اختیاری)" />
+        <button type="submit" class="btn btn-success">افزودن عکس</button>
+    </form>
+</div>

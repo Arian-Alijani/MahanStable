@@ -7,12 +7,17 @@
 ---
 
 ## وضعیت فعلی
-**مرحله: ۱ — Shell + Auth Gate ادمین DONE (کد نوشته شد).**
+**مرحله: ۲ — کاتالوگ پایه CRUD DONE (کد نوشته شد؛ بیلد/تست طبق درخواست کاربر اجرا نشد).**
 
-ساخته‌شد: `Areas/Admin/Pages` (`_ViewImports`/`_ViewStart`/Shared `_AdminLayout`+`_AdminSidebar`/`Index`)، `wwwroot/admin/admin.css`، بلوک نشان‌دار `Program.cs` (policy `AdminOnly` + `AuthorizeAreaFolder`).
-claim نقش `Admin` از قبل در Auth ست می‌شود.
+ساخته‌شد:
+- `Application/Features/Admin/Brands|Categories|Products` (CQRS کامل: list/getForEdit/create/update/toggle + ProductImage commands) + `Admin/Common/SlugHelper`.
+- `Areas/Admin/Pages/Brands|Categories|Products` (Index/Create/Edit + toggle + گالری عکس محصول).
+- `Web/Services/ImageUploadService` (whitelist پسوند/content-type + حد ۳MB → `wwwroot/AdminPanel/Photo`).
+- لینک‌های sidebar (محصولات/دسته/برند) + CSS اجزای CRUD در `admin.css`.
+- بلوک نشان‌دار `Program.cs`: ثبت `ImageUploadService` (داخل ADMIN-PANEL block).
+- `.gitignore`: عکس‌های آپلودی dev نادیده گرفته شد (`AdminPanel/Photo/*` + `.gitkeep`).
 
-قدم بعد = **مرحلهٔ ۲ (کاتالوگ پایه CRUD)** در `docs/ADMIN_ROADMAP.md`.
+قدم بعد = **مرحلهٔ ۳ (Variant/موجودی + ویژگی/تگ)**. سوال باز Phase 8.5 هنوز باز است.
 
 ---
 
@@ -37,7 +42,7 @@ git checkout main && git reset --hard baseline-before-admin-panel
 ## چک‌لیست مراحل (هر کدام تمام شد، اینجا تیک بزن + جزئیات ثبت کن)
 
 - [x] **مرحله ۱ — Shell + Auth Gate** — Areas/Admin layout + داشبورد خالی + policy `AdminOnly`.
-- [ ] **مرحله ۲ — کاتالوگ پایه** — CRUD محصول/دسته/برند + آپلود عکس.
+- [x] **مرحله ۲ — کاتالوگ پایه** — CRUD محصول/دسته/برند + آپلود عکس.
 - [ ] **مرحله ۳ — Variant/موجودی + ویژگی/تگ** — (نیاز به Phase 8.5؛ تصمیم را اینجا ثبت کن).
 - [ ] **مرحله ۴ — سفارش‌ها/کاربران/داشبورد آمار** — تکمیل Phase 9.
 

@@ -1,0 +1,36 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Brands.CreateModel
+@{
+    ViewData["Title"] = "برند جدید";
+    ViewData["AdminActive"] = "brands";
+}
+
+<div class="admin-panel-box admin-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <form method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label class="form-label">نام برند</label>
+            <input asp-for="Name" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">نامک (اختیاری — از نام ساخته می‌شود)</label>
+            <input asp-for="Slug" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">لوگو</label>
+            <input asp-for="LogoFile" type="file" accept="image/*" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">ترتیب نمایش</label>
+            <input asp-for="DisplayOrder" type="number" class="form-control" />
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">فعال</label>
+        </div>
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+</div>

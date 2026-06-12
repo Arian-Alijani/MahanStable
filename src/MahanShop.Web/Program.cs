@@ -23,6 +23,8 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 });
+// سرویس آپلود عکس ادمین (whitelist پسوند/نوع/حجم → wwwroot/AdminPanel)
+builder.Services.AddScoped<MahanShop.Web.Services.ImageUploadService>();
 // === ADMIN-PANEL END ===
 
 // فاکتور PDF (QuestPDF) — سرویس Web

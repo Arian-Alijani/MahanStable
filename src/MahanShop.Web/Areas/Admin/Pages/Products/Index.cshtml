@@ -1,0 +1,96 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Products.IndexModel
+@{
+    ViewData["Title"] = "محصولات";
+    ViewData["AdminActive"] = "products";
+}
+
+@if (TempData["AdminOk"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+
+<div class="admin-toolbar">
+    <form method="get" class="admin-search admin-search--wide">
+        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="جستجو..." />
+        <select name="BrandId" class="form-select">
+            <option value="">همه برندها</option>
+            @foreach (var b in Model.Brands)
+            {
+                <option value="@b.Id" selected="@(Model.BrandId == b.Id)">@b.Name</option>
+            }
+        </select>
+        <select name="CategoryId" class="form-select">
+            <option value="">همه دسته‌ها</option>
+            @foreach (var c in Model.Categories)
+            {
+                <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@(new string('—', c.Depth)) @c.Name</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-outline-secondary">فیلتر</button>
+    </form>
+    <a asp-page="Create" class="btn btn-primary">محصول جدید</a>
+</div>
+
+<div class="admin-panel-box">
+    <table class="table admin-table">
+        <thead>
+            <tr><th>عکس</th><th>عنوان</th><th>برند</th><th>دسته</th><th>قیمت</th><th>موجودی</th><th>وضعیت</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var p in Model.Result.Items)
+        {
+            <tr>
+                <td>
+                    @if (!string.IsNullOrEmpty(p.PrimaryImageUrl))
+                    {
+                        <img src="@p.PrimaryImageUrl" alt="@p.Title" class="admin-thumb" />
+                    }
+                    else { <span class="admin-muted">—</span> }
+                </td>
+                <td>
+                    @p.Title
+                    @if (p.IsFeatured) { <span class="badge bg-info">منتخب</span> }
+                    @if (p.HasVariants) { <span class="badge bg-light text-dark">واریانت</span> }
+                </td>
+                <td>@p.BrandName</td>
+                <td>@p.CategoryName</td>
+                <td>
+                    @if (p.DiscountPrice is long d)
+                    {
+                        <span class="admin-muted"><del>@p.Price.ToString("N0")</del></span><br /><strong>@d.ToString("N0")</strong>
+                    }
+                    else { @p.Price.ToString("N0") }
+                </td>
+                <td>@p.Stock</td>
+                <td>
+                    @if (p.IsActive) { <span class="badge bg-success">فعال</span> }
+                    else { <span class="badge bg-secondary">غیرفعال</span> }
+                </td>
+                <td class="admin-actions">
+                    <a asp-page="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    <form method="post" asp-page-handler="Toggle" asp-route-id="@p.Id" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">@(p.IsActive ? "غیرفعال" : "فعال")</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.Result.Items.Count == 0)
+        {
+            <tr><td colspan="8" class="admin-muted text-center">محصولی یافت نشد.</td></tr>
+        }
+        </tbody>
+    </table>
+
+    @if (Model.Result.TotalPages > 1)
+    {
+        <nav class="admin-pager">
+            @for (int i = 1; i <= Model.Result.TotalPages; i++)
+            {
+                <a class="admin-pager__link @(i == Model.Result.Page ? "is-active" : "")"
+                   asp-route-Page="@i" asp-route-Search="@Model.Search"
+                   asp-route-BrandId="@Model.BrandId" asp-route-CategoryId="@Model.CategoryId">@i</a>
+            }
+        </nav>
+    }
+</div>

@@ -1,0 +1,86 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Products.CreateModel
+@{
+    ViewData["Title"] = "محصول جدید";
+    ViewData["AdminActive"] = "products";
+}
+
+<div class="admin-panel-box admin-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">عنوان</label>
+            <input asp-for="Title" class="form-control" />
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">برند</label>
+                <select asp-for="BrandId" class="form-select">
+                    <option value="">— انتخاب برند —</option>
+                    @foreach (var b in Model.Brands)
+                    {
+                        <option value="@b.Id">@b.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">دسته</label>
+                <select asp-for="CategoryId" class="form-select">
+                    <option value="">— انتخاب دسته —</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.Id">@(new string('—', c.Depth)) @c.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">قیمت (تومان)</label>
+                <input asp-for="Price" type="number" class="form-control" />
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">قیمت با تخفیف (اختیاری)</label>
+                <input asp-for="DiscountPrice" type="number" class="form-control" />
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">موجودی</label>
+                <input asp-for="Stock" type="number" class="form-control" />
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">توضیح کوتاه</label>
+            <input asp-for="ShortDescription" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">توضیحات</label>
+            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">عنوان متا (SEO)</label>
+                <input asp-for="MetaTitle" class="form-control" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">توضیح متا (SEO)</label>
+                <input asp-for="MetaDescription" class="form-control" />
+            </div>
+        </div>
+        <div class="form-check mb-2">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">فعال</label>
+        </div>
+        <div class="form-check mb-2">
+            <input asp-for="IsFeatured" class="form-check-input" />
+            <label class="form-check-label">محصول منتخب</label>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="HasVariants" class="form-check-input" />
+            <label class="form-check-label">دارای واریانت (قیمت/موجودی از گزینه‌ها)</label>
+        </div>
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره و ادامه</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+</div>
