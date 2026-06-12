@@ -1,0 +1,127 @@
+@page "{id:int}"
+@using MahanShop.Web.Helpers
+@model MahanShop.Web.Areas.Admin.Pages.Orders.DetailModel
+@{
+    var o = Model.Detail.Order;
+    ViewData["Title"] = $"سفارش {o.OrderCode}";
+    ViewData["AdminActive"] = "orders";
+    var adminTargets = new[]
+    {
+        OrderStatus.Processing, OrderStatus.Shipped, OrderStatus.Delivered,
+        OrderStatus.Canceled, OrderStatus.Refunded
+    };
+}
+
+@if (TempData["AdminOk"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+@if (TempData["AdminError"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<div class="admin-toolbar">
+    <h2 class="admin-page-title">سفارش @o.OrderCode
+        <span class="badge admin-status-badge @OrderStatusView.Tone(o.Status)">@OrderStatusView.Label(o.Status)</span>
+    </h2>
+    <div>
+        <a asp-page="Detail" asp-page-handler="Invoice" asp-route-id="@o.Id" class="btn btn-outline-secondary">دانلود فاکتور PDF</a>
+        <a asp-page="Index" class="btn btn-outline-secondary">بازگشت</a>
+    </div>
+</div>
+
+<div class="admin-grid-2">
+    <div class="admin-panel-box">
+        <h3 class="admin-box-title">اطلاعات سفارش</h3>
+        <dl class="admin-dl">
+            <dt>تاریخ ثبت</dt><dd>@o.CreatedAt.ToString("yyyy/MM/dd HH:mm")</dd>
+            @if (o.PaidAt is DateTime paid)
+            {
+                <dt>تاریخ پرداخت</dt><dd>@paid.ToString("yyyy/MM/dd HH:mm")</dd>
+            }
+            <dt>مشتری</dt>
+            <dd>
+                <a asp-page="/Users/Detail" asp-area="Admin" asp-route-id="@Model.Detail.UserId">@o.CustomerName</a>
+                — @o.CustomerPhone
+            </dd>
+            @if (o.FullAddress is not null)
+            {
+                <dt>تحویل‌گیرنده</dt><dd>@o.ReceiverName (@o.ReceiverPhone)</dd>
+                <dt>آدرس</dt><dd>@o.Province، @o.City — @o.FullAddress — کد پستی @o.PostalCode</dd>
+            }
+        </dl>
+    </div>
+
+    <div class="admin-panel-box">
+        <h3 class="admin-box-title">تغییر وضعیت</h3>
+        <form method="post" asp-page-handler="Status" asp-route-id="@o.Id" class="admin-inline-form">
+            <select asp-for="NewStatus" class="form-select">
+                @foreach (var s in adminTargets)
+                {
+                    <option value="@s" selected="@(Model.NewStatus == s)">@OrderStatusView.Label(s)</option>
+                }
+            </select>
+            <input asp-for="TrackingCode" class="form-control" placeholder="کد رهگیری پستی (اختیاری)" maxlength="100" />
+            <button type="submit" class="btn btn-primary">ثبت</button>
+        </form>
+        <p class="admin-muted" style="margin-top:8px">سفارش پرداخت‌نشده فقط قابل لغو است. وضعیت‌های پرداخت توسط درگاه مدیریت می‌شوند.</p>
+    </div>
+</div>
+
+<div class="admin-panel-box">
+    <h3 class="admin-box-title">اقلام سفارش</h3>
+    <table class="table admin-table">
+        <thead><tr><th>عنوان</th><th>قیمت واحد</th><th>تعداد</th><th>جمع</th></tr></thead>
+        <tbody>
+        @foreach (var i in o.Items)
+        {
+            <tr>
+                <td>@i.ProductTitle</td>
+                <td>@i.UnitPrice.ToString("N0")</td>
+                <td>@i.Quantity</td>
+                <td>@i.LineTotal.ToString("N0")</td>
+            </tr>
+        }
+        </tbody>
+        <tfoot>
+            <tr><td colspan="3" class="text-start">جمع اقلام</td><td>@o.TotalAmount.ToString("N0")</td></tr>
+            @if (o.DiscountAmount > 0)
+            {
+                <tr><td colspan="3" class="text-start">تخفیف</td><td>@o.DiscountAmount.ToString("N0")-</td></tr>
+            }
+            <tr><td colspan="3" class="text-start">هزینه ارسال</td><td>@(o.ShippingCost == 0 ? "رایگان" : o.ShippingCost.ToString("N0"))</td></tr>
+            <tr><td colspan="3" class="text-start"><strong>مبلغ نهایی</strong></td><td><strong>@o.FinalAmount.ToString("N0") تومان</strong></td></tr>
+        </tfoot>
+    </table>
+</div>
+
+<div class="admin-panel-box">
+    <h3 class="admin-box-title">تراکنش‌های پرداخت</h3>
+    <table class="table admin-table">
+        <thead><tr><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th><th>کد پیگیری (RefId)</th><th>Authority</th></tr></thead>
+        <tbody>
+        @foreach (var p in Model.Detail.Payments)
+        {
+            <tr>
+                <td>@p.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                <td>@p.Amount.ToString("N0")</td>
+                <td>
+                    @switch (p.Status)
+                    {
+                        case PaymentStatus.Success: <span class="badge bg-success">موفق</span> break;
+                        case PaymentStatus.Failed: <span class="badge bg-danger">ناموفق</span> break;
+                        default: <span class="badge bg-secondary">در انتظار</span> break;
+                    }
+                </td>
+                <td>@(p.RefId ?? "—")</td>
+                <td class="admin-muted">@(p.Authority ?? "—")</td>
+            </tr>
+        }
+        @if (Model.Detail.Payments.Count == 0)
+        {
+            <tr><td colspan="5" class="admin-muted text-center">تراکنشی ثبت نشده.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

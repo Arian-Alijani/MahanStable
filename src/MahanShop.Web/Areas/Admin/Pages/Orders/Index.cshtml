@@ -1,0 +1,76 @@
+@page
+@using MahanShop.Web.Helpers
+@model MahanShop.Web.Areas.Admin.Pages.Orders.IndexModel
+@{
+    ViewData["Title"] = "سفارش‌ها";
+    ViewData["AdminActive"] = "orders";
+    var statuses = new[]
+    {
+        OrderStatus.Paid, OrderStatus.Processing, OrderStatus.Shipped,
+        OrderStatus.Delivered, OrderStatus.Canceled, OrderStatus.Refunded,
+        OrderStatus.Pending, OrderStatus.AwaitingPayment
+    };
+}
+
+@if (TempData["AdminOk"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+
+<div class="admin-toolbar">
+    <form method="get" class="admin-search admin-search--wide">
+        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="کد سفارش / نام / موبایل / رهگیری..." />
+        <select name="Status" class="form-select">
+            <option value="">همه وضعیت‌ها</option>
+            @foreach (var s in statuses)
+            {
+                <option value="@s" selected="@(Model.Status == s)">@OrderStatusView.Label(s)</option>
+            }
+        </select>
+        <input type="date" name="FromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" class="form-control" title="از تاریخ" />
+        <input type="date" name="ToDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" class="form-control" title="تا تاریخ" />
+        <button type="submit" class="btn btn-outline-secondary">فیلتر</button>
+    </form>
+</div>
+
+<div class="admin-panel-box">
+    <table class="table admin-table">
+        <thead>
+            <tr><th>کد سفارش</th><th>مشتری</th><th>تاریخ ثبت</th><th>اقلام</th><th>مبلغ</th><th>وضعیت</th><th>رهگیری</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var o in Model.Result.Items)
+        {
+            <tr>
+                <td><strong>@o.OrderCode</strong></td>
+                <td>@o.CustomerName<br /><span class="admin-muted">@o.CustomerPhone</span></td>
+                <td>@o.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                <td>@o.ItemCount</td>
+                <td>@o.FinalAmount.ToString("N0")</td>
+                <td><span class="badge admin-status-badge @OrderStatusView.Tone(o.Status)">@OrderStatusView.Label(o.Status)</span></td>
+                <td>@(string.IsNullOrEmpty(o.TrackingCode) ? "—" : o.TrackingCode)</td>
+                <td class="admin-actions">
+                    <a asp-page="Detail" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">جزییات</a>
+                </td>
+            </tr>
+        }
+        @if (Model.Result.Items.Count == 0)
+        {
+            <tr><td colspan="8" class="admin-muted text-center">سفارشی یافت نشد.</td></tr>
+        }
+        </tbody>
+    </table>
+
+    @if (Model.Result.TotalPages > 1)
+    {
+        <nav class="admin-pager">
+            @for (int i = 1; i <= Model.Result.TotalPages; i++)
+            {
+                <a class="admin-pager__link @(i == Model.Result.Page ? "is-active" : "")"
+                   asp-route-Page="@i" asp-route-Search="@Model.Search" asp-route-Status="@Model.Status"
+                   asp-route-FromDate="@(Model.FromDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-ToDate="@(Model.ToDate?.ToString("yyyy-MM-dd"))">@i</a>
+            }
+        </nav>
+    }
+</div>
