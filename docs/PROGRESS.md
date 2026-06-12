@@ -28,10 +28,10 @@
 - **Domestic-only**: سایت بدون اینترنت بین‌الملل کامل کار کنه — صفر CDN/سرویس خارجی، همه asset self-host، سرویس فقط داخلی ✅ (جزییات: CLAUDE.md + CONVENTIONS.md)
 
 ## Next steps
-قدم بعد = **Phase 4 (Catalog)** در `docs/ROADMAP.md`. فازها به ترتیب:
+قدم بعد = **Phase 9 (Admin Panel)** — رودمپ ۴ مرحله‌ای قابل‌برگشت در `docs/ADMIN_ROADMAP.md`، پیشرفت زنده در `docs/ADMIN_PROGRESS.md`. baseline تمیز قبل از پنل ادمین = tag `baseline-before-admin-panel` (commit `f279aa6`). فازها به ترتیب:
 - [x] P0 Scaffold · [x] P1 Domain+Data · [x] P2 Infra+Config · [x] P3 Layout+Home
 - [x] P4 Catalog (4A✅ / 4B✅ / 4C❌حذف) · [x] P5 Auth · [x] P6 Cart+Checkout · [x] P7 Payment
-- [ ] P8 UserPanel · [ ] P9 Admin · [ ] P10 Security · [ ] P11 Perf · [ ] P12 Deploy
+- [x] P8 UserPanel · [ ] P9 Admin (رودمپ آماده، کد=صفر) · [ ] P10 Security · [ ] P11 Perf · [ ] P12 Deploy
 
 ## Open questions (از کاربر بپرس وقتی رسیدی)
 - جزییات ارتقای UI نسبت به نمونه؟
@@ -93,3 +93,8 @@
   - **Verify**: build solution سبز (0/0). header از قبل `/Panel` لینک می‌داد. (نکته: PDF فونت Vazir از `wwwroot/fonts/vazirmatn/Vazir.ttf`.)
   - **Runtime smoke (پاس):** login OTP → `/Panel` 200 (داشبورد + آمار + کارت سفارش)، `/Panel/Profile` 200، `/Panel/OrderDetail?id=` 200 (جدول + خلاصه)، `/Panel/Invoice?id=` → PDF معتبر (`%PDF-`, فونت `/AAAAAA+Vazir` embed، Identity-H/FontFile2 → فارسی درست). IDOR: anon→302 login، order ناموجود→404. anti-forgery گلوبال فعال.
   - 🐛 **رفع‌شده حین smoke:** `InvoicePdfService._fontName` بود `"Vazirmatn"` ولی family واقعی TTF = `Vazir` (تایید via GDI PrivateFontCollection) → PDF به SegoeUI/Lato fallback می‌کرد (فارسی tofu). اصلاح به `"Vazir"`؛ PDF بازتولید → Vazir embed شد (size 96KB→144KB glyphها). build سبز (0/0).
+- 2026-06-12: **Phase 9 (Admin Panel) — برنامه‌ریزی قابل‌برگشت (هیچ کدی نوشته نشد):** تلاش قبلی پنل ادمین نیمه‌کاره رها شده بود. وضعیت سورس بررسی شد ⇒ در عمل **هیچ کد پنل ادمینی وجود ندارد** (نه `Areas/Admin`، نه `Pages/Admin`، نه `Features/Admin`، نه Controller/CSS/JS ادمین؛ فقط ارجاع‌های عمومی `User.IsAdmin` و claim نقش Auth). یعنی پروژه همین حالا در حالت تمیزِ «قبل از پنل ادمین» است. اقدامات:
+  - **tag `baseline-before-admin-panel`** روی commit `f279aa6` (مقصد بازگشت کامل: `git reset --hard baseline-before-admin-panel`).
+  - **`docs/ADMIN_ROADMAP.md`** — رودمپ ۴ مرحله‌ای پنل ادمین (۱:Shell+AuthGate، ۲:کاتالوگ CRUD+آپلود، ۳:Variant/موجودی+ویژگی/تگ، ۴:سفارش/کاربر/داشبورد)، با مرزبندی فیزیکی کد ادمین (`Areas/Admin`، `wwwroot/admin`، `wwwroot/AdminPanel`، `Features/Admin`)، تنها فایل مشترکِ قابل‌تغییر = `Program.cs` فقط داخل بلوک نشان‌دار، migration افزایشی `Add_Admin_*`، و «Boundary list» + دستور rollback برای هر مرحله.
+  - **`docs/ADMIN_PROGRESS.md`** — فایل پیشرفت زندهٔ مخصوص پنل ادمین (حافظهٔ بین‌سشنی): وضعیت فعلی=مرحله ۰، چک‌لیست ۴ مرحله، «دفتر ثبت rollback» (commit/migration هر مرحله)، و سؤالات باز.
+  - **`CLAUDE.md`** آپدیت: شروع سشنِ کار ادمین → خواندن `ADMIN_PROGRESS.md`؛ افزودن دو فایل به Pointers.

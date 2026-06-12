@@ -29,7 +29,7 @@
 | Deploy | Plesk IIS in-process |
 
 ## Session continuity rules (مهم — جلوگیری از خرابی بین سشن‌ها)
-1. **شروع هر سشن:** اول `docs/PROGRESS.md` بخون — وضعیت فعلی و قدم بعد اونجاست.
+1. **شروع هر سشن:** اول `docs/PROGRESS.md` بخون — وضعیت فعلی و قدم بعد اونجاست. **اگر روی پنل ادمین (Phase 9) کار می‌کنی، بعدش `docs/ADMIN_PROGRESS.md` رو هم بخون.**
 2. **قبل کد زدن:** `docs/ARCHITECTURE.md` + `docs/CONVENTIONS.md` چک کن.
 3. **نسخه پکیج:** فقط نسخه‌های پین‌شده `docs/STACK.md`. نسخه جدید بدون آپدیت اون فایل اضافه نکن.
 4. **بعد هر تسک کامل:** `docs/PROGRESS.md` آپدیت کن (چی شد، قدم بعد).
@@ -38,6 +38,8 @@
 
 ## Pointers
 - `docs/ROADMAP.md` — فازبندی 12-مرحله‌ای (با done-criteria)
+- `docs/ADMIN_ROADMAP.md` — رودمپ ۴ مرحله‌ای پنل ادمین (Phase 9) با معیار rollback هر مرحله + tag `baseline-before-admin-panel`
+- `docs/ADMIN_PROGRESS.md` — پیشرفت زندهٔ پنل ادمین (هر سشن کار ادمین آپدیت)
 - `docs/STACK.md` — نسخه دقیق پکیج‌ها
 - `docs/ARCHITECTURE.md` — نقشه لایه‌ها، قواعد وابستگی، ساختار پوشه
 - `docs/DEPLOYMENT.md` — Plesk + web.config + env vars
