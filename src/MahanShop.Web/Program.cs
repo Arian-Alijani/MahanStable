@@ -12,7 +12,18 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/Panel");
+    // === ADMIN-PANEL START (Phase 9) — remove this whole block to rollback ===
+    options.Conventions.AuthorizeAreaFolder("Admin", "/", "AdminOnly");
+    // === ADMIN-PANEL END ===
 });
+
+// === ADMIN-PANEL START (Phase 9) — remove this whole block to rollback ===
+// policy دسترسی فقط ادمین (claim نقش "Admin" که در VerifyLoginCode/Account ست می‌شود)
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+});
+// === ADMIN-PANEL END ===
 
 // فاکتور PDF (QuestPDF) — سرویس Web
 builder.Services.AddSingleton<MahanShop.Web.Services.InvoicePdfService>();

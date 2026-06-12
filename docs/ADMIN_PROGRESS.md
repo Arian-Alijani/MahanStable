@@ -7,9 +7,12 @@
 ---
 
 ## وضعیت فعلی
-**مرحله: ۰ — فقط رودمپ و baseline ثبت شد. هیچ کد پنل ادمینی هنوز نوشته نشده.**
+**مرحله: ۱ — Shell + Auth Gate ادمین DONE (کد نوشته شد).**
 
-قدم بعد = **مرحلهٔ ۱ (Shell + Auth Gate ادمین)** در `docs/ADMIN_ROADMAP.md`.
+ساخته‌شد: `Areas/Admin/Pages` (`_ViewImports`/`_ViewStart`/Shared `_AdminLayout`+`_AdminSidebar`/`Index`)، `wwwroot/admin/admin.css`، بلوک نشان‌دار `Program.cs` (policy `AdminOnly` + `AuthorizeAreaFolder`).
+claim نقش `Admin` از قبل در Auth ست می‌شود.
+
+قدم بعد = **مرحلهٔ ۲ (کاتالوگ پایه CRUD)** در `docs/ADMIN_ROADMAP.md`.
 
 ---
 
@@ -33,7 +36,7 @@ git checkout main && git reset --hard baseline-before-admin-panel
 
 ## چک‌لیست مراحل (هر کدام تمام شد، اینجا تیک بزن + جزئیات ثبت کن)
 
-- [ ] **مرحله ۱ — Shell + Auth Gate** — Areas/Admin layout + داشبورد خالی + policy `AdminOnly`.
+- [x] **مرحله ۱ — Shell + Auth Gate** — Areas/Admin layout + داشبورد خالی + policy `AdminOnly`.
 - [ ] **مرحله ۲ — کاتالوگ پایه** — CRUD محصول/دسته/برند + آپلود عکس.
 - [ ] **مرحله ۳ — Variant/موجودی + ویژگی/تگ** — (نیاز به Phase 8.5؛ تصمیم را اینجا ثبت کن).
 - [ ] **مرحله ۴ — سفارش‌ها/کاربران/داشبورد آمار** — تکمیل Phase 9.
