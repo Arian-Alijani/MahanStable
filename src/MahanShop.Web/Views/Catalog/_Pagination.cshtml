@@ -1,0 +1,70 @@
+@model CatalogViewModel
+@{
+    var f = Model.Applied;
+    if (Model.TotalPages <= 1) { return; }
+
+    string pageUrl(int page)
+    {
+        var rv = new Dictionary<string, string?>();
+        if (f.Search is { Length: > 0 } && string.IsNullOrWhiteSpace(f.CategorySlug)) rv["q"] = f.Search;
+        if (f.BrandSlug is { Length: > 0 }) rv["BrandSlug"] = f.BrandSlug;
+        if (f.ColorId is int ci) rv["ColorId"] = ci.ToString();
+        if (f.PriceMin is long pm) rv["PriceMin"] = pm.ToString();
+        if (f.PriceMax is long px) rv["PriceMax"] = px.ToString();
+        if (f.InStockOnly) rv["InStockOnly"] = "true";
+        if (f.Sort != "newest") rv["Sort"] = f.Sort;
+        if (page > 1) rv["Page"] = page.ToString();
+
+        string path = string.IsNullOrWhiteSpace(f.CategorySlug)
+            ? (f.Search is { Length: > 0 } ? Url.RouteUrl("search")! : Url.RouteUrl("catalog")!)
+            : Url.RouteUrl("category", new { slug = f.CategorySlug })!;
+        var qs = string.Join("&", rv.Where(kv => kv.Value is { Length: > 0 })
+            .Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value!)}"));
+        return qs.Length > 0 ? $"{path}?{qs}" : path;
+    }
+
+    int cur = Model.Page;
+    int totp = Model.TotalPages;
+    int start = Math.Max(1, cur - 2);
+    int end = Math.Min(totp, cur + 2);
+}
+
+<nav class="pagination" aria-label="صفحه‌بندی محصولات">
+    @if (Model.HasPrev)
+    {
+        <a class="page-link page-link--nav" href="@pageUrl(cur - 1)" rel="prev" aria-label="صفحه قبل">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+        </a>
+    }
+
+    @if (start > 1)
+    {
+        <a class="page-link" href="@pageUrl(1)">1</a>
+        @if (start > 2) { <span class="page-gap">…</span> }
+    }
+
+    @for (int i = start; i <= end; i++)
+    {
+        if (i == cur)
+        {
+            <span class="page-link is-active" aria-current="page">@i.ToString("0")</span>
+        }
+        else
+        {
+            <a class="page-link" href="@pageUrl(i)">@i.ToString("0")</a>
+        }
+    }
+
+    @if (end < totp)
+    {
+        @if (end < totp - 1) { <span class="page-gap">…</span> }
+        <a class="page-link" href="@pageUrl(totp)">@totp.ToString("0")</a>
+    }
+
+    @if (Model.HasNext)
+    {
+        <a class="page-link page-link--nav" href="@pageUrl(cur + 1)" rel="next" aria-label="صفحه بعد">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+        </a>
+    }
+</nav>

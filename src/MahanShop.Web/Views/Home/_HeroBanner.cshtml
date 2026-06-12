@@ -1,0 +1,37 @@
+@model List<HomeBannerDto>
+@if (Model.Count == 0) { return; }
+
+<section class="hero" data-hero aria-label="بنرهای ویژه">
+    <div class="hero__viewport">
+        @for (var i = 0; i < Model.Count; i++)
+        {
+            var b = Model[i];
+            <a class="hero__slide @(i == 0 ? "is-active" : "")" data-hero-slide href="@(b.LinkUrl ?? "#")" aria-hidden="@(i == 0 ? "false" : "true")">
+                <picture>
+                    @if (!string.IsNullOrEmpty(b.MobileImageUrl))
+                    {
+                        <source media="(max-width: 640px)" srcset="@b.MobileImageUrl" />
+                    }
+                    <img src="@b.ImageUrl" alt="@b.AltText" loading="@(i == 0 ? "eager" : "lazy")" decoding="async" />
+                </picture>
+            </a>
+        }
+    </div>
+
+    @if (Model.Count > 1)
+    {
+        <button type="button" class="hero__arrow hero__arrow--prev" data-hero-prev aria-label="بنر قبلی">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button type="button" class="hero__arrow hero__arrow--next" data-hero-next aria-label="بنر بعدی">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+
+        <div class="hero__dots" data-hero-dots>
+            @for (var i = 0; i < Model.Count; i++)
+            {
+                <button type="button" class="hero__dot @(i == 0 ? "is-active" : "")" data-hero-dot="@i" aria-label="اسلاید @(i + 1)"></button>
+            }
+        </div>
+    }
+</section>

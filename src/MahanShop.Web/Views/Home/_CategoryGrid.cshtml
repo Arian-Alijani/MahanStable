@@ -1,0 +1,29 @@
+@model List<FeaturedCategoryDto>
+@if (Model.Count == 0) { return; }
+@{
+    // گرادیان ملایم هر تایل بر اساس اندیس (بدون تصویر/منبع خارجی) — مطابق Plus bento
+    int[] hues = { 217, 265, 150, 190, 25, 330, 50, 280 };
+    var items = Model.Take(6).ToList();
+}
+
+<section class="cat-section" aria-label="دسته‌بندی‌ها">
+    <div class="sec-head">
+        <span class="sec-head__bar" aria-hidden="true"></span>
+        <h2 class="sec-head__title">خرید بر اساس دسته‌بندی</h2>
+    </div>
+
+    <div class="cat-bento">
+        @for (var i = 0; i < items.Count; i++)
+        {
+            var c = items[i];
+            var hue = hues[i % hues.Length];
+            <a class="cat-cell @(i == 0 ? "cat-cell--big" : "")" href="/@c.Slug" style="--h:@hue">
+                <span class="cat-cell__bg" aria-hidden="true"></span>
+                <span class="cat-cell__icon" aria-hidden="true">
+                    <img src="@(c.ImageUrl ?? "/img/categories/gadget.svg")" alt="" loading="lazy" decoding="async" />
+                </span>
+                <span class="cat-cell__name">@c.Name</span>
+            </a>
+        }
+    </div>
+</section>

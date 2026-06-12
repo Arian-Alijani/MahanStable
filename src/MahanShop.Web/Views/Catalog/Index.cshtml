@@ -1,0 +1,61 @@
+@model CatalogViewModel
+@{
+    var f = Model.Applied;
+    ViewData["Title"] = !string.IsNullOrEmpty(Model.ActiveCategoryName)
+        ? Model.ActiveCategoryName
+        : (!string.IsNullOrWhiteSpace(f.Search) ? $"جستجو: {f.Search}" : "محصولات");
+    ViewData["MetaDescription"] = !string.IsNullOrEmpty(Model.ActiveCategoryName)
+        ? $"خرید {Model.ActiveCategoryName} اصل با قیمت مناسب و ارسال سریع از ماهان شاپ."
+        : "مرور و خرید محصولات ماهان شاپ — فیلتر بر اساس دسته، برند، رنگ و قیمت.";
+
+    // مقصد فرم: مرور همان مسیر را حفظ می‌کند (دسته/جستجو/محصولات)
+    string formAction = !string.IsNullOrWhiteSpace(f.CategorySlug)
+        ? Url.RouteUrl("category", new { slug = f.CategorySlug })!
+        : (!string.IsNullOrWhiteSpace(f.Search) ? Url.RouteUrl("search")! : Url.RouteUrl("catalog")!);
+}
+
+<div class="container catalog">
+    <h1 class="visually-hidden">@(ViewData["Title"])</h1>
+
+    <form id="catalog-form" class="catalog-shell" method="get" action="@formAction" data-js-enhance="catalog">
+        @* جستجو در حالت /search باید در URL بماند *@
+        @if (!string.IsNullOrWhiteSpace(f.Search))
+        {
+            <input type="hidden" name="q" value="@f.Search" />
+        }
+
+        @await Html.PartialAsync("_FilterSidebar", Model)
+
+        <div class="catalog-main">
+            @await Html.PartialAsync("_ProductsHeader", Model)
+
+            @if (Model.Products.Count > 0)
+            {
+                <div class="catalog-grid">
+                    @foreach (var p in Model.Products)
+                    {
+                        @await Html.PartialAsync("_ProductCard", p)
+                    }
+                </div>
+
+                @await Html.PartialAsync("_Pagination", Model)
+            }
+            else
+            {
+                <div class="no-results" role="status" aria-live="polite">
+                    <div class="no-results__card">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/></svg>
+                        <h3>محصولی پیدا نشد!</h3>
+                        <p>محصولی با این فیلترها موجود نیست. برای دیدن سایر محصولات فیلترها را تغییر دهید.</p>
+                        <div class="no-results__actions">
+                            <a class="btn-primary" href="@Url.RouteUrl("catalog")">حذف همه فیلترها</a>
+                            <a class="btn-ghost" href="/">بازگشت به خانه</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </form>
+</div>
+
+<div id="filter-overlay" class="filter-overlay" role="presentation" hidden></div>

@@ -1,0 +1,126 @@
+@model CatalogViewModel
+@{
+    var f = Model.Applied;
+}
+
+<aside id="filter-sidebar" class="filter-sidebar" aria-label="فیلتر محصولات">
+    <div class="filter-panel">
+        <div class="filter-panel__head">
+            <h2>فیلترها</h2>
+            <button type="button" class="filter-close" id="filter-close" aria-label="بستن فیلترها">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        @* اندازه صفحه را هنگام submit حفظ کن (Sort از select داخل همین فرم می‌آید) *@
+        <input type="hidden" name="PageSize" value="@f.PageSize" />
+
+        <div class="filter-scroll">
+            @* ---- دسته‌ها (لینک ناوبری به /category/{slug}) ---- *@
+            <details class="filter-accordion" open>
+                <summary class="filter-accordion__summary">
+                    <span>دسته‌ها</span>
+                    <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                </summary>
+                <div class="category-list">
+                    <a class="category-btn @(string.IsNullOrEmpty(f.CategorySlug) ? "is-active" : "")" href="@Url.RouteUrl("catalog")">تمام محصولات</a>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <a class="category-btn @(c.Active ? "is-active" : "")" href="@Url.RouteUrl("category", new { slug = c.Slug })">@c.Name</a>
+                        @if (c.Children.Count > 0)
+                        {
+                            <div class="category-sub">
+                                @foreach (var ch in c.Children)
+                                {
+                                    <a class="category-btn category-btn--sub @(ch.Active ? "is-active" : "")" href="@Url.RouteUrl("category", new { slug = ch.Slug })">@ch.Name</a>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </details>
+
+            @* ---- برند ---- *@
+            @if (Model.Brands.Count > 0)
+            {
+                <details class="filter-accordion" open>
+                    <summary class="filter-accordion__summary">
+                        <span>برند</span>
+                        <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </summary>
+                    <div class="filter-options">
+                        @foreach (var b in Model.Brands)
+                        {
+                            <label class="filter-option @(b.Active ? "is-selected" : "")">
+                                <input type="radio" name="BrandSlug" value="@b.Slug" @(b.Active ? "checked" : "") />
+                                <span>@b.Name</span>
+                            </label>
+                        }
+                    </div>
+                </details>
+            }
+
+            @* ---- رنگ ---- *@
+            @if (Model.Colors.Count > 0)
+            {
+                <details class="filter-accordion" open>
+                    <summary class="filter-accordion__summary">
+                        <span>رنگ</span>
+                        <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </summary>
+                    <div class="color-options">
+                        @foreach (var c in Model.Colors)
+                        {
+                            <label class="color-option @(c.Active ? "is-selected" : "")" title="@c.Name">
+                                <input type="radio" name="ColorId" value="@c.Id" @(c.Active ? "checked" : "") />
+                                <span class="color-dot" style="--c:@c.Hex"></span>
+                                <span class="color-name">@c.Name</span>
+                            </label>
+                        }
+                    </div>
+                </details>
+            }
+
+            @* ---- قیمت ---- *@
+            <details class="filter-accordion" open>
+                <summary class="filter-accordion__summary">
+                    <span>محدوده قیمت</span>
+                    <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                </summary>
+                <div class="price-filter"
+                     data-floor="@Model.PriceFloor" data-ceil="@Model.PriceCeil">
+                    <div class="price-display">
+                        <span>از <b id="price-min-label">@((f.PriceMin ?? Model.PriceFloor).ToString("#,0"))</b></span>
+                        <span>تا <b id="price-max-label">@((f.PriceMax ?? Model.PriceCeil).ToString("#,0"))</b> تومان</span>
+                    </div>
+                    <div class="price-range" dir="ltr">
+                        <div class="price-range__track"></div>
+                        <div class="price-range__fill" id="price-range-fill"></div>
+                        <input type="range" id="price-min-range" class="price-range__input"
+                               min="@Model.PriceFloor" max="@Model.PriceCeil" step="10000"
+                               value="@(f.PriceMin ?? Model.PriceFloor)" aria-label="حداقل قیمت" />
+                        <input type="range" id="price-max-range" class="price-range__input"
+                               min="@Model.PriceFloor" max="@Model.PriceCeil" step="10000"
+                               value="@(f.PriceMax ?? Model.PriceCeil)" aria-label="حداکثر قیمت" />
+                    </div>
+                    <input type="hidden" name="PriceMin" id="PriceMin" value="@(f.PriceMin?.ToString())" />
+                    <input type="hidden" name="PriceMax" id="PriceMax" value="@(f.PriceMax?.ToString())" />
+                </div>
+            </details>
+
+            @* ---- موجودی ---- *@
+            <div class="filter-stock">
+                <span>فقط کالاهای موجود</span>
+                <label class="toggle" for="instock-toggle">
+                    <input type="checkbox" id="instock-toggle" name="InStockOnly" value="true" @(f.InStockOnly ? "checked" : "") />
+                    <span class="toggle__track"><span class="toggle__thumb"></span></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn-primary filter-apply">اعمال فیلترها</button>
+            <a class="btn-ghost filter-reset" href="@(string.IsNullOrWhiteSpace(f.CategorySlug) ? Url.RouteUrl("catalog") : Url.RouteUrl("category", new { slug = f.CategorySlug }))">حذف فیلترها</a>
+        </div>
+    </div>
+</aside>

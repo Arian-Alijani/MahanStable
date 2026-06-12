@@ -1,0 +1,11 @@
+@model HomeSectionViewModel
+
+<a class="promo @(Model.IsHalfWidth ? "promo--half" : "promo--full")" href="@(Model.LinkUrl ?? "#")">
+    <picture>
+        @if (!string.IsNullOrEmpty(Model.MobileImageUrl))
+        {
+            <source media="(max-width: 640px)" srcset="@Model.MobileImageUrl" />
+        }
+        <img src="@Model.ImageUrl" alt="@(Model.Subtitle ?? Model.Title)" loading="lazy" decoding="async" />
+    </picture>
+</a>

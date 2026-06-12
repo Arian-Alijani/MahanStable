@@ -1,0 +1,33 @@
+@{
+    var active = ViewData["PanelActive"] as string ?? "dashboard";
+    var name = User.Identity?.Name ?? "کاربر";
+    var phone = User.FindFirst(System.Security.Claims.ClaimTypes.MobilePhone)?.Value ?? "";
+    var initial = string.IsNullOrWhiteSpace(name) ? "؟" : name.Trim()[0].ToString();
+}
+<aside class="panel-aside">
+    <div class="panel-card panel-user">
+        <div class="panel-avatar">@initial</div>
+        <div class="panel-user__meta">
+            <div class="panel-user__name">@name</div>
+            <div class="panel-user__phone" dir="ltr">@phone</div>
+        </div>
+    </div>
+    <nav class="panel-card panel-nav">
+        <a class="panel-nav__link @(active == "dashboard" ? "is-active" : "")" href="/Panel">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>داشبورد و سفارش‌ها</span>
+        </a>
+        <a class="panel-nav__link @(active == "profile" ? "is-active" : "")" href="/Panel/Profile">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>مشخصات حساب</span>
+        </a>
+        <div class="panel-nav__sep"></div>
+        <form method="post" action="/Account/Logout" class="panel-nav__logout">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="panel-nav__link is-danger">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>خروج از حساب</span>
+            </button>
+        </form>
+    </nav>
+</aside>

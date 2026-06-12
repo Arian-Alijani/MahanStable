@@ -1,0 +1,110 @@
+/* Auth (Phase 5) — صفحه ورود/تایید OTP. توکن‌های مشترک site.css. domestic-only، آیکن inline. */
+.auth-shell {
+    display: flex;
+    justify-content: center;
+    padding: 3rem 1rem 4rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    padding: 2rem 1.75rem;
+}
+
+.auth-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 .35rem;
+}
+
+.auth-sub {
+    font-size: .9rem;
+    color: var(--muted);
+    margin: 0 0 1.5rem;
+    line-height: 1.7;
+}
+
+.auth-label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 1rem 0 .4rem;
+}
+
+.auth-opt { color: var(--muted); font-weight: 400; }
+
+.auth-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 .9rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 1rem;
+    transition: border-color .15s;
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.auth-code {
+    letter-spacing: .4em;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.auth-btn {
+    width: 100%;
+    height: 50px;
+    margin-top: 1.5rem;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--primary);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.auth-btn:hover { background: var(--primary-d); }
+
+.auth-errors:not(:empty) {
+    background: color-mix(in srgb, var(--danger) 8%, transparent);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: var(--radius-sm);
+    padding: .7rem .9rem;
+    font-size: .85rem;
+    margin-bottom: .5rem;
+}
+
+.auth-errors ul { margin: 0; padding-inline-start: 1.1rem; }
+
+.auth-resend {
+    margin-top: 1.25rem;
+    text-align: center;
+}
+
+.auth-link {
+    background: none;
+    border: 0;
+    color: var(--primary);
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: .3rem;
+}
+
+.auth-link:hover { text-decoration: underline; }

@@ -1,0 +1,27 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "ورود / ثبت‌نام";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+}
+
+<div class="auth-shell">
+    <div class="auth-card">
+        <h1 class="auth-title">ورود / ثبت‌نام</h1>
+        <p class="auth-sub">شماره موبایل خود را وارد کنید. کد تایید پیامک می‌شود.</p>
+
+        <form asp-action="Login" method="post" novalidate>
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <div asp-validation-summary="All" class="auth-errors"></div>
+
+            <label class="auth-label" asp-for="Phone">شماره موبایل</label>
+            <input asp-for="Phone" class="auth-input" type="tel" inputmode="numeric"
+                   autocomplete="tel" placeholder="09xxxxxxxxx" dir="ltr" maxlength="15" autofocus />
+
+            <button type="submit" class="auth-btn">ارسال کد تایید</button>
+        </form>
+    </div>
+</div>

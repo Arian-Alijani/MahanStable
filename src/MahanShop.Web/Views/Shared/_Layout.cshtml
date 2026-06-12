@@ -1,0 +1,47 @@
+@{
+    var pageTitle = ViewData["Title"] as string;
+    var fullTitle = string.IsNullOrEmpty(pageTitle) ? "ماهان شاپ | فروشگاه موبایل و لوازم جانبی" : $"{pageTitle} | ماهان شاپ";
+    var metaDescription = ViewData["MetaDescription"] as string
+        ?? "خرید اینترنتی گوشی موبایل، قاب، شارژر و لوازم جانبی اصل با ضمانت و ارسال سریع از ماهان شاپ.";
+    var canonical = ViewData["Canonical"] as string ?? $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
+}
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2563EB" />
+    <title>@fullTitle</title>
+    <meta name="description" content="@metaDescription" />
+    <link rel="canonical" href="@canonical" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ماهان شاپ" />
+    <meta property="og:title" content="@fullTitle" />
+    <meta property="og:description" content="@metaDescription" />
+    <meta property="og:url" content="@canonical" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <a class="skip-link" href="#main">رفتن به محتوا</a>
+
+    @Html.AntiForgeryToken()
+
+    @await Html.PartialAsync("_Header")
+
+    <main id="main">
+        @RenderBody()
+    </main>
+
+    @await Html.PartialAsync("_Footer")
+
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

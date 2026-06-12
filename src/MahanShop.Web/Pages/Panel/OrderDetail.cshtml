@@ -1,0 +1,75 @@
+@page
+@model MahanShop.Web.Pages.Panel.OrderDetailModel
+@using MahanShop.Web.Helpers
+@{
+    ViewData["Title"] = "جزئیات سفارش";
+    ViewData["PanelActive"] = "dashboard";
+    var o = Model.Order!;
+    string Money(long t) => t.ToString("#,0") + " تومان";
+}
+@section Styles { <link rel="stylesheet" href="~/css/panel.css" asp-append-version="true" /> }
+
+<div class="container panel-shell">
+    <partial name="Panel/_PanelSidebar" />
+
+    <section class="panel-main">
+        <div class="panel-card">
+            <div class="panel-head">
+                <h2 class="panel-head__title">سفارش @o.OrderCode</h2>
+                <a href="/Panel/Invoice?id=@o.Id" class="panel-head__link">دانلود فاکتور PDF</a>
+            </div>
+
+            <div class="od-meta">
+                <span class="status-badge @OrderStatusView.Tone(o.Status)">@OrderStatusView.Label(o.Status)</span>
+                <span class="od-meta__date">ثبت: @o.CreatedAt.ToString("yyyy/MM/dd HH:mm")</span>
+                @if (o.PaidAt is not null)
+                {
+                    <span class="od-meta__date">پرداخت: @o.PaidAt.Value.ToString("yyyy/MM/dd HH:mm")</span>
+                }
+                @if (!string.IsNullOrEmpty(o.TrackingCode))
+                {
+                    <span class="od-meta__date">رهگیری: <b dir="ltr">@o.TrackingCode</b></span>
+                }
+            </div>
+
+            @if (o.FullAddress is not null)
+            {
+                <div class="od-address">
+                    <b>تحویل‌گیرنده:</b> @o.ReceiverName (<span dir="ltr">@o.ReceiverPhone</span>)<br />
+                    @o.Province، @o.City — @o.FullAddress — کد پستی <span dir="ltr">@o.PostalCode</span>
+                </div>
+            }
+
+            <div class="od-table-wrap">
+                <table class="od-table">
+                    <thead>
+                        <tr><th>محصول</th><th>قیمت واحد</th><th>تعداد</th><th>جمع</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var it in o.Items)
+                        {
+                            <tr>
+                                <td>@it.ProductTitle</td>
+                                <td>@Money(it.UnitPrice)</td>
+                                <td>@it.Quantity</td>
+                                <td>@Money(it.LineTotal)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="od-summary">
+                <div class="od-summary__row"><span>جمع کل</span><span>@Money(o.TotalAmount)</span></div>
+                @if (o.DiscountAmount > 0)
+                {
+                    <div class="od-summary__row"><span>تخفیف</span><span>- @Money(o.DiscountAmount)</span></div>
+                }
+                <div class="od-summary__row"><span>هزینه ارسال</span><span>@Money(o.ShippingCost)</span></div>
+                <div class="od-summary__row od-summary__total"><span>مبلغ پرداختی</span><span>@Money(o.FinalAmount)</span></div>
+            </div>
+
+            <a href="/Panel" class="btn-outline">بازگشت به سفارش‌ها</a>
+        </div>
+    </section>
+</div>

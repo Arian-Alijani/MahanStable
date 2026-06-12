@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "نتیجه پرداخت";
+    var success = ViewBag.Success as bool? ?? false;
+    var code = ViewBag.OrderCode as string;
+    var refId = ViewBag.RefId as string;
+    var error = ViewBag.Error as string;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/cart.css" asp-append-version="true" />
+}
+
+<div class="placed-page">
+    <div class="placed-card">
+        @if (success)
+        {
+            <div class="placed-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M8 12l3 3 5-6"></path>
+                </svg>
+            </div>
+            <h1 class="placed-title">پرداخت موفق بود</h1>
+            @if (code is not null)
+            {
+                <p class="placed-code">کد سفارش: <bdi dir="ltr">@code</bdi></p>
+            }
+            @if (!string.IsNullOrEmpty(refId))
+            {
+                <p class="placed-code">کد پیگیری پرداخت: <bdi dir="ltr">@refId</bdi></p>
+            }
+            <p class="placed-text">سفارش شما پرداخت و ثبت نهایی شد. سپاس از خرید شما.</p>
+        }
+        else
+        {
+            <div class="placed-icon" aria-hidden="true" style="color:var(--danger)">
+                <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M15 9l-6 6M9 9l6 6"></path>
+                </svg>
+            </div>
+            <h1 class="placed-title">پرداخت ناموفق</h1>
+            <p class="placed-text">@(error ?? "پرداخت انجام نشد.")</p>
+            @if (code is not null)
+            {
+                <p class="placed-code">کد سفارش: <bdi dir="ltr">@code</bdi></p>
+            }
+        }
+
+        <div class="placed-actions">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary">بازگشت به فروشگاه</a>
+        </div>
+    </div>
+</div>

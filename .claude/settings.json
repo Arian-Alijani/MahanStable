@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /tmp)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\\\\n\" -X POST http://localhost:5093/payment/start -d \"orderId=1\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:5093/payment/verify?Authority=BADXXXX&Status=NOK\")",
+      "Bash(curl -s \"http://localhost:5093/payment/verify?Authority=BADXXXX&Status=NOK\")",
+      "Bash(curl -s -o /dev/null http://localhost:5093/)",
+      "Bash(kill 1263)",
+      "Bash(grep -in \"run-\\\\|\\\\.local\\\\|\\\\.cmd\\\\|secret\" .gitignore)",
+      "Bash(grep -rn \"ConnectionStrings\\\\|EShop_PhoneDb\" src/MahanShop.Web/appsettings*.json)",
+      "Bash(git check-ignore *)",
+      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; cat \"{}\"')",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(dotnet build *)",
+      "Bash(taskkill //F //IM MahanShop.Web.exe)",
+      "Bash(fc-scan src/MahanShop.Web/wwwroot/fonts/vazirmatn/Vazir.ttf)",
+      "Bash(python -c ' *)",
+      "Bash(curl -s -D - -o /dev/null http://localhost:5099/Panel)",
+      "Read(//tmp/**)",
+      "Bash(grep -nA15 -iE \"exception|fail:|error:\" /tmp/p8run.log)",
+      "Bash(grep -nA6 -iE \"exception|fail:\" /tmp/p8run.log)",
+      "Bash(cd \"C:\\\\Users\\\\arian\\\\Desktop\\\\MahanShop\\\\New website\" && grep -iE \"ConnectionStrings|Default.*=|Server=\" src/MahanShop.Web/appsettings*.json | grep -i server | head; echo \"---sqlcmd?---\"; which sqlcmd 2>/dev/null || ls \"/c/Program Files/Microsoft SQL Server/Client SDK/ODBC\"/*/Tools/Binn/sqlcmd.exe 2>/dev/null | head -1)",
+      "Read(//c/Program Files/Microsoft SQL Server/Client SDK/**)",
+      "Bash(export MSYS_NO_PATHCONV=1)",
+      "Bash(powershell -NoProfile -Command ' *)",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File \".smoke\\\\seedorder.ps1\")",
+      "Bash(curl -s -o /dev/null -w \"anon OrderDetail=%{http_code} \\(302 expected\\)\\\\n\" \"http://localhost:5099/Panel/OrderDetail?id=3\")",
+      "Bash(curl -s -b .smoke/j -o /dev/null -w \"uid4 OrderDetail id=999=%{http_code} \\(404 expected\\)\\\\n\" \"http://localhost:5099/Panel/OrderDetail?id=999\")",
+      "Bash(pkill -f MahanShop)",
+      "Bash(taskkill //F //PID 13928)",
+      "Bash(powershell -NoProfile -Command \"Get-Process -Name MahanShop.Web -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(find /Users/dev/workspace-ef2c399a -type f -name \"*.cs\" | grep -E \"\\(Domain|Entities|Admin|Controllers\\)\" | head -30)",
+      "Read(//Users/dev/**)",
+      "Bash(ls -la /Users/dev/workspace-ef2c399a 2>/dev/null | head -20)"
+    ]
+  }
+}

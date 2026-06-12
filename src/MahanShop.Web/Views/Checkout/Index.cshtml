@@ -1,0 +1,119 @@
+@model CheckoutViewModel
+@{
+    ViewData["Title"] = "تسویه حساب";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/cart.css" asp-append-version="true" />
+}
+
+<div class="checkout-page">
+    <h1 class="cart-page__title">تسویه حساب</h1>
+
+    @if (TempData["CheckoutError"] is string err)
+    {
+        <div class="cart-alert cart-alert--err">@err</div>
+    }
+    <div asp-validation-summary="All" class="auth-errors"></div>
+
+    <div class="checkout-layout">
+        <div class="checkout-main">
+            <section class="checkout-card">
+                <h2 class="checkout-card__title">آدرس تحویل</h2>
+
+                @if (Model.Addresses.Count > 0)
+                {
+                    <form asp-controller="Checkout" asp-action="Place" method="post" id="place-form">
+                        <div class="addr-list">
+                            @foreach (var a in Model.Addresses)
+                            {
+                                <label class="addr-item">
+                                    <input type="radio" name="addressId" value="@a.Id"
+                                           @(a.Id == Model.SelectedAddressId ? "checked" : "") required />
+                                    <div class="addr-item__body">
+                                        <span class="addr-item__name">@a.ReceiverName — <bdi dir="ltr">@a.ReceiverPhone</bdi></span>
+                                        <span class="addr-item__text">@a.Province، @a.City، @a.FullAddress</span>
+                                        <span class="addr-item__post">کد پستی: <bdi dir="ltr">@a.PostalCode</bdi></span>
+                                    </div>
+                                </label>
+                            }
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <p class="checkout-empty-addr">آدرسی ثبت نشده. ابتدا یک آدرس اضافه کنید.</p>
+                }
+
+                <details class="addr-new" @(Model.Addresses.Count == 0 ? "open" : "")>
+                    <summary>افزودن آدرس جدید</summary>
+                    <form asp-controller="Checkout" asp-action="AddAddress" method="post" class="addr-form">
+                        <div class="addr-form__grid">
+                            <div>
+                                <label asp-for="NewAddress.Province"></label>
+                                <input asp-for="NewAddress.Province" class="auth-input" maxlength="100" />
+                            </div>
+                            <div>
+                                <label asp-for="NewAddress.City"></label>
+                                <input asp-for="NewAddress.City" class="auth-input" maxlength="100" />
+                            </div>
+                            <div>
+                                <label asp-for="NewAddress.PostalCode"></label>
+                                <input asp-for="NewAddress.PostalCode" class="auth-input" inputmode="numeric" dir="ltr" maxlength="10" />
+                            </div>
+                            <div>
+                                <label asp-for="NewAddress.ReceiverName"></label>
+                                <input asp-for="NewAddress.ReceiverName" class="auth-input" maxlength="200" />
+                            </div>
+                            <div>
+                                <label asp-for="NewAddress.ReceiverPhone"></label>
+                                <input asp-for="NewAddress.ReceiverPhone" class="auth-input" type="tel" inputmode="numeric" dir="ltr" maxlength="15" />
+                            </div>
+                            <div class="addr-form__full">
+                                <label asp-for="NewAddress.FullAddress"></label>
+                                <textarea asp-for="NewAddress.FullAddress" class="auth-input" rows="2" maxlength="800"></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary">ذخیره آدرس</button>
+                    </form>
+                </details>
+            </section>
+
+            <section class="checkout-card">
+                <h2 class="checkout-card__title">اقلام سفارش</h2>
+                <div class="checkout-items">
+                    @foreach (var line in Model.Cart.Lines)
+                    {
+                        <div class="checkout-item">
+                            <img src="@(line.ImageUrl ?? "/img/products/p1.svg")" alt="@line.Title" loading="lazy" />
+                            <span class="checkout-item__title">@line.Title @(line.VariantTitle is not null ? $"({line.VariantTitle})" : "")</span>
+                            <span class="checkout-item__qty">×@line.Quantity</span>
+                            <span class="checkout-item__total">@line.LineTotal.ToString("#,0") تومان</span>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+
+        <aside class="cart-summary">
+            <h2 class="cart-summary__title">پرداخت</h2>
+            <div class="cart-summary__row"><span>جمع کل</span><span>@Model.Cart.TotalAmount.ToString("#,0") تومان</span></div>
+            @if (Model.Cart.DiscountAmount > 0)
+            {
+                <div class="cart-summary__row cart-summary__row--off"><span>تخفیف</span><span>−@Model.Cart.DiscountAmount.ToString("#,0") تومان</span></div>
+            }
+            <div class="cart-summary__row"><span>هزینه ارسال</span><span>رایگان</span></div>
+            <div class="cart-summary__row cart-summary__row--pay"><span>قابل پرداخت</span><span>@Model.Cart.PayableAmount.ToString("#,0") تومان</span></div>
+
+            @if (Model.Addresses.Count > 0)
+            {
+                <button type="submit" form="place-form" class="btn btn-primary w-100 mt-3">ثبت سفارش</button>
+                <p class="checkout-note">پرداخت آنلاین در مرحله بعد فعال می‌شود.</p>
+            }
+            else
+            {
+                <button type="button" class="btn btn-primary w-100 mt-3" disabled>ابتدا آدرس اضافه کنید</button>
+            }
+        </aside>
+    </div>
+</div>

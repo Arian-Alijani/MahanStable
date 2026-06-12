@@ -1,0 +1,29 @@
+@model List<MenuCategoryDto>
+
+<nav class="mega" aria-label="دسته‌بندی محصولات">
+    <ul class="mega-root">
+        @foreach (var c in Model)
+        {
+            <li class="mega-item">
+                <a class="mega-link" href="/@c.Slug">
+                    @c.Name
+                    @if (c.Children.Any())
+                    {
+                        <svg class="mega-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                    }
+                </a>
+                @if (c.Children.Any())
+                {
+                    <div class="mega-panel">
+                        <ul class="mega-sub">
+                            @foreach (var ch in c.Children)
+                            {
+                                <li><a href="/@ch.Slug">@ch.Name</a></li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </li>
+        }
+    </ul>
+</nav>

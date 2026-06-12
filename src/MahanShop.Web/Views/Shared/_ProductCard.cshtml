@@ -1,0 +1,46 @@
+@model ProductCardDto
+@{
+    long finalPrice = Model.HasDiscount ? Model.DiscountPrice!.Value : Model.Price;
+    var url = $"/product/{Model.Slug}";
+}
+
+<article class="pcard">
+    <a class="pcard__media" href="@url" aria-label="@Model.Title">
+        @if (Model.HasDiscount)
+        {
+            <span class="pcard__badge">@(Model.DiscountPercent)٪ تخفیف</span>
+        }
+        <img src="@(Model.PrimaryImageUrl ?? "/img/products/p1.svg")" alt="@Model.Title" loading="lazy" decoding="async" />
+    </a>
+
+    <div class="pcard__body">
+        @if (!string.IsNullOrEmpty(Model.BrandName))
+        {
+            <span class="pcard__brand">@Model.BrandName</span>
+        }
+        <a class="pcard__title" href="@url">@Model.Title</a>
+
+        @if (Model.ColorHexes.Count > 0)
+        {
+            <div class="pcard__colors" aria-hidden="true">
+                @foreach (var hex in Model.ColorHexes.Take(5))
+                {
+                    <span class="swatch" style="--c:@hex"></span>
+                }
+            </div>
+        }
+
+        <div class="pcard__foot">
+            <div class="pcard__price">
+                @if (Model.HasDiscount)
+                {
+                    <span class="pcard__old">@Model.Price.ToString("#,0")</span>
+                }
+                <span class="pcard__now">@finalPrice.ToString("#,0") <span class="pcard__unit">تومان</span></span>
+            </div>
+            <button class="pcard__add" type="button" aria-label="افزودن به سبد" data-add="@Model.Id">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+        </div>
+    </div>
+</article>

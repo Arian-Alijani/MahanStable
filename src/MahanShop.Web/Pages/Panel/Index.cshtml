@@ -1,0 +1,103 @@
+@page
+@model MahanShop.Web.Pages.Panel.IndexModel
+@using MahanShop.Web.Helpers
+@{
+    ViewData["Title"] = "داشبورد کاربری";
+    ViewData["PanelActive"] = "dashboard";
+    string Money(long t) => t.ToString("#,0") + " تومان";
+    string Fa(string s) => s; // اعداد فارسی توسط CSS/فونت رندر می‌شوند
+}
+@section Styles { <link rel="stylesheet" href="~/css/panel.css" asp-append-version="true" /> }
+
+<div class="container panel-shell">
+    <partial name="Panel/_PanelSidebar" />
+
+    <section class="panel-main">
+        <div class="panel-card panel-stat-row">
+            <div class="panel-stat">
+                <div class="panel-stat__num">@Model.Orders.Count</div>
+                <div class="panel-stat__lbl">سفارش</div>
+            </div>
+            <div class="panel-stat">
+                <div class="panel-stat__num">@Model.Orders.Count(o => o.Status == Domain.Enums.OrderStatus.Delivered)</div>
+                <div class="panel-stat__lbl">تحویل‌شده</div>
+            </div>
+            <div class="panel-stat">
+                <div class="panel-stat__num">@Model.Orders.Count(o => o.Status == Domain.Enums.OrderStatus.Processing || o.Status == Domain.Enums.OrderStatus.Paid)</div>
+                <div class="panel-stat__lbl">در پردازش</div>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <div class="panel-head">
+                <h2 class="panel-head__title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    سفارش‌های من
+                </h2>
+            </div>
+
+            @if (Model.Orders.Count == 0)
+            {
+                <div class="panel-empty">
+                    <div class="panel-empty__icon">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    </div>
+                    <p class="panel-empty__title">سفارشی ثبت نشده</p>
+                    <p class="panel-empty__sub">هنوز خریدی انجام نداده‌اید.</p>
+                    <a href="/products" class="btn-primary panel-empty__cta">شروع خرید</a>
+                </div>
+            }
+            else
+            {
+                <div class="order-list">
+                    @foreach (var o in Model.Orders)
+                    {
+                        <article class="order-card">
+                            <div class="order-card__top">
+                                <div class="order-card__id">
+                                    <span class="status-badge @OrderStatusView.Tone(o.Status)">@OrderStatusView.Label(o.Status)</span>
+                                    <div class="order-card__code">کد: @o.OrderCode • @o.CreatedAt.ToString("yyyy/MM/dd")</div>
+                                </div>
+                                <div class="order-card__amount">
+                                    <span class="order-card__amount-lbl">مبلغ کل</span>
+                                    <span class="order-card__amount-val">@Money(o.FinalAmount)</span>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(o.TrackingCode))
+                            {
+                                <div class="order-track">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    <span>کد رهگیری: <b dir="ltr">@o.TrackingCode</b></span>
+                                </div>
+                            }
+
+                            <div class="order-thumbs">
+                                <span class="order-thumbs__lbl">محصولات (@o.ItemCount مورد)</span>
+                                <div class="order-thumbs__row">
+                                    @foreach (var it in o.Items.Take(6))
+                                    {
+                                        <div class="order-thumb" title="@it.ProductTitle">
+                                            <img src="@(string.IsNullOrEmpty(it.ImageUrl) ? "/img/products/p1.svg" : it.ImageUrl)" alt="@it.ProductTitle" loading="lazy" />
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="order-card__actions">
+                                <a href="/Panel/OrderDetail?id=@o.Id" class="btn-outline">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    مشاهده جزئیات
+                                </a>
+                                <a href="/Panel/Invoice?id=@o.Id" class="btn-outline">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    دانلود فاکتور
+                                </a>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>

@@ -1,0 +1,46 @@
+@model HomePageViewModel
+@{
+    ViewData["Title"] = null; // عنوان پیش‌فرض صفحه اصلی در Layout
+    ViewData["MetaDescription"] = "فروشگاه اینترنتی ماهان شاپ؛ خرید گوشی موبایل، قاب، شارژر، هندزفری و گجت اصل با ضمانت اصالت، قیمت مناسب و ارسال سریع.";
+}
+
+<h1 class="visually-hidden">فروشگاه اینترنتی موبایل و لوازم جانبی ماهان شاپ</h1>
+
+<div class="container home">
+    @await Html.PartialAsync("_HeroBanner", Model.Banners)
+    @await Html.PartialAsync("_CategoryGrid", Model.FeaturedCategories)
+
+    @{
+        var sections = Model.Sections;
+        for (var i = 0; i < sections.Count; i++)
+        {
+            var s = sections[i];
+
+            if (s.SectionType == HomeSectionType.PromoBanner && s.IsHalfWidth)
+            {
+                // گروه‌بندی بنرهای half پشت‌سرهم → یک ردیف کنار هم
+                var group = new List<HomeSectionViewModel>();
+                while (i < sections.Count && sections[i].SectionType == HomeSectionType.PromoBanner && sections[i].IsHalfWidth)
+                {
+                    group.Add(sections[i]);
+                    i++;
+                }
+                i--; // جبران ++ حلقه بیرونی
+                <div class="promo-duo">
+                    @foreach (var g in group)
+                    {
+                        @await Html.PartialAsync("_PromoBanner", g)
+                    }
+                </div>
+            }
+            else if (s.SectionType == HomeSectionType.PromoBanner)
+            {
+                @await Html.PartialAsync("_PromoBanner", s)
+            }
+            else
+            {
+                @await Html.PartialAsync("_ProductRow", s)
+            }
+        }
+    }
+</div>

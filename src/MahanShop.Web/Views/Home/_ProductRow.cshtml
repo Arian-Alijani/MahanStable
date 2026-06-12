@@ -1,0 +1,22 @@
+@model HomeSectionViewModel
+@if (Model.Products.Count == 0) { return; }
+
+<section class="prow" aria-label="@Model.Title">
+    <div class="prow__head">
+        <h2 class="prow__title">@Model.Title</h2>
+        @if (!string.IsNullOrEmpty(Model.ViewAllUrl))
+        {
+            <a class="prow__all" href="@Model.ViewAllUrl">
+                مشاهده همه
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+            </a>
+        }
+    </div>
+
+    <div class="prow__scroller" data-carousel>
+        @foreach (var p in Model.Products)
+        {
+            @await Html.PartialAsync("_ProductCard", p)
+        }
+    </div>
+</section>

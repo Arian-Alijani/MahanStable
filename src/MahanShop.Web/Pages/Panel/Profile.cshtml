@@ -1,0 +1,135 @@
+@page
+@model MahanShop.Web.Pages.Panel.ProfileModel
+@{
+    ViewData["Title"] = "مشخصات حساب";
+    ViewData["PanelActive"] = "profile";
+    var initial = string.IsNullOrWhiteSpace(Model.Profile?.FullName) ? "؟" : Model.Profile!.FullName.Trim()[0].ToString();
+}
+@section Styles { <link rel="stylesheet" href="~/css/panel.css" asp-append-version="true" /> }
+
+<div class="container panel-shell">
+    <partial name="Panel/_PanelSidebar" />
+
+    <section class="panel-main">
+        @if (TempData["PanelOk"] is string ok)
+        {
+            <div class="panel-alert is-success">@ok</div>
+        }
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="panel-alert is-danger">
+                @foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div>@e.ErrorMessage</div>
+                }
+            </div>
+        }
+
+        <div class="panel-card">
+            <div class="panel-profile-hero">
+                <div class="panel-avatar panel-avatar--lg">@initial</div>
+                <h2 class="panel-profile-hero__name">@(string.IsNullOrWhiteSpace(Model.Profile?.FullName) ? "کاربر" : Model.Profile!.FullName)</h2>
+                <p class="panel-profile-hero__phone" dir="ltr">@Model.Profile?.PhoneNumber</p>
+            </div>
+
+            <div class="info-grid">
+                <!-- نام و ایمیل -->
+                <form method="post" asp-page-handler="Update" class="info-card">
+                    @Html.AntiForgeryToken()
+                    <div class="info-card__head">
+                        <div class="info-card__icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                        <div>
+                            <h3>اطلاعات هویتی</h3>
+                            <p>نام و ایمیل</p>
+                        </div>
+                    </div>
+                    <div class="info-field">
+                        <label for="fn">نام کامل</label>
+                        <input id="fn" name="FullName" value="@Model.FullName" class="panel-input" placeholder="نام و نام خانوادگی" />
+                    </div>
+                    <div class="info-field">
+                        <label for="em">ایمیل (اختیاری)</label>
+                        <input id="em" name="Email" value="@Model.Email" class="panel-input" dir="ltr" placeholder="example@mail.com" />
+                    </div>
+                    <button type="submit" class="btn-primary info-card__save">ذخیره تغییرات</button>
+                </form>
+
+                <!-- تغییر شماره -->
+                <div class="info-card">
+                    <div class="info-card__head">
+                        <div class="info-card__icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        </div>
+                        <div>
+                            <h3>شماره موبایل</h3>
+                            <p>تغییر با تایید پیامکی</p>
+                        </div>
+                    </div>
+
+                    <div class="info-current" dir="ltr">@Model.Profile?.PhoneNumber</div>
+
+                    @if (!Model.ShowOtpStep)
+                    {
+                        <form method="post" asp-page-handler="SendPhoneCode">
+                            @Html.AntiForgeryToken()
+                            <div class="info-field">
+                                <label for="np">شماره جدید</label>
+                                <input id="np" name="NewPhone" value="@Model.NewPhone" class="panel-input" dir="ltr" placeholder="09xxxxxxxxx" inputmode="numeric" />
+                            </div>
+                            <button type="submit" class="btn-outline info-card__save">ارسال کد تایید</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form method="post" asp-page-handler="VerifyPhone">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="NewPhone" value="@Model.PendingPhone" />
+                            <p class="info-hint">کد تایید به <b dir="ltr">@Model.PendingPhone</b> ارسال شد.</p>
+                            <div class="info-field">
+                                <label for="otp">کد تایید</label>
+                                <input id="otp" name="OtpCode" class="panel-input panel-input--otp" dir="ltr" inputmode="numeric" maxlength="6" autocomplete="one-time-code" autofocus />
+                            </div>
+                            <div class="info-card__row">
+                                <button type="submit" class="btn-primary">تایید و تغییر</button>
+                                <a href="/Panel/Profile" class="btn-outline">انصراف</a>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            <!-- آدرس‌ها -->
+            <div class="addr-section">
+                <div class="panel-head">
+                    <h3 class="panel-head__title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        آدرس‌های من
+                    </h3>
+                    <a href="/checkout" class="panel-head__link">+ افزودن آدرس</a>
+                </div>
+                @if (Model.Addresses.Count == 0)
+                {
+                    <p class="info-hint">آدرسی ثبت نشده. هنگام تسویه می‌توانید آدرس اضافه کنید.</p>
+                }
+                else
+                {
+                    <div class="addr-list">
+                        @foreach (var a in Model.Addresses)
+                        {
+                            <div class="addr-card">
+                                <div class="addr-card__top">
+                                    <b>@a.ReceiverName</b>
+                                    <span dir="ltr">@a.ReceiverPhone</span>
+                                </div>
+                                <p class="addr-card__line">@a.Province، @a.City — @a.FullAddress</p>
+                                <span class="addr-card__post">کد پستی: <span dir="ltr">@a.PostalCode</span></span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+</div>

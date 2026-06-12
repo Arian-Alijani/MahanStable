@@ -1,0 +1,82 @@
+@* هدر فروشگاه — لوگو، جستجو، سبد، ورود/ثبت‌نام، مگامنو. هیچ آیتم «محبوب‌ها». *@
+<header class="site-header">
+    <div class="header-top">
+        <div class="container header-top__inner">
+            <button class="icon-btn drawer-toggle d-lg-none" type="button" aria-label="باز کردن منو" data-drawer-open>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </button>
+
+            <a class="brand" href="/" aria-label="ماهان شاپ">
+                <svg class="brand__mark" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M9 13h6"/></svg>
+                <span class="brand__name">ماهان شاپ</span>
+            </a>
+
+            <form class="search" role="search" action="/search" method="get">
+                <svg class="search__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                <input class="search__input" type="search" name="q" placeholder="جستجوی محصول، برند یا دسته…" aria-label="جستجو" />
+            </form>
+
+            <div class="header-actions">
+                <div class="cart-wrap">
+                    <a class="icon-btn cart-btn" href="/cart" aria-label="سبد خرید">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.5 12.5a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L22 7H6"/></svg>
+                        <span class="cart-badge" data-cart-count>0</span>
+                    </a>
+                </div>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a class="btn-auth" href="/Panel" title="حساب کاربری">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                        <span>@User.Identity!.Name</span>
+                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                        <button type="submit" class="btn-auth btn-auth--logout" title="خروج">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn-auth" href="/Account/Login">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                        <span>ورود / ثبت‌نام</span>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="header-nav d-none d-lg-block">
+        <div class="container">
+            @await Component.InvokeAsync("CategoryMenu")
+        </div>
+    </div>
+</header>
+
+@* دراور موبایل *@
+<div class="drawer" data-drawer hidden>
+    <div class="drawer__backdrop" data-drawer-close></div>
+    <aside class="drawer__panel" role="dialog" aria-label="منوی موبایل">
+        <div class="drawer__head">
+            <span class="brand__name">ماهان شاپ</span>
+            <button class="icon-btn" type="button" aria-label="بستن منو" data-drawer-close>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+        </div>
+        <nav class="drawer__nav">
+            @await Component.InvokeAsync("CategoryMenu")
+        </nav>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="btn btn-outline-primary w-100 mt-3" href="/Panel">حساب کاربری</a>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="mt-2">
+                <button type="submit" class="btn btn-light w-100">خروج</button>
+            </form>
+        }
+        else
+        {
+            <a class="btn btn-primary w-100 mt-3" href="/Account/Login">ورود / ثبت‌نام</a>
+        }
+    </aside>
+</div>

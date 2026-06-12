@@ -1,0 +1,28 @@
+# Build
+bin/
+obj/
+publish/
+*.user
+
+# Logs
+logs/
+*.log
+
+# Secrets — NEVER commit real config
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json
+# keep the sample
+!appsettings.sample.json
+# local run scripts with real env secrets — NEVER commit
+run-local.cmd
+run-local.ps1
+
+# IDE
+.vs/
+.idea/
+*.suo
+
+# OS
+Thumbs.db
+.DS_Store

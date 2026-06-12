@@ -1,0 +1,37 @@
+@model VerifyViewModel
+@{
+    ViewData["Title"] = "تایید کد";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+}
+
+<div class="auth-shell">
+    <div class="auth-card">
+        <h1 class="auth-title">کد تایید</h1>
+        <p class="auth-sub">کد پیامک‌شده به <bdi dir="ltr">@Model.Phone</bdi> را وارد کنید.</p>
+
+        <form asp-action="Verify" method="post" novalidate>
+            <input type="hidden" asp-for="Phone" />
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <div asp-validation-summary="All" class="auth-errors"></div>
+
+            <label class="auth-label" asp-for="Code">کد تایید</label>
+            <input asp-for="Code" class="auth-input auth-code" type="text" inputmode="numeric"
+                   autocomplete="one-time-code" dir="ltr" maxlength="8" autofocus />
+
+            <label class="auth-label" asp-for="FullName">نام و نام خانوادگی <span class="auth-opt">(اختیاری)</span></label>
+            <input asp-for="FullName" class="auth-input" type="text" maxlength="200" />
+
+            <button type="submit" class="auth-btn">ورود</button>
+        </form>
+
+        <form asp-action="Login" method="post" class="auth-resend">
+            <input type="hidden" name="Phone" value="@Model.Phone" />
+            <input type="hidden" asp-for="ReturnUrl" />
+            <button type="submit" class="auth-link">ارسال مجدد کد</button>
+        </form>
+    </div>
+</div>
