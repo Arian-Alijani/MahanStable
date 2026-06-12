@@ -1,0 +1,35 @@
+@{
+    var pageTitle = ViewData["Title"] as string;
+    var fullTitle = string.IsNullOrEmpty(pageTitle) ? "پنل مدیریت | ماهان شاپ" : $"{pageTitle} | پنل مدیریت";
+}
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@fullTitle</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="admin-body">
+    @Html.AntiForgeryToken()
+    <div class="admin-shell">
+        @await Html.PartialAsync("_AdminSidebar")
+        <div class="admin-main">
+            <header class="admin-topbar">
+                <button type="button" class="admin-topbar__toggle" onclick="document.body.classList.toggle('admin-sidebar-open')" aria-label="منو">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="admin-topbar__title">@(pageTitle ?? "داشبورد")</div>
+                <a class="admin-topbar__store" href="/" target="_blank">مشاهده فروشگاه</a>
+            </header>
+            <main class="admin-content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
