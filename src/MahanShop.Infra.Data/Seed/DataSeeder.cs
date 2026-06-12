@@ -176,8 +176,9 @@ public static class DataSeeder
                 new HomeSection { Title = "", SectionType = HomeSectionType.PromoBanner, ImageUrl = "/img/banners/promo-wide.svg", MobileImageUrl = "/img/banners/promo-wide-m.svg", LinkUrl = "/case", Subtitle = "جدیدترین قاب‌ها", IsHalfWidth = false, DisplayOrder = 3 },
                 new HomeSection { Title = "جدیدترین محصولات", SectionType = HomeSectionType.ProductRow, ProductSource = HomeProductSource.Newest, MaxItems = 10, DisplayOrder = 4 },
                 new HomeSection { Title = "قاب و محافظ‌های جدید", SectionType = HomeSectionType.ProductRow, ProductSource = HomeProductSource.ByCategory, CategoryId = caseCat?.Id, MaxItems = 10, DisplayOrder = 5 },
+                // دو بنر با DisplayOrder یکسان (۶) → در یک ردیف، کنار هم، با تقسیم مساوی فضا
                 new HomeSection { Title = "", SectionType = HomeSectionType.PromoBanner, ImageUrl = "/img/banners/promo-charger.svg", LinkUrl = "/charger", Subtitle = "شارژرهای سریع", IsHalfWidth = true, DisplayOrder = 6 },
-                new HomeSection { Title = "", SectionType = HomeSectionType.PromoBanner, ImageUrl = "/img/banners/promo-airpod.svg", LinkUrl = "/airpod", Subtitle = "هندزفری بی‌سیم", IsHalfWidth = true, DisplayOrder = 7 }
+                new HomeSection { Title = "", SectionType = HomeSectionType.PromoBanner, ImageUrl = "/img/banners/promo-airpod.svg", LinkUrl = "/airpod", Subtitle = "هندزفری بی‌سیم", IsHalfWidth = true, DisplayOrder = 6 }
             );
         }
 

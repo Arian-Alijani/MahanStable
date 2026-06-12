@@ -1,23 +1,116 @@
 @page
+@using MahanShop.Domain.Enums
 @model MahanShop.Web.Areas.Admin.Pages.Home.IndexModel
 @{
     ViewData["Title"] = "صفحه اصلی";
     ViewData["AdminActive"] = "home";
 }
 
-<div class="admin-panel-box">
-    <div class="admin-panel-box__head">
-        <h2 class="admin-box-title">مدیریت صفحه اصلی</h2>
-    </div>
+@if (TempData["AdminOk"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
 
-    <div class="admin-empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <p class="admin-muted">
-            این بخش برای مدیریت محتوای صفحهٔ اصلی فروشگاه در نظر گرفته شده است.
-            <br />
-            در آینده ابزارهای کنترل صفحهٔ اصلی (مدیریت بنرها، چیدمان سکشن‌ها و دسته‌های منتخب) اینجا اضافه خواهند شد.
-        </p>
+<div class="admin-toolbar">
+    <h1 class="admin-page-title">مدیریت نوارهای صفحهٔ اصلی</h1>
+    <div class="admin-toolbar__actions">
+        <a asp-page="ProductRowCreate" class="btn btn-primary">نوار محصول جدید</a>
+        <a asp-page="BannerCreate" class="btn btn-outline-primary">بنر میانی جدید</a>
     </div>
+</div>
+
+<p class="admin-hint">
+    عدد ترتیب مشترک است؛ ۱ یعنی اولین ردیف از بالا. اگر دو <strong>بنر میانی</strong> عدد ترتیب یکسان داشته باشند،
+    در یک ردیف کنار هم با تقسیم مساوی فضا نمایش داده می‌شوند.
+</p>
+
+<div class="admin-panel-box">
+    <table class="table admin-table home-table">
+        <thead>
+            <tr>
+                <th style="width:96px">ترتیب</th>
+                <th>نوع</th>
+                <th>عنوان / محتوا</th>
+                <th>جزئیات</th>
+                <th style="width:90px">وضعیت</th>
+                <th style="width:230px"></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var s in Model.Sections)
+        {
+            var isRow = s.SectionType == HomeSectionType.ProductRow;
+            <tr class="@(s.IsActive ? "" : "is-off")">
+                <td>
+                    <form method="post" asp-page-handler="Order" class="home-order-form">
+                        <input type="hidden" name="id" value="@s.Id" />
+                        <input type="number" name="displayOrder" value="@s.DisplayOrder" min="0" class="home-order-input" aria-label="عدد ترتیب" />
+                        <button type="submit" class="home-order-save" title="ذخیره ترتیب" aria-label="ذخیره ترتیب">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    @if (isRow)
+                    {
+                        <span class="home-type home-type--row">نوار محصول</span>
+                    }
+                    else
+                    {
+                        <span class="home-type home-type--banner">بنر میانی</span>
+                    }
+                </td>
+                <td>
+                    @if (isRow)
+                    {
+                        <strong>@s.Title</strong>
+                    }
+                    else if (!string.IsNullOrEmpty(s.ImageUrl))
+                    {
+                        <img src="@s.ImageUrl" alt="@(s.Subtitle ?? "بنر")" class="home-thumb" loading="lazy" />
+                    }
+                    else
+                    {
+                        <span class="admin-muted">—</span>
+                    }
+                </td>
+                <td class="admin-muted">
+                    @if (isRow)
+                    {
+                        <span>منبع: @s.SourceLabel</span> <span class="home-dot">•</span> <span>حداکثر @s.MaxItems محصول</span>
+                    }
+                    else
+                    {
+                        @(s.Subtitle ?? "—")
+                    }
+                </td>
+                <td>
+                    @if (s.IsActive) { <span class="badge bg-success">فعال</span> }
+                    else { <span class="badge bg-secondary">غیرفعال</span> }
+                </td>
+                <td class="admin-actions">
+                    @if (isRow)
+                    {
+                        <a asp-page="ProductRowEdit" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    }
+                    else
+                    {
+                        <a asp-page="BannerEdit" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    }
+                    <form method="post" asp-page-handler="Toggle" asp-route-id="@s.Id" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">@(s.IsActive ? "غیرفعال" : "فعال")</button>
+                    </form>
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@s.Id" class="d-inline"
+                          onsubmit="return confirm('این نوار حذف شود؟');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.Sections.Count == 0)
+        {
+            <tr><td colspan="6" class="admin-muted text-center">هنوز نواری اضافه نشده است.</td></tr>
+        }
+        </tbody>
+    </table>
 </div>

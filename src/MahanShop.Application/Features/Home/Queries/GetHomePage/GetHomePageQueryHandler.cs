@@ -60,6 +60,7 @@ public class GetHomePageQueryHandler : IRequestHandler<GetHomePageQuery, HomePag
                 {
                     Title = s.Title,
                     SectionType = HomeSectionType.PromoBanner,
+                    DisplayOrder = s.DisplayOrder,
                     ImageUrl = s.ImageUrl,
                     MobileImageUrl = s.MobileImageUrl,
                     LinkUrl = s.LinkUrl,
@@ -76,15 +77,25 @@ public class GetHomePageQueryHandler : IRequestHandler<GetHomePageQuery, HomePag
             {
                 Title = s.Title,
                 SectionType = HomeSectionType.ProductRow,
+                DisplayOrder = s.DisplayOrder,
                 Products = products,
-                ViewAllUrl = s.ProductSource == HomeProductSource.ByCategory && s.Category != null
-                    ? "/" + s.Category.Slug
-                    : null
+                ViewAllUrl = BuildViewAllUrl(s)
             });
         }
 
         return vm;
     }
+
+    /// <summary>لینک «مشاهده همه» نوار بر اساس منبع محصولات → صفحهٔ کاتالوگ با فیلتر متناظر.</summary>
+    private static string? BuildViewAllUrl(HomeSection s) => s.ProductSource switch
+    {
+        HomeProductSource.ByCategory when s.Category != null
+            => "/products?CategorySlug=" + Uri.EscapeDataString(s.Category.Slug),
+        HomeProductSource.Newest => "/products?Sort=newest",
+        HomeProductSource.Discounted => "/products?Sort=newest&OnlyDiscounted=true",
+        HomeProductSource.BestSelling => "/products?Sort=popular",
+        _ => "/products"
+    };
 
     private async Task<List<ProductCardDto>> LoadProductsAsync(
         HomeSection s, IReadOnlyDictionary<int, int> soldCounts, CancellationToken ct)

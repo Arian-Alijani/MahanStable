@@ -1,0 +1,42 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Home.BannerCreateModel
+@{
+    ViewData["Title"] = "بنر میانی جدید";
+    ViewData["AdminActive"] = "home";
+}
+
+<h1 class="admin-page-title">بنر میانی جدید</h1>
+
+<div class="admin-panel-box admin-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <form method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label class="form-label">تصویر بنر (دسکتاپ)</label>
+            <input asp-for="ImageFile" type="file" accept="image/*" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">تصویر موبایل (اختیاری)</label>
+            <input asp-for="MobileImageFile" type="file" accept="image/*" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">متن جایگزین / توضیح کوتاه (اختیاری)</label>
+            <input asp-for="Subtitle" maxlength="200" class="form-control" placeholder="مثلاً: شارژرهای سریع" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">لینک مقصد (اختیاری)</label>
+            <input asp-for="LinkUrl" maxlength="500" class="form-control" placeholder="/products?CategorySlug=charger" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">عدد ترتیب (۱ = بالاترین؛ دو بنر با عدد یکسان کنار هم)</label>
+            <input asp-for="DisplayOrder" type="number" min="0" class="form-control" />
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">فعال</label>
+        </div>
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+</div>

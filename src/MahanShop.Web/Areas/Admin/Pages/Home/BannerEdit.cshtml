@@ -1,0 +1,52 @@
+@page "{id:int}"
+@model MahanShop.Web.Areas.Admin.Pages.Home.BannerEditModel
+@{
+    ViewData["Title"] = "ویرایش بنر میانی";
+    ViewData["AdminActive"] = "home";
+}
+
+<h1 class="admin-page-title">ویرایش بنر میانی</h1>
+
+<div class="admin-panel-box admin-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="ImageUrl" />
+        <input type="hidden" asp-for="MobileImageUrl" />
+
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <div class="mb-3">
+                <label class="form-label">تصویر فعلی</label>
+                <div><img src="@Model.ImageUrl" alt="بنر" class="home-preview" /></div>
+            </div>
+        }
+        <div class="mb-3">
+            <label class="form-label">جایگزینی تصویر بنر (دسکتاپ) — خالی بگذارید تا تغییر نکند</label>
+            <input asp-for="ImageFile" type="file" accept="image/*" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">جایگزینی تصویر موبایل (اختیاری)</label>
+            <input asp-for="MobileImageFile" type="file" accept="image/*" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">متن جایگزین / توضیح کوتاه</label>
+            <input asp-for="Subtitle" maxlength="200" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">لینک مقصد</label>
+            <input asp-for="LinkUrl" maxlength="500" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">عدد ترتیب (۱ = بالاترین؛ دو بنر با عدد یکسان کنار هم)</label>
+            <input asp-for="DisplayOrder" type="number" min="0" class="form-control" />
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">فعال</label>
+        </div>
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+</div>

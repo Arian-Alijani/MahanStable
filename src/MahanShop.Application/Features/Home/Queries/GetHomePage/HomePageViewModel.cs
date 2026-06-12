@@ -34,6 +34,9 @@ public class HomeSectionViewModel
     public string Title { get; set; } = null!;
     public HomeSectionType SectionType { get; set; }
 
+    /// <summary>عدد ترتیب مشترک بین نوار محصول و بنر میانی (۱ = اولین ردیف از بالا).</summary>
+    public int DisplayOrder { get; set; }
+
     // ProductRow
     public List<ProductCardDto> Products { get; set; } = new();
     public string? ViewAllUrl { get; set; }

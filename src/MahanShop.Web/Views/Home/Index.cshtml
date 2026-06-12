@@ -11,39 +11,41 @@
     @await Html.PartialAsync("_CategoryGrid", Model.FeaturedCategories)
 
     @{
-        // ردیف‌های محصول (ProductRow) از صفحهٔ اصلی حذف شده‌اند (به‌خواست کاربر).
-        // فقط بنرهای تبلیغاتی (PromoBanner) رندر می‌شوند؛ سکشن‌های نوع ProductRow نادیده گرفته می‌شوند.
+        // رندر یکپارچهٔ بدنه: نوارهای محصول و بنرهای میانی در یک ترتیب مشترک (DisplayOrder).
+        // بنرهایی که عدد ترتیب یکسان دارند، در یک ردیف کنار هم با تقسیم مساویِ فضا قرار می‌گیرند.
         var sections = Model.Sections;
         for (var i = 0; i < sections.Count; i++)
         {
             var s = sections[i];
 
-            // نادیده‌گرفتن کامل ردیف‌های محصول
-            if (s.SectionType != HomeSectionType.PromoBanner)
+            if (s.SectionType == HomeSectionType.ProductRow)
             {
+                @await Html.PartialAsync("_ProductRow", s)
                 continue;
             }
 
-            if (s.IsHalfWidth)
+            // PromoBanner — گروه‌بندی بنرهای هم‌ردیف (DisplayOrder یکسان) در یک ردیف
+            var group = new List<HomeSectionViewModel> { s };
+            while (i + 1 < sections.Count
+                && sections[i + 1].SectionType == HomeSectionType.PromoBanner
+                && sections[i + 1].DisplayOrder == s.DisplayOrder)
             {
-                // گروه‌بندی بنرهای half پشت‌سرهم → یک ردیف کنار هم
-                var group = new List<HomeSectionViewModel>();
-                while (i < sections.Count && sections[i].SectionType == HomeSectionType.PromoBanner && sections[i].IsHalfWidth)
-                {
-                    group.Add(sections[i]);
-                    i++;
-                }
-                i--; // جبران ++ حلقه بیرونی
-                <div class="promo-duo">
+                group.Add(sections[i + 1]);
+                i++;
+            }
+
+            if (group.Count == 1)
+            {
+                @await Html.PartialAsync("_PromoBanner", group[0])
+            }
+            else
+            {
+                <div class="promo-row" style="--cols:@group.Count">
                     @foreach (var g in group)
                     {
                         @await Html.PartialAsync("_PromoBanner", g)
                     }
                 </div>
-            }
-            else
-            {
-                @await Html.PartialAsync("_PromoBanner", s)
             }
         }
     }

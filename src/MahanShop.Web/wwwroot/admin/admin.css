@@ -137,3 +137,26 @@
 .admin-empty-state { display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; padding:40px 20px; color:#64748b; }
 .admin-empty-state svg { color:#94a3b8; }
 .admin-empty-state p { max-width:520px; line-height:2; margin:0; }
+
+/* ===== مدیریت صفحهٔ اصلی (نوارها/بنرها) ===== */
+.admin-toolbar__actions { display:flex; gap:8px; flex-wrap:wrap; }
+.admin-hint { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; font-size:13px; line-height:1.9; color:#475569; margin-bottom:16px; }
+.admin-hint strong { color:#1e293b; }
+
+.home-table td { vertical-align:middle; }
+.home-table tr.is-off { opacity:.55; }
+
+.home-order-form { display:flex; align-items:center; gap:6px; }
+.home-order-input { width:56px; padding:6px 8px; border:1px solid #cbd5e1; border-radius:8px; font:inherit; text-align:center; }
+.home-order-input:focus { outline:2px solid var(--admin-primary,#2563eb); outline-offset:1px; border-color:transparent; }
+.home-order-save { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:0; border-radius:8px; background:var(--admin-primary,#2563eb); color:#fff; cursor:pointer; transition:background .15s, transform .1s; }
+.home-order-save:hover { background:#1d4ed8; }
+.home-order-save:active { transform:scale(.92); }
+
+.home-type { display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap; }
+.home-type--row { background:#dbeafe; color:#1d4ed8; }
+.home-type--banner { background:#fef3c7; color:#b45309; }
+
+.home-thumb { width:120px; height:46px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0; }
+.home-preview { max-width:360px; width:100%; border-radius:10px; border:1px solid #e2e8f0; }
+.home-dot { color:#cbd5e1; margin-inline:4px; }

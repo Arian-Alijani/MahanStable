@@ -1,6 +1,6 @@
 @model HomeSectionViewModel
 
-<a class="promo @(Model.IsHalfWidth ? "promo--half" : "promo--full")" href="@(Model.LinkUrl ?? "#")">
+<a class="promo" href="@(Model.LinkUrl ?? "#")" aria-label="@(Model.Subtitle ?? Model.Title)">
     <picture>
         @if (!string.IsNullOrEmpty(Model.MobileImageUrl))
         {

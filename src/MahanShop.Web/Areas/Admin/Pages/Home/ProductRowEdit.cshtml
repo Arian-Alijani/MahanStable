@@ -1,0 +1,30 @@
+@page "{id:int}"
+@model MahanShop.Web.Areas.Admin.Pages.Home.ProductRowEditModel
+@{
+    ViewData["Title"] = "ویرایش نوار محصول";
+    ViewData["AdminActive"] = "home";
+    ViewData["Source"] = Model.ProductSource;
+    ViewData["CategoryId"] = Model.CategoryId;
+    ViewData["CategoryOptions"] = Model.CategoryOptions;
+    ViewData["Title2"] = Model.Title;
+    ViewData["MaxItems"] = Model.MaxItems;
+    ViewData["DisplayOrder"] = Model.DisplayOrder;
+    ViewData["IsActive"] = Model.IsActive;
+}
+
+<h1 class="admin-page-title">ویرایش نوار محصول</h1>
+
+<div class="admin-panel-box admin-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <form method="post">
+        <partial name="_ProductRowFields" />
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/admin/home-form.js" asp-append-version="true"></script>
+}
