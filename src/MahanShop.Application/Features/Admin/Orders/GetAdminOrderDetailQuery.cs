@@ -48,6 +48,7 @@ public class GetAdminOrderDetailQueryHandler : IRequestHandler<GetAdminOrderDeta
                     TotalAmount = o.TotalAmount,
                     DiscountAmount = o.DiscountAmount,
                     ShippingCost = o.ShippingCost,
+                    ShippingMethodName = o.ShippingMethodName,
                     FinalAmount = o.FinalAmount,
                     TrackingCode = o.TrackingCode,
                     CustomerName = o.User.FullName,

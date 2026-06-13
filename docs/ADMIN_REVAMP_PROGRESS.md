@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F3 (تب کنترل ویژگی یکپارچه + CRUD نوع پست) ✅ تمام. قدم بعد = F4 (چک‌اوت: انتخاب نوع پست + snapshot امن + فاکتور).**
+**فاز جاری: F4 (چک‌اوت: انتخاب نوع پست + snapshot امن + فاکتور) ✅ تمام. قدم بعد = F5 (بازطراحی فرم محصول ۱۱ بخش + چند‌مدلی + بدون‌برند).**
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -21,7 +21,7 @@
 - [x] **F1** — پوستهٔ ادمین: سایدبار ۶ تب + منوی فرعی + بازگشت به فروشگاه + hub کنترل‌ویژگی + ارتقای CSS shell.
 - [x] **F2** — Domain `ShippingMethod` + snapshot روی Order + Migration `Add_ShippingMethods` + seed.
 - [x] **F3** — تب کنترل ویژگی یکپارچه (برند/مدل/ویژگی/تگ/دسته) + CRUD نوع پست.
-- [ ] **F4** — چک‌اوت: انتخاب نوع پست + هزینهٔ سمت سرور + snapshot + فاکتور/سفارش نوع‌پست.
+- [x] **F4** — چک‌اوت: انتخاب نوع پست + هزینهٔ سمت سرور + snapshot + فاکتور/سفارش نوع‌پست.
 - [ ] **F5** — فرم محصول ۱۱ بخش + چند‌مدلی + بدون‌برند.
 - [ ] **F6** — تب محصولات: باکس آماری + جست‌وجو/فیلتر.
 - [ ] **F7** — تب موجودی: واریانت کامل، کنترل تفکیکی.
@@ -100,7 +100,30 @@
 - **migration:** هیچ. (زیرساخت DB در F2 کامل شد.)
 - **build:** ✅ `bash tools/build.sh` = **0 Error** (۵ warning همگی pre-existing از فازهای قبل). Domestic-only audit: صفر URL خارجی در فایل‌های جدید.
 - **نکتهٔ امنیت:** نرخ ارسال فقط از صفحهٔ Shipping ادمین تنظیم می‌شود. یادآوری برای F4: هنگام PlaceOrder، `ShippingMethod.Cost` از DB خوانده شود (نه از فرم client).
-- **قدم بعد = F4** (چک‌اوت: انتخاب نوع پست توسط کاربر + هزینه سمت سرور + snapshot امن + نمایش در سفارش/فاکتور).
+- **قدم بعد = F4** (چک‌اوت: انتخاب نوع پست توسط کاربر + هزینه سمت سرور + snapshot امن + نمایش در سفارش/فاکتور). ← **انجام شد (F4)**
+
+### F4 — چک‌اوت + فاکتور با نوع پست (امن) ✅ (2026-06-13)
+- **چه شد:** کاربر هنگام ثبت سفارش نوع پست را انتخاب می‌کند؛ هزینه از DB خوانده و snapshot می‌شود؛ در سفارش، صفحه‌ی سفارش کاربر، صفحه‌ی سفارش ادمین، و فاکتور PDF ثبت می‌شود. هاردکد `ShippingCost = 0` (خط ۹۸ قدیم) حذف شد.
+- **فایل‌های جدید:**
+  - `src/MahanShop.Application/Features/Cart/Queries/GetShippingMethods/GetShippingMethodsForCheckoutQuery.cs` — کوئری لیست روش‌های ارسال فعال (`IsActive`) مرتب‌شده بر اساس `DisplayOrder`.
+- **فایل‌های تغییریافته:**
+  - `src/MahanShop.Application/Features/Cart/Commands/PlaceOrder/PlaceOrderCommand.cs` — `ShippingMethodId` اضافه شد به record.
+  - `src/MahanShop.Application/Features/Cart/Commands/PlaceOrder/PlaceOrderCommandValidator.cs` — `ShippingMethodId > 0` اعتبارسنجی شد.
+  - `src/MahanShop.Application/Features/Cart/Commands/PlaceOrder/PlaceOrderCommandHandler.cs` — روش ارسال از DB خوانده + اعتبارسنجی فعال‌بودن + snapshot `ShippingMethodId/ShippingMethodName/ShippingCost=method.Cost` + `FinalAmount = payable + shippingCost`.
+  - `src/MahanShop.Application/Features/Account/Queries/GetOrderDetail/GetOrderDetailQuery.cs` — `ShippingMethodName` به `OrderDetailDto` + به projection اضافه شد.
+  - `src/MahanShop.Application/Features/Admin/Orders/GetAdminOrderDetailQuery.cs` — `ShippingMethodName` به projection اضافه شد.
+  - `src/MahanShop.Web/Models/Checkout/CheckoutViewModels.cs` — `ShippingMethods` + `SelectedShippingMethodId` + `SelectedShippingCost` + `FinalPayableAmount` اضافه شد.
+  - `src/MahanShop.Web/Controllers/CheckoutController.cs` — بارگذاری `ShippingMethods` از DB در `BuildVm`؛ دریافت `shippingMethodId` از فرم `Place`؛ پاس به `PlaceOrderCommand`.
+  - `src/MahanShop.Web/Views/Checkout/Index.cshtml` — بازنویسی: بخش انتخاب روش ارسال (radio + قیمت) + `hidden shippingMethodId` در فرم `place-form` + JS live-update مبلغ پرداختی در خلاصه سفارش بدون reload.
+  - `src/MahanShop.Web/wwwroot/css/cart.css` — استایل‌های `.shipping-item` + `.shipping-item--selected` + `.shipping-item__cost` + `.shipping-item__free`.
+  - `src/MahanShop.Web/Services/InvoicePdfService.cs` — ردیف «ارسال ({ShippingMethodName})» در فاکتور PDF (با fallback به «هزینه ارسال» اگر name خالی).
+  - `src/MahanShop.Web/Pages/Panel/OrderDetail.cshtml` — نمایش نام روش ارسال در خلاصه مبلغ.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Orders/Detail.cshtml` — نمایش نام روش ارسال در جدول اقلام.
+- **امنیت:** نرخ ارسال فقط از DB (`method.Cost`) snapshot می‌شود — هیچ مبلغی از client پذیرفته نمی‌شود. `ShippingMethodId` جعلی/غیرفعال → خطا صریح (`Fail("...")`).
+- **لمس فروشگاه عمومی (صریح):** `CheckoutController`, `Views/Checkout/Index.cshtml`, `Cart/Commands/PlaceOrder/*`, `Cart/Queries/GetShippingMethods/`, `Services/InvoicePdfService.cs`, `Pages/Panel/OrderDetail.cshtml` — تمامی در مرز مجاز «استثناهای ناگزیر» روادمپ (قانون ۲).
+- **migration:** هیچ. (زیرساخت DB در F2 کامل شد؛ `ShippingMethodId?`/`ShippingMethodName?` قبلاً به `Orders` اضافه شده.)
+- **build:** ✅ `bash tools/build.sh` = **0 Error** (5 warning همگی pre-existing). JS: `bash tools/check-js.sh` = 10 passed, 0 failed. Domestic-only audit: صفر URL خارجی.
+- **قدم بعد = F5** (بازطراحی فرم افزودن/ویرایش محصول با ۱۱ بخش + چند‌مدلی + بدون‌برند).
 
 ---
 

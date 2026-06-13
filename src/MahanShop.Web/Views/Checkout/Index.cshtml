@@ -24,6 +24,8 @@
                 @if (Model.Addresses.Count > 0)
                 {
                     <form asp-controller="Checkout" asp-action="Place" method="post" id="place-form">
+                        <input type="hidden" name="shippingMethodId" id="place-form-shipping-id"
+                               value="@Model.SelectedShippingMethodId" />
                         <div class="addr-list">
                             @foreach (var a in Model.Addresses)
                             {
@@ -48,6 +50,7 @@
                 <details class="addr-new" @(Model.Addresses.Count == 0 ? "open" : "")>
                     <summary>افزودن آدرس جدید</summary>
                     <form asp-controller="Checkout" asp-action="AddAddress" method="post" class="addr-form">
+                        <input type="hidden" name="SelectedShippingMethodId" value="@Model.SelectedShippingMethodId" />
                         <div class="addr-form__grid">
                             <div>
                                 <label asp-for="NewAddress.Province"></label>
@@ -79,6 +82,50 @@
                 </details>
             </section>
 
+            @if (Model.ShippingMethods.Count > 0)
+            {
+                <section class="checkout-card">
+                    <h2 class="checkout-card__title">روش ارسال</h2>
+                    <div class="shipping-list" id="shipping-list">
+                        @foreach (var sm in Model.ShippingMethods)
+                        {
+                            <label class="shipping-item @(sm.Id == Model.SelectedShippingMethodId ? "shipping-item--selected" : "")"
+                                   data-cost="@sm.Cost"
+                                   data-id="@sm.Id">
+                                <input type="radio" name="shippingMethodId" value="@sm.Id"
+                                       @(sm.Id == Model.SelectedShippingMethodId ? "checked" : "")
+                                       class="shipping-radio" />
+                                <div class="shipping-item__body">
+                                    <span class="shipping-item__name">@sm.Name</span>
+                                    @if (!string.IsNullOrEmpty(sm.Description))
+                                    {
+                                        <span class="shipping-item__desc">@sm.Description</span>
+                                    }
+                                </div>
+                                <span class="shipping-item__cost">
+                                    @if (sm.Cost == 0)
+                                    {
+                                        <span class="shipping-item__free">رایگان</span>
+                                    }
+                                    else
+                                    {
+                                        @sm.Cost.ToString("#,0")
+                                        <small>تومان</small>
+                                    }
+                                </span>
+                            </label>
+                        }
+                    </div>
+                </section>
+            }
+            else
+            {
+                <section class="checkout-card">
+                    <h2 class="checkout-card__title">روش ارسال</h2>
+                    <p class="checkout-empty-addr">در حال حاضر روشی برای ارسال تعریف نشده. لطفاً با پشتیبانی تماس بگیرید.</p>
+                </section>
+            }
+
             <section class="checkout-card">
                 <h2 class="checkout-card__title">اقلام سفارش</h2>
                 <div class="checkout-items">
@@ -102,18 +149,77 @@
             {
                 <div class="cart-summary__row cart-summary__row--off"><span>تخفیف</span><span>−@Model.Cart.DiscountAmount.ToString("#,0") تومان</span></div>
             }
-            <div class="cart-summary__row"><span>هزینه ارسال</span><span>رایگان</span></div>
-            <div class="cart-summary__row cart-summary__row--pay"><span>قابل پرداخت</span><span>@Model.Cart.PayableAmount.ToString("#,0") تومان</span></div>
+            <div class="cart-summary__row" id="summary-shipping-row">
+                <span>هزینه ارسال</span>
+                <span id="summary-shipping-cost">
+                    @if (Model.SelectedShippingCost == 0)
+                    {
+                        <text>رایگان</text>
+                    }
+                    else
+                    {
+                        @Model.SelectedShippingCost.ToString("#,0")
+                        <text> تومان</text>
+                    }
+                </span>
+            </div>
+            <div class="cart-summary__row cart-summary__row--pay">
+                <span>قابل پرداخت</span>
+                <span id="summary-final-amount">@Model.FinalPayableAmount.ToString("#,0") تومان</span>
+            </div>
 
-            @if (Model.Addresses.Count > 0)
+            @if (Model.Addresses.Count > 0 && Model.ShippingMethods.Count > 0)
             {
                 <button type="submit" form="place-form" class="btn btn-primary w-100 mt-3">ثبت سفارش</button>
                 <p class="checkout-note">پرداخت آنلاین در مرحله بعد فعال می‌شود.</p>
             }
-            else
+            else if (Model.Addresses.Count == 0)
             {
                 <button type="button" class="btn btn-primary w-100 mt-3" disabled>ابتدا آدرس اضافه کنید</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-primary w-100 mt-3" disabled>روش ارسال موجود نیست</button>
             }
         </aside>
     </div>
 </div>
+
+@section Scripts {
+<script>
+(function () {
+    var payableBase = @Model.Cart.PayableAmount;
+
+    function formatMoney(n) {
+        return n.toLocaleString('fa-IR') + ' تومان';
+    }
+
+    function updateSummary(cost) {
+        var final = payableBase + cost;
+        var costEl = document.getElementById('summary-shipping-cost');
+        var finalEl = document.getElementById('summary-final-amount');
+        var hiddenId = document.getElementById('place-form-shipping-id');
+        if (costEl) costEl.textContent = cost === 0 ? 'رایگان' : cost.toLocaleString('fa-IR') + ' تومان';
+        if (finalEl) finalEl.textContent = final.toLocaleString('fa-IR') + ' تومان';
+    }
+
+    // sync hidden shippingMethodId in place-form when radio changes
+    var radios = document.querySelectorAll('.shipping-radio');
+    radios.forEach(function (r) {
+        r.addEventListener('change', function () {
+            var label = r.closest('.shipping-item');
+            var cost = label ? parseInt(label.getAttribute('data-cost') || '0', 10) : 0;
+            var id = label ? label.getAttribute('data-id') : '';
+            // update place-form hidden input
+            var hiddenId = document.getElementById('place-form-shipping-id');
+            if (hiddenId) hiddenId.value = id;
+            // update summary
+            updateSummary(cost);
+            // visual active state
+            document.querySelectorAll('.shipping-item').forEach(function (l) { l.classList.remove('shipping-item--selected'); });
+            if (label) label.classList.add('shipping-item--selected');
+        });
+    });
+}());
+</script>
+}

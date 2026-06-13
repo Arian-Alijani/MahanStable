@@ -65,7 +65,10 @@
                 {
                     <div class="od-summary__row"><span>تخفیف</span><span>- @Money(o.DiscountAmount)</span></div>
                 }
-                <div class="od-summary__row"><span>هزینه ارسال</span><span>@Money(o.ShippingCost)</span></div>
+                <div class="od-summary__row">
+                    <span>@(string.IsNullOrEmpty(o.ShippingMethodName) ? "هزینه ارسال" : $"ارسال ({o.ShippingMethodName})")</span>
+                    <span>@(o.ShippingCost == 0 ? "رایگان" : Money(o.ShippingCost))</span>
+                </div>
                 <div class="od-summary__row od-summary__total"><span>مبلغ پرداختی</span><span>@Money(o.FinalAmount)</span></div>
             </div>
 

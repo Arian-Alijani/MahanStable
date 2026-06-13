@@ -88,6 +88,16 @@ public class PlaceOrderCommandHandler : IRequestHandler<PlaceOrderCommand, Place
         if (orderItems.Count == 0)
             return Fail("سبد خرید خالی است.");
 
+        // بارگیری و اعتبارسنجی روش ارسال از DB — نرخ از client قبول نمی‌شود (امن)
+        var shippingMethod = await _db.ShippingMethods
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == request.ShippingMethodId && s.IsActive, ct);
+        if (shippingMethod is null)
+            return Fail("روش ارسال انتخابی معتبر نیست. لطفاً یک روش ارسال فعال انتخاب کنید.");
+
+        long shippingCost = shippingMethod.Cost;
+        long finalAmount = payable + shippingCost;
+
         var order = new Order
         {
             OrderCode = GenerateOrderCode(),
@@ -95,8 +105,10 @@ public class PlaceOrderCommandHandler : IRequestHandler<PlaceOrderCommand, Place
             AddressId = request.AddressId,
             TotalAmount = total,
             DiscountAmount = total - payable,
-            ShippingCost = 0,
-            FinalAmount = payable,
+            ShippingMethodId = shippingMethod.Id,
+            ShippingMethodName = shippingMethod.Name,  // snapshot نام (تغییرناپذیر بعد ثبت)
+            ShippingCost = shippingCost,               // snapshot نرخ از DB (نه از client)
+            FinalAmount = finalAmount,
             Status = OrderStatus.Pending,
             Items = orderItems
         };

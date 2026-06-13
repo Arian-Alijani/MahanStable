@@ -18,6 +18,7 @@ public class OrderDetailDto
     public long TotalAmount { get; set; }
     public long DiscountAmount { get; set; }
     public long ShippingCost { get; set; }
+    public string? ShippingMethodName { get; set; }  // snapshot نام روش ارسال (F4)
     public long FinalAmount { get; set; }
     public string? TrackingCode { get; set; }
 
@@ -61,6 +62,7 @@ public class GetOrderDetailQueryHandler : IRequestHandler<GetOrderDetailQuery, O
                 TotalAmount = o.TotalAmount,
                 DiscountAmount = o.DiscountAmount,
                 ShippingCost = o.ShippingCost,
+                ShippingMethodName = o.ShippingMethodName,
                 FinalAmount = o.FinalAmount,
                 TrackingCode = o.TrackingCode,
                 CustomerName = o.User.FullName,
