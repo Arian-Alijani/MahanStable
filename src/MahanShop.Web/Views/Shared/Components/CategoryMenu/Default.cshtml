@@ -1,7 +1,19 @@
 @model List<MenuCategoryDto>
+@{
+    // مسیر فعلی برای فعال‌سازی «تمام محصولات» وقتی روی صفحهٔ کاتالوگ بدون دستهٔ خاص هستیم
+    var path = (Context.Request.Path.Value ?? string.Empty).TrimEnd('/').ToLowerInvariant();
+    var hasCategory = Context.Request.Query.ContainsKey("CategorySlug");
+    var allActive = (path == "/products" && !hasCategory);
+}
 
 <nav class="mega" aria-label="دسته‌بندی محصولات">
     <ul class="mega-root">
+        <li class="mega-item mega-item--all">
+            <a class="mega-link mega-link--all @(allActive ? "is-active" : "")" href="/products" aria-current="@(allActive ? "page" : null)">
+                <svg class="mega-link__icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                تمام محصولات
+            </a>
+        </li>
         @foreach (var c in Model)
         {
             <li class="mega-item">
