@@ -3,131 +3,55 @@
 @{
     ViewData["Title"] = "محصول جدید";
     ViewData["AdminActive"] = "products";
-    var mode = (ViewData["WizardMode"] as string) ?? "simple";
     var wizard = Model.Wizard;
 }
 
-<div class="admin-panel-box admin-form" id="product-wizard"
-     data-wizard='@System.Text.Json.JsonSerializer.Serialize(wizard)'>
+<div class="admin-panel-box admin-form" id="product-create-form">
 
-    <div asp-validation-summary="All" class="text-danger"></div>
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-    <!-- انتخاب نوع محصول -->
+    <!-- ════ تب‌ها ════ -->
+    <div class="prod-form-tabs" id="create-tabs">
+        <button type="button" class="prod-form-tab active" data-tab="tab-basic">اطلاعات پایه</button>
+        <button type="button" class="prod-form-tab" data-tab="tab-price">قیمت و موجودی</button>
+        <button type="button" class="prod-form-tab disabled" title="پس از ذخیره در دسترس است" disabled>مشخصات فنی</button>
+        <button type="button" class="prod-form-tab disabled" title="پس از ذخیره در دسترس است" disabled>مدل‌ها</button>
+        <button type="button" class="prod-form-tab disabled" title="پس از ذخیره در دسترس است" disabled>تصاویر</button>
+    </div>
+
+    <!-- ════ انتخاب نوع محصول (بالای فرم) ════ -->
     <div class="mb-4">
         <label class="form-label fw-bold">نوع محصول</label>
         <div class="btn-group" role="group" id="wizard-mode-toggle">
             <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-simple" value="simple"
-                   autocomplete="off" @(mode == "simple" ? "checked" : "") />
+                   autocomplete="off" checked />
             <label class="btn btn-outline-primary" for="mode-simple">ساده (یک محصول)</label>
 
             <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-multi" value="multi"
-                   autocomplete="off" @(mode == "multi" ? "checked" : "")
+                   autocomplete="off"
                    @(wizard.HasBrandModelAttributes ? "" : "disabled") />
             <label class="btn btn-outline-primary" for="mode-multi">چندبرندی (تولید خودکار گزینه‌ها)</label>
         </div>
         @if (!wizard.HasBrandModelAttributes)
         {
             <p class="admin-muted mt-2 mb-0">
-                برای استفاده از حالت چندبرندی، ابتدا در «ویژگی‌های متغیر» یک ویژگی از نوع «برند» و یک ویژگی از نوع «مدل» تعریف کنید و مدل‌ها را به برندشان وصل کنید.
+                برای استفاده از حالت چندبرندی، ابتدا در «ویژگی‌های متغیر» یک ویژگی از نوع «برند» و یک ویژگی از نوع «مدل» تعریف کنید.
             </p>
         }
     </div>
 
-    <!-- ============ مسیر ساده ============ -->
+    <!-- ════════════════ مسیر ساده ════════════════ -->
     <form method="post" asp-page-handler="Simple" id="form-simple" class="wizard-pane" data-mode="simple">
-        <div class="mb-3">
-            <label class="form-label">عنوان</label>
-            <input asp-for="Title" class="form-control" />
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">برند</label>
-                <select asp-for="BrandId" class="form-select">
-                    <option value="">— انتخاب برند —</option>
-                    @foreach (var b in Model.Brands)
-                    {
-                        <option value="@b.Id">@b.Name</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">دسته</label>
-                <select asp-for="CategoryId" class="form-select">
-                    <option value="">— انتخاب دسته —</option>
-                    @foreach (var c in Model.Categories)
-                    {
-                        <option value="@c.Id">@(new string('—', c.Depth)) @c.Name</option>
-                    }
-                </select>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label class="form-label">قیمت (تومان)</label>
-                <input asp-for="Price" type="number" class="form-control" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">قیمت با تخفیف (اختیاری)</label>
-                <input asp-for="DiscountPrice" type="number" class="form-control" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">موجودی</label>
-                <input asp-for="Stock" type="number" class="form-control" />
-            </div>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">توضیح کوتاه</label>
-            <input asp-for="ShortDescription" class="form-control" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">توضیحات</label>
-            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">عنوان متا (SEO)</label>
-                <input asp-for="MetaTitle" class="form-control" />
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">توضیح متا (SEO)</label>
-                <input asp-for="MetaDescription" class="form-control" />
-            </div>
-        </div>
-        <div class="form-check mb-2">
-            <input asp-for="IsActive" class="form-check-input" />
-            <label class="form-check-label">فعال</label>
-        </div>
-        <div class="form-check mb-3">
-            <input asp-for="IsFeatured" class="form-check-input" />
-            <label class="form-check-label">محصول منتخب</label>
-        </div>
-        <div class="admin-form__actions">
-            <button type="submit" class="btn btn-primary">ذخیره و ادامه</button>
-            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
-        </div>
-    </form>
 
-    <!-- ============ مسیر چندبرندی ============ -->
-    @if (wizard.HasBrandModelAttributes)
-    {
-        <form method="post" asp-page-handler="Multi" id="form-multi" class="wizard-pane d-none" data-mode="multi">
+        <!-- تب: اطلاعات پایه -->
+        <div class="prod-form-pane active" id="tab-basic">
             <div class="mb-3">
-                <label class="form-label">عنوان</label>
-                <input asp-for="Title" class="form-control" />
+                <label class="form-label">عنوان محصول <span class="text-danger">*</span></label>
+                <input asp-for="Title" class="form-control" placeholder="مثال: گوشی سامسونگ Galaxy S24" />
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">برند اصلی محصول</label>
-                    <select asp-for="BrandId" class="form-select">
-                        <option value="">— انتخاب برند —</option>
-                        @foreach (var b in Model.Brands)
-                        {
-                            <option value="@b.Id">@b.Name</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">دسته</label>
+                    <label class="form-label">دسته‌بندی <span class="text-danger">*</span></label>
                     <select asp-for="CategoryId" class="form-select">
                         <option value="">— انتخاب دسته —</option>
                         @foreach (var c in Model.Categories)
@@ -136,16 +60,148 @@
                         }
                     </select>
                 </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">برند</label>
+                    <select asp-for="BrandId" class="form-select">
+                        <option value="">— انتخاب برند —</option>
+                        @foreach (var b in Model.Brands)
+                        {
+                            <option value="@b.Id">@b.Name</option>
+                        }
+                    </select>
+                    <div class="form-text admin-muted">در صورت نداشتن برند، «بدون برند» را انتخاب کنید.</div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">توضیح کوتاه</label>
+                <input asp-for="ShortDescription" class="form-control" placeholder="یک جملهٔ کوتاه توصیفی (اختیاری)" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">توضیحات کامل</label>
+                <textarea asp-for="Description" class="form-control" rows="5" placeholder="توضیحات تکمیلی محصول (اختیاری)"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">عنوان متا (SEO)</label>
+                    <input asp-for="MetaTitle" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">توضیح متا (SEO)</label>
+                    <input asp-for="MetaDescription" class="form-control" />
+                </div>
+            </div>
+            <div class="d-flex gap-4 mb-3">
+                <div class="form-check">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label class="form-check-label">فعال</label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="IsFeatured" class="form-check-input" />
+                    <label class="form-check-label">محصول منتخب</label>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-primary" onclick="switchCreateTab('tab-price')">بعدی: قیمت و موجودی ←</button>
+            </div>
+        </div>
+
+        <!-- تب: قیمت و موجودی -->
+        <div class="prod-form-pane" id="tab-price">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">قیمت (تومان) <span class="text-danger">*</span></label>
+                    <input asp-for="Price" type="number" min="0" class="form-control" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">قیمت با تخفیف (اختیاری)</label>
+                    <input asp-for="DiscountPrice" type="number" min="0" class="form-control" />
+                    <div class="form-text admin-muted">باید کمتر از قیمت اصلی باشد.</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">موجودی</label>
+                    <input asp-for="Stock" type="number" min="0" class="form-control" />
+                    <div class="form-text admin-muted">برای محصول چندمدلی، بعد از ذخیره در تب «مدل‌ها» تنظیم می‌شود.</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-2">
+                <button type="button" class="btn btn-outline-secondary" onclick="switchCreateTab('tab-basic')">← قبلی</button>
+                <button type="submit" class="btn btn-primary">ذخیره و ادامه</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+            </div>
+        </div>
+
+    </form>
+
+    <!-- ════════════════ مسیر چندبرندی ════════════════ -->
+    @if (wizard.HasBrandModelAttributes)
+    {
+        <form method="post" asp-page-handler="Multi" id="form-multi" class="wizard-pane d-none" data-mode="multi"
+              data-wizard='@System.Text.Json.JsonSerializer.Serialize(wizard)'>
+
+            <!-- تب: اطلاعات پایه (چندبرندی) -->
+            <div class="prod-form-pane active" id="tab-basic-multi">
+                <div class="mb-3">
+                    <label class="form-label">عنوان محصول <span class="text-danger">*</span></label>
+                    <input asp-for="Title" class="form-control" placeholder="عنوان کلی محصول" />
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">دسته‌بندی <span class="text-danger">*</span></label>
+                        <select asp-for="CategoryId" class="form-select">
+                            <option value="">— انتخاب دسته —</option>
+                            @foreach (var c in Model.Categories)
+                            {
+                                <option value="@c.Id">@(new string('—', c.Depth)) @c.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">برند اصلی محصول</label>
+                        <select asp-for="BrandId" class="form-select">
+                            <option value="">— انتخاب برند —</option>
+                            @foreach (var b in Model.Brands)
+                            {
+                                <option value="@b.Id">@b.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">توضیح کوتاه</label>
+                    <input asp-for="ShortDescription" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">توضیحات کامل</label>
+                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">عنوان متا (SEO)</label>
+                        <input asp-for="MetaTitle" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">توضیح متا (SEO)</label>
+                        <input asp-for="MetaDescription" class="form-control" />
+                    </div>
+                </div>
+                <div class="d-flex gap-4 mb-3">
+                    <div class="form-check">
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label class="form-check-label">فعال</label>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="IsFeatured" class="form-check-input" />
+                        <label class="form-check-label">محصول منتخب</label>
+                    </div>
+                </div>
             </div>
 
-            <!-- انتخاب برندها و گوشی‌ها -->
+            <!-- انتخاب مدل‌ها + رنگ‌ها -->
             <div class="mb-3">
-                <label class="form-label fw-bold">گوشی‌ها (گروه‌بندی‌شده بر اساس برند)</label>
+                <label class="form-label fw-bold">مدل‌ها (گروه‌بندی‌شده بر اساس برند)</label>
                 @if (wizard.UnlinkedModelCount > 0)
                 {
-                    <p class="admin-muted">
-                        @wizard.UnlinkedModelCount مدل هنوز به هیچ برندی وصل نشده‌اند و اینجا نمایش داده نمی‌شوند.
-                    </p>
+                    <p class="admin-muted">@wizard.UnlinkedModelCount مدل هنوز به هیچ برندی وصل نشده‌اند.</p>
                 }
                 <div class="wizard-brand-list border rounded p-2">
                     @foreach (var b in wizard.Brands)
@@ -175,11 +231,10 @@
                 </div>
             </div>
 
-            <!-- رنگ‌ها (اختیاری) -->
             @if (wizard.Colors.Count > 0)
             {
                 <div class="mb-3">
-                    <label class="form-label fw-bold">رنگ‌ها (اختیاری — برای هر مدل ضرب می‌شود)</label>
+                    <label class="form-label fw-bold">رنگ‌ها (اختیاری)</label>
                     <div class="border rounded p-2">
                         @foreach (var c in wizard.Colors)
                         {
@@ -200,50 +255,24 @@
             }
 
             <div class="alert alert-info py-2" id="wizard-variant-summary">
-                با انتخاب گوشی‌ها، تعداد گزینه‌هایی که ساخته می‌شود اینجا نمایش داده می‌شود.
+                با انتخاب مدل‌ها، تعداد گزینه‌هایی که ساخته می‌شود اینجا نمایش داده می‌شود.
             </div>
 
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">قیمت اولیهٔ همهٔ گزینه‌ها (تومان)</label>
-                    <input asp-for="BasePrice" type="number" class="form-control" />
+                    <input asp-for="BasePrice" type="number" min="0" class="form-control" />
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">قیمت با تخفیف اولیه (اختیاری)</label>
-                    <input asp-for="BaseDiscountPrice" type="number" class="form-control" />
+                    <input asp-for="BaseDiscountPrice" type="number" min="0" class="form-control" />
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">موجودی اولیهٔ هر گزینه</label>
-                    <input asp-for="BaseStock" type="number" class="form-control" />
+                    <input asp-for="BaseStock" type="number" min="0" class="form-control" />
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">توضیح کوتاه</label>
-                <input asp-for="ShortDescription" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">توضیحات</label>
-                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">عنوان متا (SEO)</label>
-                    <input asp-for="MetaTitle" class="form-control" />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">توضیح متا (SEO)</label>
-                    <input asp-for="MetaDescription" class="form-control" />
-                </div>
-            </div>
-            <div class="form-check mb-2">
-                <input asp-for="IsActive" class="form-check-input" />
-                <label class="form-check-label">فعال</label>
-            </div>
-            <div class="form-check mb-3">
-                <input asp-for="IsFeatured" class="form-check-input" />
-                <label class="form-check-label">محصول منتخب</label>
-            </div>
             <div class="admin-form__actions">
                 <button type="submit" class="btn btn-primary">ساخت محصول و تولید گزینه‌ها</button>
                 <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
@@ -254,4 +283,19 @@
 
 @section Scripts {
     <script src="~/admin/product-wizard.js" asp-append-version="true"></script>
+    <script>
+        // تب‌بندی فرم ساده
+        function switchCreateTab(tabId) {
+            document.querySelectorAll('#form-simple .prod-form-pane').forEach(p => p.classList.remove('active'));
+            var pane = document.getElementById(tabId);
+            if (pane) pane.classList.add('active');
+            // آپدیت دکمه‌های تب
+            document.querySelectorAll('#create-tabs .prod-form-tab:not(.disabled)').forEach(t => {
+                t.classList.toggle('active', t.dataset.tab === tabId);
+            });
+        }
+        document.querySelectorAll('#create-tabs .prod-form-tab:not(.disabled)').forEach(function(btn) {
+            btn.addEventListener('click', function() { switchCreateTab(this.dataset.tab); });
+        });
+    </script>
 }

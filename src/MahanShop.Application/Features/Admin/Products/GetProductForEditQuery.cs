@@ -37,6 +37,15 @@ public class GetProductForEditQueryHandler : IRequestHandler<GetProductForEditQu
                     .Select(i => new ProductImageDto
                     {
                         Id = i.Id, Url = i.Url, Alt = i.Alt, IsMain = i.IsMain, DisplayOrder = i.DisplayOrder
+                    }).ToList(),
+                Features = p.Features
+                    .OrderBy(pf => pf.Feature.DisplayOrder).ThenBy(pf => pf.Feature.Name)
+                    .Select(pf => new ProductFeatureItemDto
+                    {
+                        Id = pf.Id,
+                        FeatureId = pf.FeatureId,
+                        FeatureName = pf.Feature.Name,
+                        Value = pf.Value
                     }).ToList()
             })
             .FirstOrDefaultAsync(ct);
