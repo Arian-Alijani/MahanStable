@@ -11,12 +11,20 @@
     @await Html.PartialAsync("_CategoryGrid", Model.FeaturedCategories)
 
     @{
+        // ردیف‌های محصول (ProductRow) از صفحهٔ اصلی حذف شده‌اند (به‌خواست کاربر).
+        // فقط بنرهای تبلیغاتی (PromoBanner) رندر می‌شوند؛ سکشن‌های نوع ProductRow نادیده گرفته می‌شوند.
         var sections = Model.Sections;
         for (var i = 0; i < sections.Count; i++)
         {
             var s = sections[i];
 
-            if (s.SectionType == HomeSectionType.PromoBanner && s.IsHalfWidth)
+            // نادیده‌گرفتن کامل ردیف‌های محصول
+            if (s.SectionType != HomeSectionType.PromoBanner)
+            {
+                continue;
+            }
+
+            if (s.IsHalfWidth)
             {
                 // گروه‌بندی بنرهای half پشت‌سرهم → یک ردیف کنار هم
                 var group = new List<HomeSectionViewModel>();
@@ -33,13 +41,9 @@
                     }
                 </div>
             }
-            else if (s.SectionType == HomeSectionType.PromoBanner)
-            {
-                @await Html.PartialAsync("_PromoBanner", s)
-            }
             else
             {
-                @await Html.PartialAsync("_ProductRow", s)
+                @await Html.PartialAsync("_PromoBanner", s)
             }
         }
     }

@@ -132,3 +132,8 @@
 .admin-dl { display:grid; grid-template-columns:auto 1fr; gap:6px 14px; margin:0; }
 .admin-dl dt { color:var(--admin-muted,#64748b); font-weight:600; }
 .admin-dl dd { margin:0; }
+
+/* بخش placeholder صفحهٔ اصلی (Phase 9) — تا افزوده‌شدن کنترل‌های واقعی */
+.admin-empty-state { display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; padding:40px 20px; color:#64748b; }
+.admin-empty-state svg { color:#94a3b8; }
+.admin-empty-state p { max-width:520px; line-height:2; margin:0; }
