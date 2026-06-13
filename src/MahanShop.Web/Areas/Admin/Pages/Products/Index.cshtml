@@ -13,7 +13,8 @@
     bool HasFilter = !string.IsNullOrWhiteSpace(Model.Search)
         || Model.CategoryId.HasValue || Model.BrandId.HasValue
         || Model.Active != ProductActiveFilter.All || Model.Stock != ProductStockFilter.All
-        || Model.Featured.HasValue || Model.Sort != ProductSort.Newest;
+        || Model.Featured.HasValue || Model.Type != ProductTypeFilter.All
+        || Model.Sort != ProductSort.Newest;
 
     string? BrandName(int id) => Model.Brands.FirstOrDefault(b => b.Id == id)?.Name;
     string? CatName(int id) => Model.Categories.FirstOrDefault(c => c.Id == id)?.Name;
@@ -36,20 +37,15 @@
 
 @* ===== کارت‌های آمار (کلیک = فیلتر سریع) ===== *@
 <div class="prod-stats">
-    <a class="prod-stat @(Model.Active == ProductActiveFilter.All && Model.Stock == ProductStockFilter.All ? "is-active" : "")"
-       asp-route-Active="@ProductActiveFilter.All" asp-route-Stock="@ProductStockFilter.All">
+    <a class="prod-stat @(Model.Active == ProductActiveFilter.All && Model.Stock == ProductStockFilter.All && Model.Type == ProductTypeFilter.All ? "is-active" : "")"
+       asp-route-Active="@ProductActiveFilter.All" asp-route-Stock="@ProductStockFilter.All" asp-route-Type="@ProductTypeFilter.All">
         <span class="prod-stat__label">همهٔ محصولات</span>
         <span class="prod-stat__value">@Model.Result.Stats.Total</span>
     </a>
-    <a class="prod-stat prod-stat--ok @(Model.Active == ProductActiveFilter.Active ? "is-active" : "")"
-       asp-route-Active="@ProductActiveFilter.Active">
-        <span class="prod-stat__label">فعال (در فروش)</span>
-        <span class="prod-stat__value">@Model.Result.Stats.Active</span>
-    </a>
-    <a class="prod-stat prod-stat--muted @(Model.Active == ProductActiveFilter.Inactive ? "is-active" : "")"
-       asp-route-Active="@ProductActiveFilter.Inactive">
-        <span class="prod-stat__label">غیرفعال (مخفی)</span>
-        <span class="prod-stat__value">@Model.Result.Stats.Inactive</span>
+    <a class="prod-stat prod-stat--ok @(Model.Stock == ProductStockFilter.InStock ? "is-active" : "")"
+       asp-route-Stock="@ProductStockFilter.InStock">
+        <span class="prod-stat__label">موجود (کافی)</span>
+        <span class="prod-stat__value">@Model.Result.Stats.InStock</span>
     </a>
     <a class="prod-stat prod-stat--warn @(Model.Stock == ProductStockFilter.Low ? "is-active" : "")"
        asp-route-Stock="@ProductStockFilter.Low">
@@ -60,6 +56,16 @@
        asp-route-Stock="@ProductStockFilter.Out">
         <span class="prod-stat__label">ناموجود</span>
         <span class="prod-stat__value">@Model.Result.Stats.OutOfStock</span>
+    </a>
+    <a class="prod-stat prod-stat--violet @(Model.Type == ProductTypeFilter.Variant ? "is-active" : "")"
+       asp-route-Type="@ProductTypeFilter.Variant">
+        <span class="prod-stat__label">چندمدلی (دارای گزینه)</span>
+        <span class="prod-stat__value">@Model.Result.Stats.VariantCount</span>
+    </a>
+    <a class="prod-stat @(Model.Type == ProductTypeFilter.Simple ? "is-active" : "")"
+       asp-route-Type="@ProductTypeFilter.Simple">
+        <span class="prod-stat__label">ساده (بدون گزینه)</span>
+        <span class="prod-stat__value">@Model.Result.Stats.SimpleCount</span>
     </a>
 </div>
 
@@ -102,6 +108,11 @@
             <option value="true" selected="@(Model.Featured == true)">فقط منتخب‌ها</option>
             <option value="false" selected="@(Model.Featured == false)">فقط عادی‌ها</option>
         </select>
+        <select name="Type" class="form-select" aria-label="نوع">
+            <option value="@ProductTypeFilter.All" selected="@(Model.Type == ProductTypeFilter.All)">ساده و چندمدلی</option>
+            <option value="@ProductTypeFilter.Simple" selected="@(Model.Type == ProductTypeFilter.Simple)">فقط ساده</option>
+            <option value="@ProductTypeFilter.Variant" selected="@(Model.Type == ProductTypeFilter.Variant)">فقط چندمدلی</option>
+        </select>
         <select name="Sort" class="form-select" aria-label="مرتب‌سازی">
             <option value="@ProductSort.Newest" selected="@(Model.Sort == ProductSort.Newest)">جدیدترین</option>
             <option value="@ProductSort.Oldest" selected="@(Model.Sort == ProductSort.Oldest)">قدیمی‌ترین</option>
@@ -125,27 +136,31 @@
     <div class="prod-chips">
         @if (!string.IsNullOrWhiteSpace(Model.Search))
         {
-            <a class="prod-chip" asp-route-Search="" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">جست‌وجو: «@Model.Search» ✕</a>
+            <a class="prod-chip" asp-route-Search="" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Type="@Model.Type" asp-route-Sort="@Model.Sort">جست‌وجو: «@Model.Search» ✕</a>
         }
         @if (Model.CategoryId is int ci)
         {
-            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">دسته: @CatName(ci) ✕</a>
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Type="@Model.Type" asp-route-Sort="@Model.Sort">دسته: @CatName(ci) ✕</a>
         }
         @if (Model.BrandId is int bi)
         {
-            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">برند: @BrandName(bi) ✕</a>
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Type="@Model.Type" asp-route-Sort="@Model.Sort">برند: @BrandName(bi) ✕</a>
         }
         @if (Model.Active != ProductActiveFilter.All)
         {
-            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@ProductActiveFilter.All" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">@(Model.Active == ProductActiveFilter.Active ? "فعال" : "غیرفعال") ✕</a>
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@ProductActiveFilter.All" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Type="@Model.Type" asp-route-Sort="@Model.Sort">@(Model.Active == ProductActiveFilter.Active ? "فعال" : "غیرفعال") ✕</a>
         }
         @if (Model.Stock != ProductStockFilter.All)
         {
-            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@ProductStockFilter.All" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">@(Model.Stock == ProductStockFilter.InStock ? "موجود" : Model.Stock == ProductStockFilter.Low ? "موجودی کم" : "ناموجود") ✕</a>
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@ProductStockFilter.All" asp-route-Featured="@Model.Featured" asp-route-Type="@Model.Type" asp-route-Sort="@Model.Sort">@(Model.Stock == ProductStockFilter.InStock ? "موجود" : Model.Stock == ProductStockFilter.Low ? "موجودی کم" : "ناموجود") ✕</a>
         }
         @if (Model.Featured.HasValue)
         {
-            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="" asp-route-Sort="@Model.Sort">@(Model.Featured == true ? "منتخب" : "عادی") ✕</a>
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="" asp-route-Type="@Model.Type" asp-route-Sort="@Model.Sort">@(Model.Featured == true ? "منتخب" : "عادی") ✕</a>
+        }
+        @if (Model.Type != ProductTypeFilter.All)
+        {
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Type="@ProductTypeFilter.All" asp-route-Sort="@Model.Sort">@(Model.Type == ProductTypeFilter.Simple ? "ساده" : "چندمدلی") ✕</a>
         }
     </div>
 </div>
@@ -275,7 +290,8 @@
                    asp-route-Page="@i" asp-route-Search="@Model.Search"
                    asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId"
                    asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock"
-                   asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">@i</a>
+                   asp-route-Featured="@Model.Featured" asp-route-Type="@Model.Type"
+                   asp-route-Sort="@Model.Sort">@i</a>
             }
         </nav>
     }

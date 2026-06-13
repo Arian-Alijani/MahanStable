@@ -26,6 +26,7 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)] public ProductActiveFilter Active { get; set; } = ProductActiveFilter.All;
     [BindProperty(SupportsGet = true)] public ProductStockFilter Stock { get; set; } = ProductStockFilter.All;
     [BindProperty(SupportsGet = true)] public bool? Featured { get; set; }
+    [BindProperty(SupportsGet = true)] public ProductTypeFilter Type { get; set; } = ProductTypeFilter.All;
     [BindProperty(SupportsGet = true)] public ProductSort Sort { get; set; } = ProductSort.Newest;
     [BindProperty(SupportsGet = true)] public int Page { get; set; } = 1;
 
@@ -53,7 +54,7 @@ public class IndexModel : PageModel
     private async Task LoadAsync()
     {
         Result = await _mediator.Send(new GetProductsQuery(
-            Search, CategoryId, BrandId, Active, Stock, Featured, Sort, Page, PageSize));
+            Search, CategoryId, BrandId, Active, Stock, Featured, Type, Sort, Page, PageSize));
         Brands = await _mediator.Send(new GetBrandsQuery());
         Categories = await _mediator.Send(new GetCategoryOptionsQuery());
     }

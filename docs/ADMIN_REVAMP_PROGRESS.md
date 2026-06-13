@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F5b (بخش ۱۰ «چندمدلی» — wizard واریانت کامل در تب «مدل‌ها») ✅ تمام. قدم بعد = F6 (تب محصولات: باکس آماری + جست‌وجو/فیلتر).**
+**فاز جاری: F6 (تب «محصولات»: باکس‌های آماری گرافیکی + پنل جست‌وجو/فیلتر) ✅ تمام. قدم بعد = F7 (تب «مدیریت موجودی»: پشتیبانی کامل واریانت‌ها).**
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -24,7 +24,7 @@
 - [x] **F4** — چک‌اوت: انتخاب نوع پست + هزینهٔ سمت سرور + snapshot + فاکتور/سفارش نوع‌پست.
 - [x] **F5a** — فرم محصول بخش‌های ۱-۹ + گالری: تب‌بندی ۵تایی + بدون‌برند + مشخصات‌فنی inline.
 - [x] **F5b** — بخش ۱۰ «چند‌مدلی»: wizard واریانت کامل در تب «مدل‌ها».
-- [ ] **F6** — تب محصولات: باکس آماری + جست‌وجو/فیلتر.
+- [x] **F6** — تب محصولات: باکس آماری + جست‌وجو/فیلتر.
 - [ ] **F7** — تب موجودی: واریانت کامل، کنترل تفکیکی.
 - [ ] **F8** — تب سفارش‌ها: سورت/جست‌وجو/تغییر‌وضعیت/کدرهگیری/فاکتور.
 - [ ] **F9** — تب کاربران: جست‌وجو/جزئیات/حذف/ادمین‌کردن.
@@ -35,6 +35,26 @@
 ---
 
 ## دفتر ثبت (هر فاز: چه شد / فایل‌ها / لمس فروشگاه عمومی / migration / قدم بعد)
+
+### F6 — تب «محصولات» (باکس‌های آماری گرافیکی + پنل جست‌وجو/فیلتر) ✅ (2026-06-13)
+- **چه شد:** تب «محصولات» از فازهای قبل پایهٔ قوی داشت (جدول/فیلتر/آمار). در این فاز موارد جامانده برای تکمیل DoD اضافه شد:
+  1. **`ProductTypeFilter` (ساده/واریانتی):** enum جدید + فیلتر در `GetProductsQuery` برای فیلتر بر اساس `HasVariants`.
+  2. **آمار کامل:** `ProductStatsDto` با فیلدهای `InStock` (موجودی کافی > آستانه) + `SimpleCount` + `VariantCount` تکمیل شد.
+  3. **۶ کارت آماری:** کارت‌های بالای صفحه به ۶ کارت گسترش یافت: همه / موجود(کافی) / موجودی‌کم / ناموجود / چندمدلی / ساده. هر کارت = فیلتر سریع (لینک قابل‌کلیک).
+  4. **Type filter dropdown:** انتخاب «ساده/واریانتی» به نوار فیلتر اضافه شد.
+  5. **چیپ فیلتر فعال نوع:** چیپس‌های فیلتر فعال با `asp-route-Type` تکمیل شدند (هم چیپ «نوع» + هم تمام چیپس‌های قبلی با Type حفظ شد).
+  6. **Pagination:** پارامتر `Type` به لینک‌های صفحه‌بندی اضافه شد.
+  7. **CSS:** گرید ۵ستونی → ۶ستونی + رنگ `prod-stat--violet` برای کارت چندمدلی + بریک‌پوینت ۱۳۰۰ px.
+- **فایل‌های تغییر‌یافته:**
+  - `src/MahanShop.Application/Features/Admin/Products/GetProductsQuery.cs` — `ProductTypeFilter` enum + فیلتر `Type` در handler + `InStock`/`SimpleCount`/`VariantCount` در `BuildStatsAsync`.
+  - `src/MahanShop.Application/Features/Admin/Products/ProductAdminDtos.cs` — `ProductStatsDto` با `InStock`, `SimpleCount`, `VariantCount`.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Products/Index.cshtml.cs` — `Type` property bind + پاس به query.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Products/Index.cshtml` — ۶ کارت آماری + Type filter dropdown + `Type` در همهٔ chip/pagination linkها + `HasFilter` با Type.
+  - `src/MahanShop.Web/wwwroot/admin/admin.css` — گرید ۶ستونی + `prod-stat--violet` + بریک‌پوینت ۱۳۰۰.
+- **لمس فروشگاه عمومی:** هیچ. فقط `Areas/Admin/Products` + `Features/Admin/Products` + `wwwroot/admin/admin.css`.
+- **migration:** هیچ. صفر تغییر Domain/DB.
+- **build:** ✅ `bash tools/build.sh` = **0 Error** (۵ warning همگی pre-existing از فازهای قبل). `bash tools/check-js.sh` = 8 ok, 0 bad, 10 tests passed. Domestic-only audit: صفر URL خارجی.
+- **قدم بعد = F7** (تب «مدیریت موجودی»: پشتیبانی کامل واریانت‌ها، کنترل تفکیکی قیمت/تعداد هر زیرشاخه).
 
 ### F5b — بخش ۱۰ «چندمدلی» + wizard واریانت کامل ✅ (2026-06-13)
 - **چه شد:** تب «مدل‌ها» در فرم افزودن محصول (Create) از placeholder به wizardِ کاملِ چندمدلی تبدیل شد و با تب‌بندیِ ۵تاییِ F5a کاملاً هماهنگ گردید. تب «مدل‌ها» در ویرایش (Edit) با افزودن اکشن «تبدیل به چندمدلی» و گِیت‌کردنِ گرید/فرمِ افزودن گزینه بهبود یافت.
