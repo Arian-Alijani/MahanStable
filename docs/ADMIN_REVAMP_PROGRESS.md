@@ -8,9 +8,9 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F0 (برنامه‌ریزی) ✅ تمام. قدم بعد = F1 (پوستهٔ ادمین جدید — سایدبار ۶‌تبی).**
+**فاز جاری: F1 (پوستهٔ ادمین جدید) ✅ تمام. قدم بعد = F2 (Domain نوع پست + snapshot Order + Migration).**
 
-محیط: Linux sandbox، **dotnet نصب نیست** → build/test اجرا نمی‌شود. JS با `node --check`.
+محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
 
 ---
@@ -18,7 +18,7 @@
 ## چک‌لیست فازها
 
 - [x] **F0** — برنامه‌ریزی: `ADMIN_REVAMP_ROADMAP.md` + این فایل ساخته شد. وضعیت فعلی پروژه بازرسی شد.
-- [ ] **F1** — پوستهٔ ادمین: سایدبار ۶ تب + منوی فرعی + بازگشت به فروشگاه + hub کنترل‌ویژگی + ارتقای CSS shell.
+- [x] **F1** — پوستهٔ ادمین: سایدبار ۶ تب + منوی فرعی + بازگشت به فروشگاه + hub کنترل‌ویژگی + ارتقای CSS shell.
 - [ ] **F2** — Domain `ShippingMethod` + snapshot روی Order + Migration `Add_ShippingMethods` + seed.
 - [ ] **F3** — تب کنترل ویژگی یکپارچه (برند/مدل/ویژگی/تگ/دسته) + CRUD نوع پست.
 - [ ] **F4** — چک‌اوت: انتخاب نوع پست + هزینهٔ سمت سرور + snapshot + فاکتور/سفارش نوع‌پست.
@@ -43,16 +43,25 @@
 - **build اجرا نشد (sandbox).** صفر تغییر کد. صفر migration.
 - **قدم بعد = F1.** اولین کار F1: از کاربر دربارهٔ سرنوشت تب‌های Home/Categories تأیید بگیر (یا پیش‌فرض §0 روادمپ را اعمال کن).
 
-<!-- الگوی ثبت برای فازهای بعد (کپی کن):
-### F1 — پوستهٔ ادمین ✅/🔄 (تاریخ)
-- چه شد: ...
-- فایل‌های تغییر‌یافته: ...
-- لمس فروشگاه عمومی: هیچ / [فهرست]
-- migration: هیچ / [نام + دستور]
-- build: اجرا نشد (sandbox) / [نتیجه]
-- بدهی/نکته: ...
-- قدم بعد = F2
--->
+### F1 — پوستهٔ ادمین جدید ✅ (2026-06-13)
+- **چه شد:** سایدبار از ۱۱ تب به **۶ تب** کاهش یافت + زیرمنوی جمع‌شوندهٔ «تنظیمات بیشتر» + لینک «بازگشت به فروشگاه» + صفحهٔ hub «کنترل ویژگی» + بازطراحی design system پنل (CSS).
+- **تصمیم‌های §0 اعمال‌شده (caveman / پیش‌فرض روادمپ — کاربر سؤال‌ها را باز نکرد):**
+  - **مدیریت صفحهٔ اصلی (Home)** → از تب‌های اصلی خارج شد، زیر زیرمنوی **«تنظیمات بیشتر»** (جمع‌شونده) حفظ شد. قابلیت گم نشد. *(تأیید نهایی کاربر در صورت دسترسی.)*
+  - **دسته‌بندی‌ها (Categories)** → تب مستقل حذف، به‌صورت کارت داخل تب **«کنترل ویژگی»** منتقل شد. صفحهٔ `/Admin/Categories` دست‌نخورده و از hub در دسترس است.
+  - **نوع پست** → کارت «به‌زودی» (غیرفعال) در hub گذاشته شد؛ CRUD واقعی در F3.
+- **۶ تب نهایی:** داشبورد(`/Admin`) · محصولات(`/Admin/Products`) · مدیریت موجودی(`/Admin/Inventory`) · کنترل ویژگی(`/Admin/Attributes` — hub جدید) · سفارش‌ها(`/Admin/Orders`) · کاربران(`/Admin/Users`).
+- **فایل‌های تغییر‌یافته:**
+  - `Areas/Admin/Pages/Shared/_AdminSidebar.cshtml` — بازنویسی کامل (۶ تب + زیرمنو + بازگشت به فروشگاه + آواتار کاربر).
+  - `Areas/Admin/Pages/Shared/_AdminLayout.cshtml` — افزودن backdrop موبایل.
+  - `Areas/Admin/Pages/Attributes/Index.cshtml` + `Index.cshtml.cs` — **صفحهٔ hub جدید** (۶ کارت لینک: دسته/برند/مدل/مشخصات‌فنی/تگ + نوع‌پست به‌زودی). بدون کوئری DB (شمارش در F3).
+  - `wwwroot/admin/admin.css` — ارتقای design system: توکن رنگ/شعاع/سایه، سایدبار گرادیان، زیرمنوی انیمیشن‌دار (grid-rows)، marker تب فعال، topbar چسبان+blur، گرید کارت hub، RTL کامل، موبایل (backdrop + اسلاید).
+  - **remap `ViewData["AdminActive"]`** روی ۱۶ صفحه (Brands×۳ · Categories×۳ · Features×۳ · Tags×۳ · Variants×۴) از کلیدهای قدیمی به `"attributes"` تا تب کنترل‌ویژگی هایلایت شود.
+  - keyهای جدید سایدبار: `dashboard|products|inventory|attributes|orders|users|home`.
+- **لمس فروشگاه عمومی:** هیچ. (فقط `Areas/Admin/**` + `wwwroot/admin/**` — مرز فاز رعایت شد.)
+- **migration:** هیچ (F1 صفر تغییر Domain/Data).
+- **build:** ✅ اجرا شد — dotnet 8.0.422 نصب شد، `dotnet build MahanShop.sln` = **0 Error** (۵ warning همگی pre-existing، بی‌ربط به F1). JS inline با `node --check` سبز. Domestic-only audit: صفر URL خارجی در فایل‌های جدید.
+- **بدهی/نکته:** کارت «نوع پست» در hub فعلاً غیرفعال (`is-soon`) تا F3. صفحات قدیمی Brands/Categories/... هنوز فایل مستقل دارند و از hub لینک می‌شوند؛ پاکسازی/redirect نهایی در F12.
+- **قدم بعد = F2** (Domain `ShippingMethod` + snapshot روی Order + Migration `Add_ShippingMethods` + seed).
 
 ---
 
