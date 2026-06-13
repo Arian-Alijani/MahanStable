@@ -114,13 +114,19 @@
         el.addEventListener('pointerdown', e => {
             if (e.pointerType === 'mouse' && e.button !== 0) return;
             down = true; moved = false; startX = e.clientX; startScroll = el.scrollLeft; pid = e.pointerId;
-            el.classList.add('dragging');
-            try { el.setPointerCapture(pid); } catch (_) {}
+            // مهم: pointer capture را اینجا نمی‌گیریم. گرفتنِ زودهنگام باعث می‌شود
+            // رویداد click روی همین scroller هدف‌گیری شود نه روی لینک کارت → کلیک کار نمی‌کند.
+            // فقط بعد از عبور از آستانهٔ درگ (در pointermove) capture می‌گیریم.
         });
         el.addEventListener('pointermove', e => {
             if (!down) return;
             const dx = e.clientX - startX;
-            if (Math.abs(dx) > 4) moved = true;
+            if (!moved && Math.abs(dx) > 4) {
+                // اولین لحظه‌ای که واقعاً درگ شروع شد: حالت درگ + capture
+                moved = true;
+                el.classList.add('dragging');
+                try { el.setPointerCapture(pid); } catch (_) {}
+            }
             if (moved) {
                 el.scrollLeft = startScroll - dx;
                 e.preventDefault();

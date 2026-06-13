@@ -145,18 +145,26 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
     content: ""; width: 1px; height: 18px; background: var(--line); flex: none; align-self: center;
 }
 .mega-link {
-    display: inline-flex; align-items: center; gap: 5px; padding: 13px 16px; font-size: 14.5px; font-weight: 600;
-    color: var(--muted); border-radius: var(--radius-sm); transition: color .15s, background .15s;
+    display: inline-flex; align-items: center; gap: 5px; padding: 13px 14px; font-size: 14.5px; font-weight: 600;
+    color: var(--muted); border-radius: var(--radius-sm);
+    transition: color .25s cubic-bezier(0.16,1,0.3,1);
     position: relative;
 }
+/* زیرخطِ مینیمال — از مرکز باز می‌شود، گرادیان ظریف، بدون پس‌زمینهٔ بلوکی */
 .mega-link::after {
-    content: ""; position: absolute; inset-inline: 14px; bottom: 6px; height: 2px; border-radius: 2px;
-    background: var(--primary); transform: scaleX(0); transform-origin: center; transition: transform .2s ease;
+    content: ""; position: absolute; inset-inline: 14px; bottom: 8px; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--primary), #60A5FA);
+    transform: scaleX(0); transform-origin: center;
+    transition: transform .32s cubic-bezier(0.16,1,0.3,1);
 }
-.mega-item:hover .mega-link { color: var(--primary); background: var(--primary-soft); }
-.mega-item:hover .mega-link::after { transform: scaleX(1); }
-.mega-caret { transition: transform .2s; }
-.mega-item:hover .mega-caret { transform: rotate(180deg); }
+.mega-item:hover .mega-link,
+.mega-item:focus-within .mega-link { color: var(--ink); }
+.mega-item:hover .mega-link::after,
+.mega-item:focus-within .mega-link::after { transform: scaleX(1); }
+.mega-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.mega-caret { transition: transform .32s cubic-bezier(0.16,1,0.3,1); }
+.mega-item:hover .mega-caret,
+.mega-item:focus-within .mega-caret { transform: rotate(180deg); color: var(--primary); }
 
 /* «تمام محصولات» — قرص شاخص با آیکن گرید */
 .mega-item--all { margin-inline-end: 4px; }
@@ -180,12 +188,12 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .mega-sub a { display: block; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 14px; color: var(--muted); transition: background .15s, color .15s; }
 .mega-sub a:hover { background: var(--primary-soft); color: var(--primary); }
 
-/* ===== Mobile drawer (از سمت چپ باز می‌شود) ===== */
+/* ===== Mobile drawer (در RTL از سمت راست باز می‌شود) ===== */
 .drawer { position: fixed; inset: 0; z-index: 1000; }
 .drawer[hidden] { display: none; }
 .drawer__backdrop { position: absolute; inset: 0; background: rgba(15,23,42,.5); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); animation: fade .2s ease; }
 .drawer__panel {
-    position: absolute; top: 0; inset-inline-start: 0; height: 100%; width: min(88vw, 360px);
+    position: absolute; top: 0; inset-inline-end: 0; height: 100%; width: min(88vw, 360px);
     background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 14px;
     box-shadow: var(--shadow-lg); animation: drawerIn .28s cubic-bezier(0.16,1,0.3,1); overflow-y: auto;
 }
@@ -228,7 +236,8 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .drawer__foot .btn-primary, .drawer__foot .btn-ghost { width: 100%; }
 .w-100 { width: 100%; }
 
-@keyframes drawerIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+/* پنل به لبهٔ راست چسبیده؛ از بیرونِ راست به داخل سُر می‌خورد */
+@keyframes drawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
 /* ===== Home spacing ===== */
@@ -440,6 +449,12 @@ html[dir="rtl"] .prow__viewport::after  { background: linear-gradient(to right, 
 .footer-acc > summary { list-style: none; cursor: default; display: flex; align-items: center; justify-content: space-between; }
 .footer-acc > summary::-webkit-details-marker { display: none; }
 .footer-acc__chev { display: none; color: #94A3B8; transition: transform .2s; }
+
+/* روی دسکتاپ، صرف‌نظر از باز/بستهٔ <details>، محتوای ستون فوتر همیشه نمایش داده شود */
+@media (min-width: 720px) {
+    .footer-acc > summary { pointer-events: none; }
+    .footer-acc .footer-links { display: grid !important; }
+}
 
 .footer-bottom {
     margin-top: 36px; padding-block: 18px; border-top: 1px solid rgba(255,255,255,.08);

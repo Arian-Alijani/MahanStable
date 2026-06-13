@@ -12,6 +12,75 @@
 }
 
 <div class="admin-toolbar">
+    <h1 class="admin-page-title">مدیریت بنر بالای صفحه</h1>
+    <div class="admin-toolbar__actions">
+        <a asp-page="HeroBannerCreate" class="btn btn-primary">بنر بالای صفحه جدید</a>
+    </div>
+</div>
+
+<p class="admin-hint">
+    بنرهای بالای صفحه (هیرو) به‌صورت اسلایدر نمایش داده می‌شوند. عدد ترتیب کوچک‌تر زودتر/بالاتر نشان داده می‌شود.
+    فقط بنرهای «فعال» در سایت دیده می‌شوند.
+</p>
+
+<div class="admin-panel-box">
+    <table class="table admin-table home-table">
+        <thead>
+            <tr>
+                <th style="width:96px">ترتیب</th>
+                <th>تصویر</th>
+                <th>عنوان / متن جایگزین</th>
+                <th>لینک</th>
+                <th style="width:90px">وضعیت</th>
+                <th style="width:200px"></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var b in Model.HeroBanners)
+        {
+            <tr class="@(b.IsActive ? "" : "is-off")">
+                <td>
+                    <form method="post" asp-page-handler="HeroOrder" class="home-order-form">
+                        <input type="hidden" name="id" value="@b.Id" />
+                        <input type="number" name="displayOrder" value="@b.DisplayOrder" min="0" class="home-order-input" aria-label="عدد ترتیب" />
+                        <button type="submit" class="home-order-save" title="ذخیره ترتیب" aria-label="ذخیره ترتیب">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <img src="@b.ImageUrl" alt="@b.AltText" class="home-thumb" loading="lazy" />
+                </td>
+                <td>
+                    @if (!string.IsNullOrEmpty(b.Title)) { <strong>@b.Title</strong><br /> }
+                    <span class="admin-muted">@b.AltText</span>
+                </td>
+                <td class="admin-muted">@(b.LinkUrl ?? "—")</td>
+                <td>
+                    @if (b.IsActive) { <span class="badge bg-success">فعال</span> }
+                    else { <span class="badge bg-secondary">غیرفعال</span> }
+                </td>
+                <td class="admin-actions">
+                    <a asp-page="HeroBannerEdit" asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    <form method="post" asp-page-handler="HeroToggle" asp-route-id="@b.Id" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">@(b.IsActive ? "غیرفعال" : "فعال")</button>
+                    </form>
+                    <form method="post" asp-page-handler="HeroDelete" asp-route-id="@b.Id" class="d-inline"
+                          onsubmit="return confirm('این بنر بالای صفحه حذف شود؟');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.HeroBanners.Count == 0)
+        {
+            <tr><td colspan="6" class="admin-muted text-center">هنوز بنری برای بالای صفحه اضافه نشده است.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="admin-toolbar" style="margin-top:28px">
     <h1 class="admin-page-title">مدیریت نوارهای صفحهٔ اصلی</h1>
     <div class="admin-toolbar__actions">
         <a asp-page="ProductRowCreate" class="btn btn-primary">نوار محصول جدید</a>
