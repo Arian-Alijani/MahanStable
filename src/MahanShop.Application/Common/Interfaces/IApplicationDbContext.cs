@@ -25,6 +25,7 @@ public interface IApplicationDbContext
     DbSet<Order> Orders { get; }
     DbSet<OrderItem> OrderItems { get; }
     DbSet<Payment> Payments { get; }
+    DbSet<ShippingMethod> ShippingMethods { get; }
     DbSet<Banner> Banners { get; }
     DbSet<HomeSection> HomeSections { get; }
 

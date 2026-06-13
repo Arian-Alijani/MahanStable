@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F1 (پوستهٔ ادمین جدید) ✅ تمام. قدم بعد = F2 (Domain نوع پست + snapshot Order + Migration).**
+**فاز جاری: F2 (Domain نوع پست + snapshot Order + Migration) ✅ تمام. قدم بعد = F3 (تب کنترل ویژگی یکپارچه + CRUD نوع پست).**
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -19,7 +19,7 @@
 
 - [x] **F0** — برنامه‌ریزی: `ADMIN_REVAMP_ROADMAP.md` + این فایل ساخته شد. وضعیت فعلی پروژه بازرسی شد.
 - [x] **F1** — پوستهٔ ادمین: سایدبار ۶ تب + منوی فرعی + بازگشت به فروشگاه + hub کنترل‌ویژگی + ارتقای CSS shell.
-- [ ] **F2** — Domain `ShippingMethod` + snapshot روی Order + Migration `Add_ShippingMethods` + seed.
+- [x] **F2** — Domain `ShippingMethod` + snapshot روی Order + Migration `Add_ShippingMethods` + seed.
 - [ ] **F3** — تب کنترل ویژگی یکپارچه (برند/مدل/ویژگی/تگ/دسته) + CRUD نوع پست.
 - [ ] **F4** — چک‌اوت: انتخاب نوع پست + هزینهٔ سمت سرور + snapshot + فاکتور/سفارش نوع‌پست.
 - [ ] **F5** — فرم محصول ۱۱ بخش + چند‌مدلی + بدون‌برند.
@@ -62,6 +62,22 @@
 - **build:** ✅ اجرا شد — dotnet 8.0.422 نصب شد، `dotnet build MahanShop.sln` = **0 Error** (۵ warning همگی pre-existing، بی‌ربط به F1). JS inline با `node --check` سبز. Domestic-only audit: صفر URL خارجی در فایل‌های جدید.
 - **بدهی/نکته:** کارت «نوع پست» در hub فعلاً غیرفعال (`is-soon`) تا F3. صفحات قدیمی Brands/Categories/... هنوز فایل مستقل دارند و از hub لینک می‌شوند؛ پاکسازی/redirect نهایی در F12.
 - **قدم بعد = F2** (Domain `ShippingMethod` + snapshot روی Order + Migration `Add_ShippingMethods` + seed).
+
+### F2 — Domain نوع پست + snapshot سفارش + Migration ✅ (2026-06-13)
+- **چه شد:** زیرساخت دادهٔ «نوع پست» (روش ارسال) ساخته شد تا F3 (CRUD) و F4 (چک‌اوت امن) رویش کار کنند. هیچ UI لمس نشد (مرز فاز رعایت شد).
+- **فایل‌های جدید:**
+  - `src/MahanShop.Domain/Entities/ShippingMethod.cs` — entity جدید: `Name` (نام)، `Cost` (long، تومان، نرخ ثابت per-method)، `IsActive`، `DisplayOrder`، `Description?`.
+  - `src/MahanShop.Infra.Data/Migrations/20260613161644_Add_ShippingMethods.cs` (+ `.Designer.cs`) — **با `dotnet ef migrations add` در sandbox ساخته شد** (dotnet-ef 8.0.28 نصب شد). Snapshot (`MyDbContextModelSnapshot.cs`) خودکار به‌روز شد.
+- **فایل‌های تغییر‌یافته:**
+  - `src/MahanShop.Domain/Entities/Order.cs` — افزودن snapshot نوع پست: `ShippingMethodId?` + navigation `ShippingMethod?` + `ShippingMethodName?` (snapshot نام، مثل `OrderItem.ProductTitle`). `ShippingCost` موجود = snapshot نرخ (فعلاً هنوز در PlaceOrder هاردکد 0 است — در F4 از DB پر می‌شود).
+  - `src/MahanShop.Infra.Data/Configurations/UserOrderConfigurations.cs` — افزودن `ShippingMethodConfiguration` (Name maxlen 150، Description 500، index DisplayOrder) + FK `Order.ShippingMethodId` با **`OnDelete = SetNull`** (حذف یک روش، سفارش قدیمی را نمی‌شکند چون snapshot نام/نرخ داریم) + `ShippingMethodName` maxlen 150.
+  - `src/MahanShop.Application/Common/Interfaces/IApplicationDbContext.cs` + `src/MahanShop.Infra.Data/Context/MyDbContext.cs` — افزودن `DbSet<ShippingMethod> ShippingMethods`.
+  - `src/MahanShop.Infra.Data/Seed/DataSeeder.cs` — `SeedShippingMethodsAsync` (Development-only، idempotent: `if (await db.ShippingMethods.AnyAsync()) return;`) با ۳ نمونه: پست پیشتاز(۶۰٬۰۰۰)، پست سفارشی(۳۵٬۰۰۰)، تیپاکس(۹۰٬۰۰۰). در `SeedAsync` قبل از `SeedAdminAsync` صدا زده شد.
+- **migration:** `Add_ShippingMethods` (20260613161644) — ساخته و آمادهٔ apply. روی هاست واقعی با `dotnet ef database update` (یا خودکار توسط `MigrateAsync` در startup) اعمال می‌شود. Up: جدول `ShippingMethods` + دو ستون nullable روی `Orders` (`ShippingMethodId`, `ShippingMethodName`) + FK SetNull + index روی DisplayOrder و ShippingMethodId.
+- **لمس فروشگاه عمومی:** هیچ کد رفتاری. فقط Domain/Infra.Data (entity/config/context/migration/seed). `Order.ShippingCost` هنوز در `PlaceOrderCommandHandler` هاردکد 0 است (تغییرش در F4).
+- **build:** ✅ `bash tools/build.sh` = **0 Error** (۵ warning همگی pre-existing، بی‌ربط به F2). Domestic-only audit: صفر URL خارجی در فایل‌های جدید. Snapshot شامل ShippingMethod تأیید شد.
+- **سؤال باز F2 (نرخ ثابت کافی است یا وزنی/منطقه‌ای؟):** پیش‌فرض روادمپ اعمال شد = **نرخ ثابت per-method** (ساده و امن). اگر کاربر بعداً نرخ وزنی خواست → فاز جدا.
+- **قدم بعد = F3** (تب «کنترل ویژگی» یکپارچه: برند/مدل/مشخصات‌فنی/تگ/دسته + **CRUD کامل نوع پست** در `Features/Admin/Shipping` + `Areas/Admin/Pages/Shipping`؛ کارت «نوع پست» در hub از `is-soon` به فعال + شمارش‌ها).
 
 ---
 

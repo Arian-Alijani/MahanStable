@@ -16,8 +16,16 @@ public class Order : BaseEntity
 
     public long TotalAmount { get; set; }
     public long DiscountAmount { get; set; }
-    public long ShippingCost { get; set; }
+    public long ShippingCost { get; set; }   // snapshot نرخ نوع پست در لحظهٔ ثبت سفارش (از DB، نه فرم client)
     public long FinalAmount { get; set; }
+
+    // ── نوع پست (روش ارسال) — snapshot تغییرناپذیر بعد از ثبت (مثل ProductTitle در OrderItem) ──
+    /// <summary>FK به روش ارسال انتخاب‌شده. nullable تا حذف ShippingMethod سفارش قدیمی را نشکند (SetNull + snapshotِ نام/نرخ).</summary>
+    public int? ShippingMethodId { get; set; }
+    public ShippingMethod? ShippingMethod { get; set; }
+
+    /// <summary>snapshot نام روش ارسال در لحظهٔ ثبت — حتی اگر روش بعداً حذف/تغییر کند ثابت می‌ماند.</summary>
+    public string? ShippingMethodName { get; set; }
 
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
     public string? TrackingCode { get; set; }

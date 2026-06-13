@@ -28,7 +28,7 @@ Web → Infra.IoC → Infra.Data → Application → Domain
 ```
 | پروژه | مسیر | چیه | وابسته‌به |
 |------|------|-----|----------|
-| Domain | `src/MahanShop.Domain` | Entity (21) + Enum (6) + BaseEntity. pure C#. | هیچی |
+| Domain | `src/MahanShop.Domain` | Entity (22) + Enum (6) + BaseEntity. pure C#. | هیچی |
 | Application | `src/MahanShop.Application` | CQRS (Command/Query+Handler+Validator)، Interfaceها، DTO، Settings. | Domain |
 | Infra.Data | `src/MahanShop.Infra.Data` | DbContext، Fluent Config، Migration، Seed، پیاده‌سازی سرویس‌ها (SMS/OTP/Zarinpal). | Application+Domain |
 | Infra.IoC | `src/MahanShop.Infra.IoC` | `RegisterServices()` — سیم‌کشی DI همه لایه‌ها. | همه |
@@ -57,7 +57,7 @@ return View(vm);
 ## 5. کجا چی پیدا کنم (پُرکاربردترین مسیرها)
 
 ### Domain entities (`src/MahanShop.Domain/Entities/`)
-هسته: `User` (Phone+OTP، `IsAdmin`/`IsActive`) · `Product` (`HasVariants` تعیین‌کننده) · `Category` (درختی، self-ref، `ParentId`) · `Brand` · `Order`+`OrderItem` (`RowVersion` ضدّ کسر دوبارهٔ موجودی) · `Payment` · `Address` · `OtpCode` (`CodeHash`+`Attempts`).
+هسته: `User` (Phone+OTP، `IsAdmin`/`IsActive`) · `Product` (`HasVariants` تعیین‌کننده) · `Category` (درختی، self-ref، `ParentId`) · `Brand` · `Order`+`OrderItem` (`RowVersion` ضدّ کسر دوبارهٔ موجودی؛ Order دارای snapshot نوع پست: `ShippingMethodId?`+`ShippingMethodName?`+`ShippingCost`) · `Payment` · `Address` · `OtpCode` (`CodeHash`+`Attempts`) · `ShippingMethod` (نوع پست — F2: `Name`/`Cost`/`IsActive`/`DisplayOrder`/`Description?`؛ نرخ ثابت per-method، خوانده از DB در چک‌اوت F4، snapshot در Order).
 صفحهٔ اصلی: `Banner` · `HomeSection` (نوع در `HomeSectionType`).
 سیستم تنوع (EAV): `VariantAttribute` + `VariantAttributeValue` (pool) → `ProductVariant` (واحد موجودی، `RowVersion`) → `ProductVariantValue` (join). طراحی کامل: **docs/VARIANTS.md**.
 join: `ProductFeature`/`Feature` · `ProductTag`/`Tag` · `ProductImage` · `ProductComment` (بلااستفاده — امتیاز/کامنت حذف شد).
@@ -75,7 +75,7 @@ join: `ProductFeature`/`Feature` · `ProductTag`/`Tag` · `ProductImage` · `Pro
 `Behaviors/ValidationBehavior` (MediatR pipeline) · `PhoneNumberHelper` (نرمال‌سازی موبایل ایران).
 
 ### Infra.Data (`src/MahanShop.Infra.Data/`)
-`Context/MyDbContext.cs` (= `IApplicationDbContext`) · `Configurations/*` (Fluent — DeleteBehavior دقیق ضدّ multiple-cascade-path) · `Migrations/` (7 تا؛ آخرین: `Add_Admin_ValueParent`) · `Seed/DataSeeder.cs` (dev: کاتالوگ+صفحه‌اصلی+ادمین؛ prod: فقط `SeedAdminOnlyAsync`؛ ادمین اولیه=`09037882674`) · `Services/`: `OtpHasher` (HMAC+Pepper)، `SmsIrSender`/`FakeSmsSender` (انتخاب بر اساس وجود ApiKey)، `ZarinpalGateway`.
+`Context/MyDbContext.cs` (= `IApplicationDbContext`) · `Configurations/*` (Fluent — DeleteBehavior دقیق ضدّ multiple-cascade-path؛ `ShippingMethodConfiguration` + FK `Order.ShippingMethodId` با SetNull در `UserOrderConfigurations.cs`) · `Migrations/` (8 تا؛ آخرین: `Add_ShippingMethods`) · `Seed/DataSeeder.cs` (dev: کاتالوگ+صفحه‌اصلی+ادمین؛ prod: فقط `SeedAdminOnlyAsync`؛ ادمین اولیه=`09037882674`) · `Services/`: `OtpHasher` (HMAC+Pepper)، `SmsIrSender`/`FakeSmsSender` (انتخاب بر اساس وجود ApiKey)، `ZarinpalGateway`.
 
 ### Web (`src/MahanShop.Web/`)
 `Program.cs` — **نقطهٔ ورود + سیم‌کشی + routeها + middleware**. بلوک‌های ادمین با مارکر `=== ADMIN-PANEL START/END ===` (برای rollback). policy `AdminOnly` = RequireRole("Admin"). `OnValidatePrincipal` نقش ادمین رو هر درخواست از DB re-check می‌کنه.
