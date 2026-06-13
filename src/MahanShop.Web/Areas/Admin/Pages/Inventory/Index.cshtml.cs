@@ -8,32 +8,51 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace MahanShop.Web.Areas.Admin.Pages.Inventory;
 
-/// <summary>صفحهٔ مرکزی «مدیریت موجودی»: جدول همهٔ واریانت‌ها + فیلتر + ویرایش سریع + دسته‌ای + CSV.</summary>
+/// <summary>
+/// صفحهٔ مدیریت موجودی (F7) — نمای product-group:
+///   • محصولات ساده: ویرایش قیمت/تخفیف/موجودی inline (AJAX)
+///   • محصولات واریانتی: expand ردیف → جدول واریانت‌ها با ویرایش inline هر زیرشاخه
+///   • CSV export/import برای واریانت‌ها (حفظ‌شده از قبل)
+/// </summary>
 public class IndexModel : PageModel
 {
     private readonly IMediator _mediator;
     public IndexModel(IMediator mediator) => _mediator = mediator;
 
-    public InventoryOverviewDto Data { get; private set; } = new();
+    public InventoryProductsDto Data { get; private set; } = new();
 
     [BindProperty(SupportsGet = true)] public string? Search { get; set; }
-    [BindProperty(SupportsGet = true)] public int? BrandValueId { get; set; }
-    [BindProperty(SupportsGet = true)] public string? Model { get; set; }
+    [BindProperty(SupportsGet = true)] public int? BrandId { get; set; }
     [BindProperty(SupportsGet = true)] public StockStatusFilter Status { get; set; } = StockStatusFilter.All;
+    [BindProperty(SupportsGet = true)] public InventoryProductTypeFilter ProductType { get; set; } = InventoryProductTypeFilter.All;
     [BindProperty(SupportsGet = true)] public int Page { get; set; } = 1;
-    [BindProperty(SupportsGet = true)] public string Sort { get; set; } = "product";
+    [BindProperty(SupportsGet = true)] public string Sort { get; set; } = "title";
     [BindProperty(SupportsGet = true)] public bool Desc { get; set; }
 
-    private const int PageSize = 50;
+    private const int PageSize = 40;
 
     public async Task OnGetAsync() => await LoadAsync();
 
-    // ویرایش مستقیم موجودی (inline) — فراخوانی AJAX
-    public async Task<IActionResult> OnPostSetStockAsync(int variantId, int stock)
+    // ── ویرایش قیمت/تخفیف محصول ساده (AJAX) ───────────────────────────────
+    public async Task<IActionResult> OnPostSetSimplePriceAsync(int productId, long price, long? discountPrice)
     {
         try
         {
-            var newStock = await _mediator.Send(new SetVariantStockCommand(variantId, stock));
+            await _mediator.Send(new SetSimpleProductPriceCommand(productId, price, discountPrice <= 0 ? null : discountPrice));
+            return new JsonResult(new { ok = true });
+        }
+        catch (ValidationException ex)
+        {
+            return new JsonResult(new { ok = false, error = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا." });
+        }
+    }
+
+    // ── ویرایش موجودی محصول ساده (AJAX) ─────────────────────────────────────
+    public async Task<IActionResult> OnPostSetSimpleStockAsync(int productId, int stock)
+    {
+        try
+        {
+            var newStock = await _mediator.Send(new SetSimpleProductStockCommand(productId, stock));
             return new JsonResult(new { ok = true, stock = newStock });
         }
         catch (ValidationException ex)
@@ -42,8 +61,25 @@ public class IndexModel : PageModel
         }
     }
 
-    // تغییر سریع (+/-) — فراخوانی AJAX
-    public async Task<IActionResult> OnPostAdjustStockAsync(int variantId, int delta)
+    // ── ویرایش قیمت+تخفیف+موجودی یک واریانت (AJAX) ─────────────────────────
+    public async Task<IActionResult> OnPostSetVariantAsync(int variantId, long price, long? discountPrice, int stock)
+    {
+        try
+        {
+            await _mediator.Send(new SetVariantPriceAndStockCommand(
+                variantId, price,
+                discountPrice is long dp && dp > 0 ? dp : null,
+                stock));
+            return new JsonResult(new { ok = true });
+        }
+        catch (ValidationException ex)
+        {
+            return new JsonResult(new { ok = false, error = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا." });
+        }
+    }
+
+    // ── ویرایش سریع موجودی واریانت +/- (AJAX) ───────────────────────────────
+    public async Task<IActionResult> OnPostAdjustVariantStockAsync(int variantId, int delta)
     {
         try
         {
@@ -56,29 +92,29 @@ public class IndexModel : PageModel
         }
     }
 
-    // اعمال دسته‌ای روی ردیف‌های انتخاب‌شده
-    public async Task<IActionResult> OnPostBulkAsync(List<int> ids, BulkStockOperation operation, int amount)
+    // ── ویرایش مستقیم موجودی یک واریانت (AJAX) ──────────────────────────────
+    public async Task<IActionResult> OnPostSetVariantStockAsync(int variantId, int stock)
     {
         try
         {
-            var count = await _mediator.Send(new BulkUpdateStockCommand(ids ?? new(), operation, amount));
-            TempData["AdminOk"] = $"موجودی {count} واریانت به‌روزرسانی شد.";
+            var newStock = await _mediator.Send(new SetVariantStockCommand(variantId, stock));
+            return new JsonResult(new { ok = true, stock = newStock });
         }
         catch (ValidationException ex)
         {
-            TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا در عملیات دسته‌ای.";
+            return new JsonResult(new { ok = false, error = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا." });
         }
-        return RedirectToPage(new { Search, BrandValueId, Model, Status, Page, Sort, Desc });
     }
 
-    // خروجی CSV از نتایج فیلترشده
+    // ── خروجی CSV از واریانت‌ها ─────────────────────────────────────────────
     public async Task<IActionResult> OnGetExportAsync()
     {
-        var bytes = await _mediator.Send(new ExportInventoryCsvQuery(Search, BrandValueId, Model, Status));
+        // فیلتر CSV بر اساس BrandValueId از VariantAttributeValues (نمای قدیمی)
+        var bytes = await _mediator.Send(new ExportInventoryCsvQuery(Search, null, null, Status));
         return File(bytes, "text/csv", $"inventory_{DateTime.Now:yyyy-MM-dd}.csv");
     }
 
-    // بارگذاری CSV برای به‌روزرسانی انبوه موجودی
+    // ── بارگذاری CSV ────────────────────────────────────────────────────────
     public async Task<IActionResult> OnPostImportAsync(IFormFile? csvFile)
     {
         if (csvFile is null || csvFile.Length == 0)
@@ -105,7 +141,7 @@ public class IndexModel : PageModel
 
     private async Task LoadAsync()
     {
-        Data = await _mediator.Send(new GetInventoryOverviewQuery(
-            Search, BrandValueId, Model, Status, Page, PageSize, Sort, Desc));
+        Data = await _mediator.Send(new GetInventoryProductsQuery(
+            Search, BrandId, Status, ProductType, Page, PageSize, Sort, Desc));
     }
 }

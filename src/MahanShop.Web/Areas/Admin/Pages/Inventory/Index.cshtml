@@ -9,123 +9,268 @@
     string StockLabel(int s) => s == 0 ? "ناموجود" : s <= 5 ? $"فقط {s} عدد" : "موجود";
 }
 
-@if (TempData["AdminOk"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["AdminOk"] is string ok)   { <div class="alert alert-success">@ok</div> }
 @if (TempData["AdminErr"] is string err) { <div class="alert alert-danger">@err</div> }
 
-@* نوار هشدار کمبود موجودی *@
+@* نوار هشدار موجودی کم *@
 @if (Model.Data.LowStockCount > 0 && Model.Status != StockStatusFilter.Low)
 {
-    <a class="inv-lowbar" asp-route-Status="@StockStatusFilter.Low" asp-route-Search="@Model.Search"
-       asp-route-BrandValueId="@Model.BrandValueId" asp-route-Model="@Model.Model">
-        ⚠️ شما @Model.Data.LowStockCount آیتم با موجودی کمتر از ۵ دارید — برای دیدن کلیک کنید.
+    <a class="inv-lowbar" asp-route-Status="@StockStatusFilter.Low"
+       asp-route-Search="@Model.Search" asp-route-BrandId="@Model.BrandId"
+       asp-route-ProductType="@Model.ProductType">
+        ⚠️ @Model.Data.LowStockCount آیتم با موجودی محدود (۱–۵) — برای دیدن کلیک کنید.
     </a>
 }
 
-@* فیلترها *@
-<div class="admin-toolbar">
-    <form method="get" class="admin-search admin-search--wide">
-        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="نام محصول یا SKU..." />
-        <select name="BrandValueId" class="form-select">
+@* نوار فیلتر *@
+<div class="admin-toolbar inv7-toolbar">
+    <form method="get" class="inv7-filters">
+        <input type="text" name="Search" value="@Model.Search" class="form-control"
+               placeholder="نام محصول..." />
+        <select name="BrandId" class="form-select">
             <option value="">همه برندها</option>
             @foreach (var b in Model.Data.BrandOptions)
             {
-                <option value="@b.ValueId" selected="@(Model.BrandValueId == b.ValueId)">@b.Name</option>
+                <option value="@b.BrandId" selected="@(Model.BrandId == b.BrandId)">@b.Name</option>
             }
         </select>
-        <input type="text" name="Model" value="@Model.Model" class="form-control" placeholder="مدل (مثلاً A31)" />
+        <select name="ProductType" class="form-select">
+            <option value="@InventoryProductTypeFilter.All"    selected="@(Model.ProductType == InventoryProductTypeFilter.All)">همه نوع‌ها</option>
+            <option value="@InventoryProductTypeFilter.Simple" selected="@(Model.ProductType == InventoryProductTypeFilter.Simple)">محصول ساده</option>
+            <option value="@InventoryProductTypeFilter.Variant" selected="@(Model.ProductType == InventoryProductTypeFilter.Variant)">چند‌مدلی</option>
+        </select>
         <select name="Status" class="form-select">
-            <option value="@StockStatusFilter.All" selected="@(Model.Status == StockStatusFilter.All)">همه</option>
-            <option value="@StockStatusFilter.InStock" selected="@(Model.Status == StockStatusFilter.InStock)">موجود</option>
-            <option value="@StockStatusFilter.Low" selected="@(Model.Status == StockStatusFilter.Low)">موجودی محدود (کمتر از ۵)</option>
-            <option value="@StockStatusFilter.Out" selected="@(Model.Status == StockStatusFilter.Out)">ناموجود</option>
+            <option value="@StockStatusFilter.All"     selected="@(Model.Status == StockStatusFilter.All)">همه موجودی‌ها</option>
+            <option value="@StockStatusFilter.InStock" selected="@(Model.Status == StockStatusFilter.InStock)">موجود (بیشتر از ۵)</option>
+            <option value="@StockStatusFilter.Low"     selected="@(Model.Status == StockStatusFilter.Low)">موجودی محدود (۱–۵)</option>
+            <option value="@StockStatusFilter.Out"     selected="@(Model.Status == StockStatusFilter.Out)">ناموجود</option>
         </select>
         <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+        @if (!string.IsNullOrEmpty(Model.Search) || Model.BrandId.HasValue
+             || Model.ProductType != InventoryProductTypeFilter.All || Model.Status != StockStatusFilter.All)
+        {
+            <a class="btn btn-outline-secondary" asp-page="">پاک کردن</a>
+        }
     </form>
     <div class="admin-toolbar__actions">
-        <a class="btn btn-outline-secondary" asp-page-handler="Export"
-           asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId"
-           asp-route-Model="@Model.Model" asp-route-Status="@Model.Status">دانلود CSV</a>
+        <a class="btn btn-outline-secondary btn-sm"
+           asp-page-handler="Export"
+           asp-route-Search="@Model.Search"
+           asp-route-Status="@Model.Status">دانلود CSV</a>
         <form method="post" asp-page-handler="Import" enctype="multipart/form-data" class="admin-inline-form">
-            <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" required />
+            <input type="file" name="csvFile" accept=".csv,text/csv"
+                   class="form-control form-control-sm" required />
             <button type="submit" class="btn btn-outline-success btn-sm">بارگذاری CSV</button>
         </form>
     </div>
 </div>
 
-@* عملیات دسته‌ای *@
-<form method="post" asp-page-handler="Bulk" id="invBulkForm"
-      asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId"
-      asp-route-Model="@Model.Model" asp-route-Status="@Model.Status"
-      asp-route-Page="@Model.Page" asp-route-Sort="@Model.Sort" asp-route-Desc="@Model.Desc">
-    <div class="inv-bulkbar">
-        <span class="admin-muted"><span id="invSelCount">0</span> ردیف انتخاب‌شده</span>
-        <select name="operation" class="form-select form-select-sm inv-bulk-op">
-            <option value="@BulkStockOperation.Set">تنظیم موجودی روی</option>
-            <option value="@BulkStockOperation.Increase">افزایش به مقدار</option>
-            <option value="@BulkStockOperation.Decrease">کاهش به مقدار</option>
-            <option value="@BulkStockOperation.IncreasePercent">افزایش درصدی (٪)</option>
-        </select>
-        <input type="number" name="amount" min="0" value="0" class="form-control form-control-sm admin-stock-input" />
-        <button type="submit" class="btn btn-sm btn-warning">اعمال روی انتخاب‌شده‌ها</button>
-    </div>
-
-    <div class="admin-panel-box">
-        <table class="table admin-table inv-table">
-            <thead>
-                <tr>
-                    <th><input type="checkbox" class="inv-check-all" aria-label="انتخاب همه" /></th>
-                    <th><a asp-route-Sort="product" asp-route-Desc="@(Model.Sort == "product" && !Model.Desc)" asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId" asp-route-Model="@Model.Model" asp-route-Status="@Model.Status">نام محصول</a></th>
-                    <th>برند</th>
-                    <th>مدل / ویژگی اصلی</th>
-                    <th>رنگ / سایر</th>
-                    <th><a asp-route-Sort="stock" asp-route-Desc="@(Model.Sort == "stock" && !Model.Desc)" asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId" asp-route-Model="@Model.Model" asp-route-Status="@Model.Status">موجودی</a></th>
-                    <th><a asp-route-Sort="sku" asp-route-Desc="@(Model.Sort == "sku" && !Model.Desc)" asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId" asp-route-Model="@Model.Model" asp-route-Status="@Model.Status">SKU</a></th>
-                    <th>عملیات</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var r in Model.Data.Rows)
-            {
-                <tr data-variant="@r.VariantId">
-                    <td><input type="checkbox" name="ids" value="@r.VariantId" class="inv-row-check" /></td>
-                    <td><a asp-page="/Products/Edit" asp-route-id="@r.ProductId">@r.ProductTitle</a></td>
-                    <td>@(string.IsNullOrEmpty(r.Brand) ? "—" : r.Brand)</td>
-                    <td>@(string.IsNullOrEmpty(r.Model) ? "—" : r.Model)</td>
-                    <td>@(string.IsNullOrEmpty(r.OtherAttributes) ? "—" : r.OtherAttributes)</td>
-                    <td>
-                        <span class="inv-dot @StockTone(r.Stock)" title="@StockLabel(r.Stock)"></span>
-                        <input type="number" min="0" value="@r.Stock" class="form-control form-control-sm admin-stock-input inv-stock"
-                               data-variant="@r.VariantId" aria-label="موجودی @r.ProductTitle" />
-                    </td>
-                    <td>@(string.IsNullOrEmpty(r.Sku) ? "—" : r.Sku)</td>
-                    <td class="admin-actions">
-                        <button type="button" class="btn btn-sm btn-outline-secondary inv-adj" data-variant="@r.VariantId" data-delta="-1" aria-label="کاهش یک عدد">−</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary inv-adj" data-variant="@r.VariantId" data-delta="1" aria-label="افزایش یک عدد">+</button>
-                        <a class="btn btn-sm btn-outline-primary" asp-page="/Products/Edit" asp-route-id="@r.ProductId">ویرایش</a>
-                    </td>
-                </tr>
-            }
-            @if (Model.Data.Rows.Count == 0)
-            {
-                <tr><td colspan="8" class="admin-muted text-center">واریانتی یافت نشد.</td></tr>
-            }
-            </tbody>
-        </table>
-
-        @if (Model.Data.TotalPages > 1)
+@* جدول محصولات *@
+<div class="admin-panel-box">
+    <table class="table admin-table inv7-table">
+        <thead>
+            <tr>
+                <th style="width:36px"></th>@* expand toggle *@
+                <th>
+                    <a asp-route-Sort="title"
+                       asp-route-Desc="@(Model.Sort == "title" && !Model.Desc)"
+                       asp-route-Search="@Model.Search" asp-route-BrandId="@Model.BrandId"
+                       asp-route-ProductType="@Model.ProductType" asp-route-Status="@Model.Status">
+                        نام محصول
+                    </a>
+                </th>
+                <th>برند / دسته</th>
+                <th>نوع</th>
+                <th>
+                    <a asp-route-Sort="price"
+                       asp-route-Desc="@(Model.Sort == "price" && !Model.Desc)"
+                       asp-route-Search="@Model.Search" asp-route-BrandId="@Model.BrandId"
+                       asp-route-ProductType="@Model.ProductType" asp-route-Status="@Model.Status">
+                        قیمت (ریال)
+                    </a>
+                </th>
+                <th>قیمت تخفیف</th>
+                <th>
+                    <a asp-route-Sort="stock"
+                       asp-route-Desc="@(Model.Sort == "stock" && !Model.Desc)"
+                       asp-route-Search="@Model.Search" asp-route-BrandId="@Model.BrandId"
+                       asp-route-ProductType="@Model.ProductType" asp-route-Status="@Model.Status">
+                        موجودی
+                    </a>
+                </th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var p in Model.Data.Products)
         {
-            <nav class="admin-pager">
-                @for (int i = 1; i <= Model.Data.TotalPages; i++)
-                {
-                    <a class="admin-pager__link @(i == Model.Data.Page ? "is-active" : "")"
-                       asp-route-Page="@i" asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId"
-                       asp-route-Model="@Model.Model" asp-route-Status="@Model.Status"
-                       asp-route-Sort="@Model.Sort" asp-route-Desc="@Model.Desc">@i</a>
-                }
-            </nav>
+            var stockTone = p.IsOutOfStock ? "is-out" : (p.IsLowStock ? "is-low" : "is-in");
+            var stockLabel = p.IsOutOfStock ? "ناموجود" : (p.IsLowStock ? "موجودی محدود" : "موجود");
+
+            if (!p.HasVariants)
+            {
+                @* ─── ردیف محصول ساده: ویرایش inline ─── *@
+                <tr class="inv7-simple-row" data-product="@p.ProductId">
+                    <td></td>
+                    <td>
+                        <a asp-area="Admin" asp-page="/Products/Edit" asp-route-id="@p.ProductId"
+                           class="inv7-title">@p.ProductTitle</a>
+                    </td>
+                    <td class="admin-muted">
+                        @(p.BrandName ?? "—")
+                        @if (!string.IsNullOrEmpty(p.CategoryName)) { <span class="inv7-cat">/ @p.CategoryName</span> }
+                    </td>
+                    <td><span class="inv7-badge inv7-badge--simple">ساده</span></td>
+                    <td>
+                        <input type="number" min="0" value="@p.Price"
+                               class="form-control form-control-sm inv7-price"
+                               data-product="@p.ProductId" data-field="price"
+                               aria-label="قیمت @p.ProductTitle" />
+                    </td>
+                    <td>
+                        <input type="number" min="0" value="@(p.DiscountPrice ?? 0)"
+                               class="form-control form-control-sm inv7-price"
+                               data-product="@p.ProductId" data-field="discount"
+                               placeholder="بدون تخفیف"
+                               aria-label="قیمت تخفیف @p.ProductTitle" />
+                    </td>
+                    <td>
+                        <span class="inv-dot @StockTone(p.Stock)" title="@StockLabel(p.Stock)"></span>
+                        <input type="number" min="0" value="@p.Stock"
+                               class="form-control form-control-sm inv7-simple-stock"
+                               data-product="@p.ProductId"
+                               aria-label="موجودی @p.ProductTitle" />
+                    </td>
+                    <td class="admin-actions">
+                        <a class="btn btn-sm btn-outline-primary"
+                           asp-area="Admin" asp-page="/Products/Edit" asp-route-id="@p.ProductId">ویرایش</a>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @* ─── ردیف محصول واریانتی: قابل expand ─── *@
+                <tr class="inv7-variant-head" data-product="@p.ProductId">
+                    <td>
+                        <button type="button" class="inv7-expand-btn" data-target="variants-@p.ProductId"
+                                aria-expanded="false" title="نمایش/پنهان واریانت‌ها">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </td>
+                    <td>
+                        <a asp-area="Admin" asp-page="/Products/Edit" asp-route-id="@p.ProductId"
+                           class="inv7-title">@p.ProductTitle</a>
+                        <span class="inv7-variant-count">@p.VariantCount گزینه</span>
+                    </td>
+                    <td class="admin-muted">
+                        @(p.BrandName ?? "—")
+                        @if (!string.IsNullOrEmpty(p.CategoryName)) { <span class="inv7-cat">/ @p.CategoryName</span> }
+                    </td>
+                    <td><span class="inv7-badge inv7-badge--variant">چند‌مدلی</span></td>
+                    <td class="admin-muted" colspan="2">— از واریانت‌ها —</td>
+                    <td>
+                        <span class="inv-dot @stockTone" title="@stockLabel"></span>
+                        <span class="admin-muted">@stockLabel</span>
+                    </td>
+                    <td class="admin-actions">
+                        <a class="btn btn-sm btn-outline-primary"
+                           asp-area="Admin" asp-page="/Products/Edit" asp-route-id="@p.ProductId">ویرایش</a>
+                    </td>
+                </tr>
+
+                @* ─── ردیف گسترش‌یافته: جدول واریانت‌ها ─── *@
+                <tr class="inv7-variants-row d-none" id="variants-@p.ProductId">
+                    <td></td>
+                    <td colspan="7" class="p-0">
+                        <div class="inv7-variants-inner">
+                            <table class="table table-sm mb-0 inv7-variants-table">
+                                <thead>
+                                    <tr>
+                                        <th>ویژگی‌ها</th>
+                                        <th>SKU</th>
+                                        <th>قیمت (ریال)</th>
+                                        <th>قیمت تخفیف</th>
+                                        <th>موجودی</th>
+                                        <th>وضعیت</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var v in p.Variants)
+                                {
+                                    <tr data-variant="@v.VariantId">
+                                        <td class="inv7-variant-title">@v.Title</td>
+                                        <td class="admin-muted">@(v.Sku ?? "—")</td>
+                                        <td>
+                                            <input type="number" min="0" value="@v.Price"
+                                                   class="form-control form-control-sm inv7-vt-price"
+                                                   data-variant="@v.VariantId" data-field="price"
+                                                   aria-label="قیمت @v.Title" />
+                                        </td>
+                                        <td>
+                                            <input type="number" min="0" value="@(v.DiscountPrice ?? 0)"
+                                                   class="form-control form-control-sm inv7-vt-price"
+                                                   data-variant="@v.VariantId" data-field="discount"
+                                                   placeholder="بدون تخفیف"
+                                                   aria-label="قیمت تخفیف @v.Title" />
+                                        </td>
+                                        <td>
+                                            <span class="inv-dot @StockTone(v.Stock)" title="@StockLabel(v.Stock)"></span>
+                                            <input type="number" min="0" value="@v.Stock"
+                                                   class="form-control form-control-sm inv7-vt-stock"
+                                                   data-variant="@v.VariantId"
+                                                   aria-label="موجودی @v.Title" />
+                                        </td>
+                                        <td>
+                                            <span class="inv7-active-dot @(v.IsActive ? "is-active" : "is-inactive")"
+                                                  title="@(v.IsActive ? "فعال" : "غیرفعال")"></span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-xs btn-outline-secondary inv7-adj"
+                                                    data-variant="@v.VariantId" data-delta="-1" aria-label="کاهش یک">−</button>
+                                            <button type="button" class="btn btn-xs btn-outline-secondary inv7-adj"
+                                                    data-variant="@v.VariantId" data-delta="1" aria-label="افزایش یک">+</button>
+                                        </td>
+                                    </tr>
+                                }
+                                @if (p.Variants.Count == 0)
+                                {
+                                    <tr><td colspan="7" class="admin-muted text-center">گزینه‌ای تعریف نشده است.</td></tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            }
         }
+
+        @if (Model.Data.Products.Count == 0)
+        {
+            <tr><td colspan="8" class="admin-muted text-center py-4">محصولی یافت نشد.</td></tr>
+        }
+        </tbody>
+    </table>
+
+    @if (Model.Data.TotalPages > 1)
+    {
+        <nav class="admin-pager">
+            @for (int i = 1; i <= Model.Data.TotalPages; i++)
+            {
+                <a class="admin-pager__link @(i == Model.Data.Page ? "is-active" : "")"
+                   asp-route-Page="@i" asp-route-Search="@Model.Search"
+                   asp-route-BrandId="@Model.BrandId" asp-route-ProductType="@Model.ProductType"
+                   asp-route-Status="@Model.Status"
+                   asp-route-Sort="@Model.Sort" asp-route-Desc="@Model.Desc">@i</a>
+            }
+        </nav>
+    }
+    <div class="admin-muted" style="padding:8px 16px; font-size:13px;">
+        مجموع: @Model.Data.TotalCount محصول
     </div>
-</form>
+</div>
 
 @section Scripts {
     <script src="~/admin/inventory.js" asp-append-version="true"></script>
