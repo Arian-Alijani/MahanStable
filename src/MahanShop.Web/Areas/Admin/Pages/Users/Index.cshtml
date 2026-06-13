@@ -1,0 +1,89 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Users.IndexModel
+@{
+    ViewData["Title"] = "کاربران";
+    ViewData["AdminActive"] = "users";
+}
+
+@if (TempData["AdminOk"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+@if (TempData["AdminError"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<div class="admin-toolbar">
+    <form method="get" class="admin-search admin-search--wide">
+        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="نام / موبایل / ایمیل..." />
+        <select name="OnlyAdmins" class="form-select">
+            <option value="">همه کاربران</option>
+            <option value="true" selected="@(Model.OnlyAdmins == true)">فقط مدیران</option>
+        </select>
+        <select name="OnlyInactive" class="form-select">
+            <option value="">فعال و غیرفعال</option>
+            <option value="true" selected="@(Model.OnlyInactive == true)">فقط غیرفعال‌ها</option>
+        </select>
+        <button type="submit" class="btn btn-outline-secondary">فیلتر</button>
+    </form>
+</div>
+
+<div class="admin-panel-box">
+    <table class="table admin-table">
+        <thead>
+            <tr><th>نام</th><th>موبایل</th><th>ایمیل</th><th>سفارش‌ها</th><th>عضویت</th><th>نقش</th><th>وضعیت</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var u in Model.Result.Items)
+        {
+            <tr>
+                <td><strong>@(string.IsNullOrEmpty(u.FullName) ? "—" : u.FullName)</strong></td>
+                <td>@u.PhoneNumber</td>
+                <td>@(string.IsNullOrEmpty(u.Email) ? "—" : u.Email)</td>
+                <td>@u.OrderCount</td>
+                <td>@u.CreatedAt.ToString("yyyy/MM/dd")</td>
+                <td>
+                    @if (u.IsAdmin)
+                    {
+                        <span class="badge admin-status-badge is-info">مدیر</span>
+                    }
+                    else
+                    {
+                        <span class="badge admin-status-badge is-muted">کاربر</span>
+                    }
+                </td>
+                <td>
+                    @if (u.IsActive)
+                    {
+                        <span class="badge admin-status-badge is-success">فعال</span>
+                    }
+                    else
+                    {
+                        <span class="badge admin-status-badge is-danger">غیرفعال</span>
+                    }
+                </td>
+                <td class="admin-actions">
+                    <a asp-page="Detail" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary">جزییات</a>
+                </td>
+            </tr>
+        }
+        @if (Model.Result.Items.Count == 0)
+        {
+            <tr><td colspan="8" class="admin-muted text-center">کاربری یافت نشد.</td></tr>
+        }
+        </tbody>
+    </table>
+
+    @if (Model.Result.TotalPages > 1)
+    {
+        <nav class="admin-pager">
+            @for (int i = 1; i <= Model.Result.TotalPages; i++)
+            {
+                <a class="admin-pager__link @(i == Model.Result.Page ? "is-active" : "")"
+                   asp-route-Page="@i" asp-route-Search="@Model.Search"
+                   asp-route-OnlyAdmins="@Model.OnlyAdmins" asp-route-OnlyInactive="@Model.OnlyInactive">@i</a>
+            }
+        </nav>
+    }
+</div>

@@ -7,7 +7,21 @@
 ---
 
 ## وضعیت فعلی
-**مرحله: ۳ DONE + ممیزی امنیتی پنل ادمین DONE (کد نوشته شد؛ بیلد/تست طبق درخواست کاربر اجرا نشد).**
+**مرحله: ۴ DONE — Phase 9 (پنل ادمین) کامل شد (کد نوشته شد؛ بیلد/تست طبق درخواست کاربر اجرا نشد).**
+
+### مرحله ۴ (سفارش‌ها/کاربران/داشبورد آمار) — این سشن
+ادامهٔ کامیت `PH4 half` (لایهٔ Application + صفحات Orders از قبل بود). در این سشن تکمیل شد:
+- **داشبورد:** `Areas/Admin/Pages/Index` به `GetDashboardStatsQuery` وصل شد (فروش امروز/کل، سفارش‌های منتظر پردازش، موجودی کم، شمارنده‌ها + جدول سفارش‌های اخیر + جدول موجودی کم).
+- **کاربران:** `Areas/Admin/Pages/Users/Index` (لیست + جستجو/فیلتر مدیر/غیرفعال + صفحه‌بندی) و `Users/Detail` (پروفایل + toggle نقش مدیر/فعال + آدرس‌ها با حذف + سفارش‌های اخیر). `CurrentAdminId` از claim (نه فرم) — گارد خودقفل‌نشدن در command‌ها.
+- **sidebar:** لینک‌های «سفارش‌ها» و «کاربران» اضافه شد.
+- **CSS:** کلاس‌های داشبورد/جزییات/بج وضعیت به `wwwroot/admin/admin.css` افزوده شد (`admin-status-badge` toneها، `admin-dashboard-grid`، `admin-grid-2`، `admin-dl`، `admin-page-title`، `admin-box-title`، `admin-panel-box__head/__title`، `admin-stat-card--soft/__unit`).
+
+موجود از قبل (PH4 half): `Features/Admin/Dashboard`، `Features/Admin/Orders` (Get/Detail/ChangeStatus + DTOها)، `Features/Admin/Users` (Get/Detail/Commands + DTOها)، صفحات `Orders/Index` و `Orders/Detail` (با فاکتور PDF reuse). **بدون migration جدید.**
+
+---
+
+## وضعیت قبلی
+**مرحله: ۳ DONE + ممیزی امنیتی پنل ادمین DONE.**
 
 ### ممیزی امنیتی (Security Hardening — این سشن)
 بررسی‌شده و **سالم** بود: policy `AdminOnly` روی کل Area، anti-forgery گلوبال، همهٔ عملیات تغییردهنده POST (هیچ GET-state-change)، بدون SQL خام، بدون `Html.Raw` در ادمین، OTP با هش constant-time + MaxAttempts، آپلود whitelist پسوند/Content-Type/حجم + نام فایل GUID، `Url.IsLocalUrl` روی returnUrl، حذف عکس فقط از DB (بدون path traversal).
@@ -33,7 +47,7 @@
 
 **مرحله ۲ (قبلی):** CRUD برند/دسته/محصول + آپلود عکس + ImageUploadService + بلوک نشان‌دار Program.cs — بدون تغییر.
 
-قدم بعد = **مرحلهٔ ۴ (سفارش‌ها/کاربران/داشبورد آمار)** = تکمیل Phase 9.
+قدم بعد = **پایان رودمپ — Phase 9 کامل.** (در صورت نیاز: بیلد/تست/smoke که طبق درخواست کاربر اجرا نشد.)
 
 ---
 
@@ -60,7 +74,7 @@ git checkout main && git reset --hard baseline-before-admin-panel
 - [x] **مرحله ۱ — Shell + Auth Gate** — Areas/Admin layout + داشبورد خالی + policy `AdminOnly`.
 - [x] **مرحله ۲ — کاتالوگ پایه** — CRUD محصول/دسته/برند + آپلود عکس.
 - [x] **مرحله ۳ — Variant/موجودی + ویژگی/تگ** — pool ویژگی/مقادیر + CRUD مشخصه/برچسب + گرید variant per-product (بدون migration جدید؛ Phase 8.5 از قبل موجود بود).
-- [ ] **مرحله ۴ — سفارش‌ها/کاربران/داشبورد آمار** — تکمیل Phase 9.
+- [x] **مرحله ۴ — سفارش‌ها/کاربران/داشبورد آمار** — تکمیل Phase 9 (داشبورد واقعی + CRUD سفارش/تغییر وضعیت/فاکتور + مدیریت کاربر؛ بدون migration جدید).
 
 ---
 
