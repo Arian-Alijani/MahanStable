@@ -1,9 +1,18 @@
 @page
 @using MahanShop.Domain.Enums
+@using MahanShop.Application.Features.Admin.Home
 @model MahanShop.Web.Areas.Admin.Pages.Home.IndexModel
 @{
     ViewData["Title"] = "صفحه اصلی";
     ViewData["AdminActive"] = "home";
+
+    (string key, string label, string desc)[] catStyles = new[]
+    {
+        ("Bento",  "بنتو",        "سلول اول بزرگ‌تر — جلوهٔ ویترینی"),
+        ("Grid",   "گرید یکنواخت", "همهٔ تایل‌ها هم‌اندازه و منظم"),
+        ("Scroll", "اسلایدر گرد",  "تایل‌های دایره‌ای قابل اسکرول افقی"),
+        ("Pills",  "چیپس فشرده",   "سبک و جمع‌وجور، مناسب دسته‌های زیاد")
+    };
 }
 
 @if (TempData["AdminOk"] is string ok)
@@ -183,3 +192,125 @@
         </tbody>
     </table>
 </div>
+
+@* ======================= گرید دسته‌بندی صفحهٔ اصلی ======================= *@
+@{ var board = Model.CategoryBoard; }
+<div class="admin-toolbar" style="margin-top:28px">
+    <h1 class="admin-page-title">گرید دسته‌بندی صفحهٔ اصلی</h1>
+</div>
+<p class="admin-hint">
+    این بخش، گرید «خرید بر اساس دسته‌بندی» را روی صفحهٔ اصلی کنترل می‌کند: کدام دسته‌ها نمایش داده شوند،
+    به چه ترتیبی (با کشیدن‌ورها‌کردن یا دکمه‌های بالا/پایین)، و با چه سبک ظاهری.
+</p>
+
+<div class="cat-board">
+    @* ---------- ستون: تنظیمات سبک/فعال‌بودن/ترتیب ---------- *@
+    <div class="admin-panel-box cat-board__settings">
+        <h2 class="admin-box-title">سبک نمایش و تنظیمات</h2>
+        <form method="post" asp-page-handler="CatSettings" id="catSettingsForm">
+            <input type="hidden" name="style" id="catStyleInput" value="@board.Style" />
+
+            <div class="cat-style-grid" role="radiogroup" aria-label="سبک نمایش گرید">
+                @foreach (var st in catStyles)
+                {
+                    var active = string.Equals(st.key, board.Style.ToString(), StringComparison.OrdinalIgnoreCase);
+                    <button type="button" class="cat-style-card @(active ? "is-selected" : "")"
+                            data-style="@st.key" aria-pressed="@(active ? "true" : "false")">
+                        <span class="cat-style-card__preview cat-style-card__preview--@st.key.ToLowerInvariant()" aria-hidden="true">
+                            <i></i><i></i><i></i><i></i>
+                        </span>
+                        <span class="cat-style-card__label">@st.label</span>
+                        <span class="cat-style-card__desc">@st.desc</span>
+                    </button>
+                }
+            </div>
+
+            <div class="mb-3 mt-3">
+                <label class="form-label">عنوان بخش</label>
+                <input name="title" value="@board.Title" maxlength="150" class="form-control" placeholder="خرید بر اساس دسته‌بندی" />
+            </div>
+            <div class="row">
+                <div class="col mb-3">
+                    <label class="form-label">عدد ترتیب در صفحه (۰ = بلافاصله زیر بنر)</label>
+                    <input name="displayOrder" type="number" min="0" value="@board.DisplayOrder" class="form-control" />
+                </div>
+            </div>
+            <div class="form-check mb-3">
+                <input name="isActive" value="true" type="checkbox" class="form-check-input" checked="@board.IsActive" />
+                <label class="form-check-label">نمایش گرید دسته‌بندی روی صفحهٔ اصلی</label>
+            </div>
+            <button type="submit" class="btn btn-primary">ذخیرهٔ تنظیمات</button>
+        </form>
+    </div>
+
+    @* ---------- ستون: دسته‌های منتخب (قابل مرتب‌سازی) ---------- *@
+    <div class="admin-panel-box cat-board__selected">
+        <div class="admin-panel-box__head">
+            <h2 class="admin-box-title">دسته‌های روی صفحهٔ اصلی</h2>
+            <span class="admin-muted">@board.Selected.Count دسته</span>
+        </div>
+
+        @if (board.Selected.Count == 0)
+        {
+            <p class="admin-muted">هنوز دسته‌ای انتخاب نشده است. از فهرست «دسته‌های قابل افزودن» اضافه کنید.</p>
+        }
+        else
+        {
+            <p class="admin-hint cat-reorder-hint">
+                ردیف‌ها را بکشید و رها کنید تا ترتیب عوض شود؛ سپس «ذخیرهٔ ترتیب» را بزنید.
+                (یا از دکمه‌های بالا/پایین استفاده کنید.)
+            </p>
+            <form method="post" asp-page-handler="CatReorder" id="catReorderForm">
+                <input type="hidden" name="orderedIds" id="catOrderedIds" />
+                <ul class="cat-sortable" id="catSortable">
+                    @foreach (var c in board.Selected)
+                    {
+                        <li class="cat-sortable__item" draggable="true" data-id="@c.Id">
+                            <span class="cat-sortable__grip" aria-hidden="true" title="بکشید برای جابه‌جایی">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg>
+                            </span>
+                            <img src="@(c.ImageUrl ?? "/img/categories/gadget.svg")" alt="" class="cat-sortable__thumb" loading="lazy" />
+                            <span class="cat-sortable__name">
+                                @c.Name
+                                <small class="admin-muted">@c.ProductCount محصول</small>
+                            </span>
+                            <span class="cat-sortable__actions">
+                                <button type="submit" formaction="?handler=CatMove&categoryId=@c.Id&up=true" class="cat-icon-btn" title="بالا" aria-label="یک پله بالا">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>
+                                </button>
+                                <button type="submit" formaction="?handler=CatMove&categoryId=@c.Id&up=false" class="cat-icon-btn" title="پایین" aria-label="یک پله پایین">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <button type="submit" formaction="?handler=CatRemove&categoryId=@c.Id" class="cat-icon-btn cat-icon-btn--danger" title="حذف از صفحهٔ اصلی" aria-label="حذف">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                </button>
+                            </span>
+                        </li>
+                    }
+                </ul>
+                <button type="submit" class="btn btn-primary mt-2" id="catSaveOrderBtn" disabled>ذخیرهٔ ترتیب</button>
+            </form>
+        }
+
+        @if (board.Available.Count > 0)
+        {
+            <h3 class="admin-box-title cat-board__avail-title">دسته‌های قابل افزودن</h3>
+            <div class="cat-avail">
+                @foreach (var c in board.Available)
+                {
+                    <form method="post" asp-page-handler="CatAdd" class="cat-avail__form">
+                        <input type="hidden" name="categoryId" value="@c.Id" />
+                        <button type="submit" class="cat-avail__chip" title="افزودن @c.Name به صفحهٔ اصلی">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                            @c.Name
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/admin/home-categories.js" asp-append-version="true"></script>
+}

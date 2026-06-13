@@ -2,15 +2,79 @@
 (function () {
     'use strict';
 
-    /* ---------- Mobile drawer ---------- */
+    /* ---------- Mobile drawer (منوی همبرگری — اسلاید از سمت راست با انیمیشن) ---------- */
     const drawer = document.querySelector('[data-drawer]');
     const drawerToggles = document.querySelectorAll('[data-drawer-open]');
-    function setToggleState(on) { drawerToggles.forEach(b => b.setAttribute('aria-expanded', on ? 'true' : 'false')); }
-    function openDrawer() { if (drawer) { drawer.hidden = false; document.body.style.overflow = 'hidden'; setToggleState(true); } }
-    function closeDrawer() { if (drawer) { drawer.hidden = true; document.body.style.overflow = ''; setToggleState(false); } }
-    drawerToggles.forEach(b => b.addEventListener('click', openDrawer));
+    let drawerCloseTimer = null;
+    let lastFocused = null;
+
+    function setToggleState(on) {
+        drawerToggles.forEach(b => b.setAttribute('aria-expanded', on ? 'true' : 'false'));
+    }
+    function isDrawerOpen() { return drawer && !drawer.hidden && drawer.classList.contains('is-open'); }
+
+    function openDrawer() {
+        if (!drawer) return;
+        if (drawerCloseTimer) { clearTimeout(drawerCloseTimer); drawerCloseTimer = null; }
+        lastFocused = document.activeElement;
+        drawer.hidden = false;
+        document.body.style.overflow = 'hidden';
+        // فریم بعدی تا ترنزیشن اسلاید اجرا شود
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => drawer.classList.add('is-open'));
+        });
+        setToggleState(true);
+        // فوکوس روی اولین کنترل قابل تعامل دراور
+        const first = drawer.querySelector('.drawer__close, .drawer__search input, a, button');
+        if (first) setTimeout(() => first.focus(), 60);
+    }
+
+    function closeDrawer() {
+        if (!drawer || drawer.hidden) return;
+        drawer.classList.remove('is-open');
+        document.body.style.overflow = '';
+        setToggleState(false);
+        // پس از پایان انیمیشن، پنهان کن
+        drawerCloseTimer = setTimeout(() => { drawer.hidden = true; }, 320);
+        if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    }
+
+    drawerToggles.forEach(b => b.addEventListener('click', e => {
+        e.preventDefault();
+        isDrawerOpen() ? closeDrawer() : openDrawer();
+    }));
     document.querySelectorAll('[data-drawer-close]').forEach(b => b.addEventListener('click', closeDrawer));
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+    // بستن دراور هنگام بزرگ‌شدن صفحه به دسکتاپ (جلوگیری از قفل اسکرول)
+    const dWide = window.matchMedia('(min-width: 992px)');
+    (dWide.addEventListener ? dWide.addEventListener('change', e => { if (e.matches) closeDrawer(); })
+                           : dWide.addListener(e => { if (e.matches) closeDrawer(); }));
+
+    // فعال‌کردن آکاردئون داخل دراور (زیرمنوی دسته‌ها) با کلیک
+    if (drawer) {
+        drawer.querySelectorAll('[data-drawer-acc]').forEach(item => {
+            const trigger = item.querySelector('[data-drawer-acc-toggle]');
+            if (!trigger) return;
+            trigger.addEventListener('click', e => {
+                e.preventDefault();
+                const open = item.classList.toggle('is-expanded');
+                trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+        });
+    }
+
+    /* ---------- فوتر دسکتاپ: ستون‌ها همیشه کامل باز باشند (details در دسکتاپ نباید جمع شود) ---------- */
+    const footerAccs = document.querySelectorAll('.footer-acc');
+    const fWide = window.matchMedia('(min-width: 720px)');
+    function syncFooterAcc(matches) {
+        footerAccs.forEach(d => { if (matches) d.setAttribute('open', ''); else d.removeAttribute('open'); });
+    }
+    if (footerAccs.length) {
+        syncFooterAcc(fWide.matches);
+        (fWide.addEventListener ? fWide.addEventListener('change', e => syncFooterAcc(e.matches))
+                               : fWide.addListener(e => syncFooterAcc(e.matches)));
+    }
 
     /* ---------- Cart popover ---------- */
     const cartBtn = document.querySelector('[data-cart-toggle]');

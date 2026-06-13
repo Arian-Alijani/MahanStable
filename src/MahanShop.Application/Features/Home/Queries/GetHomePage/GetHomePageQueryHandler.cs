@@ -33,10 +33,24 @@ public class GetHomePageQueryHandler : IRequestHandler<GetHomePageQuery, HomePag
             FeaturedCategories = await _db.Categories
                 .AsNoTracking()
                 .Where(x => x.IsActive && x.ShowOnHome)
-                .OrderBy(x => x.DisplayOrder)
+                .OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name)
                 .Select(x => new FeaturedCategoryDto { Name = x.Name, Slug = x.Slug, ImageUrl = x.ImageUrl })
                 .ToListAsync(ct)
         };
+
+        // تنظیمات گرید دسته‌بندی (سبک/فعال/ترتیب/عنوان) از رکورد HomeSection نوع CategoryGrid
+        var catGridRow = await _db.HomeSections.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.SectionType == HomeSectionType.CategoryGrid, ct);
+        if (catGridRow is not null)
+        {
+            vm.CategoryGrid = new HomeCategoryGridVm
+            {
+                Style = Enum.TryParse<HomeCategoryStyle>(catGridRow.Subtitle, out var st) ? st : HomeCategoryStyle.Bento,
+                IsActive = catGridRow.IsActive,
+                DisplayOrder = catGridRow.DisplayOrder,
+                Title = string.IsNullOrWhiteSpace(catGridRow.Title) ? "خرید بر اساس دسته‌بندی" : catGridRow.Title
+            };
+        }
 
         // فروش هر محصول برای BestSelling (fallback ViewCount)
         var soldCounts = await _db.OrderItems
@@ -48,7 +62,7 @@ public class GetHomePageQueryHandler : IRequestHandler<GetHomePageQuery, HomePag
         var sections = await _db.HomeSections
             .AsNoTracking()
             .Include(x => x.Category)
-            .Where(x => x.IsActive)
+            .Where(x => x.IsActive && x.SectionType != HomeSectionType.CategoryGrid)
             .OrderBy(x => x.DisplayOrder)
             .ToListAsync(ct);
 

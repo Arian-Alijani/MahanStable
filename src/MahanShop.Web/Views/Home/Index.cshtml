@@ -2,21 +2,37 @@
 @{
     ViewData["Title"] = null; // عنوان پیش‌فرض صفحه اصلی در Layout
     ViewData["MetaDescription"] = "فروشگاه اینترنتی ماهان شاپ؛ خرید گوشی موبایل، قاب، شارژر، هندزفری و گجت اصل با ضمانت اصالت، قیمت مناسب و ارسال سریع.";
+
+    bool catGridRendered = false;
+    // گرید دسته‌بندی فقط وقتی نمایش داده می‌شود که فعال باشد و حداقل یک دستهٔ منتخب وجود داشته باشد.
+    bool catGridEnabled = Model.CategoryGrid.IsActive && Model.FeaturedCategories.Count > 0;
 }
 
 <h1 class="visually-hidden">فروشگاه اینترنتی موبایل و لوازم جانبی ماهان شاپ</h1>
 
 <div class="container home">
     @await Html.PartialAsync("_HeroBanner", Model.Banners)
-    @await Html.PartialAsync("_CategoryGrid", Model.FeaturedCategories)
 
     @{
-        // رندر یکپارچهٔ بدنه: نوارهای محصول و بنرهای میانی در یک ترتیب مشترک (DisplayOrder).
-        // بنرهایی که عدد ترتیب یکسان دارند، در یک ردیف کنار هم با تقسیم مساویِ فضا قرار می‌گیرند.
+        // اگر ترتیب گرید دسته‌بندی صفر باشد، بلافاصله پس از بنر هیرو نمایش داده می‌شود.
+        if (catGridEnabled && Model.CategoryGrid.DisplayOrder <= 0)
+        {
+            @await Html.PartialAsync("_CategoryGrid", Model)
+            catGridRendered = true;
+        }
+
+        // رندر یکپارچهٔ بدنه: نوارهای محصول، بنرهای میانی و گرید دسته‌بندی در یک ترتیب مشترک (DisplayOrder).
         var sections = Model.Sections;
         for (var i = 0; i < sections.Count; i++)
         {
             var s = sections[i];
+
+            // درج گرید دسته‌بندی در جای مناسب (بر اساس DisplayOrder) بین نوارها
+            if (catGridEnabled && !catGridRendered && Model.CategoryGrid.DisplayOrder <= s.DisplayOrder)
+            {
+                @await Html.PartialAsync("_CategoryGrid", Model)
+                catGridRendered = true;
+            }
 
             if (s.SectionType == HomeSectionType.ProductRow)
             {
@@ -47,6 +63,12 @@
                     }
                 </div>
             }
+        }
+
+        // اگر هنوز رندر نشده (ترتیبش از همهٔ نوارها بزرگ‌تر بود)، انتهای بدنه نمایش بده
+        if (catGridEnabled && !catGridRendered)
+        {
+            @await Html.PartialAsync("_CategoryGrid", Model)
         }
     }
 </div>

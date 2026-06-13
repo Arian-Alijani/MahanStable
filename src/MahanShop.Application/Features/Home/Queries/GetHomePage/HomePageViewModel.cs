@@ -8,6 +8,19 @@ public class HomePageViewModel
     public List<HomeBannerDto> Banners { get; set; } = new();
     public List<FeaturedCategoryDto> FeaturedCategories { get; set; } = new();
     public List<HomeSectionViewModel> Sections { get; set; } = new();
+
+    /// <summary>تنظیمات بخش گرید دسته‌بندی (سبک نمایش، فعال‌بودن، ترتیب، عنوان).</summary>
+    public HomeCategoryGridVm CategoryGrid { get; set; } = new();
+}
+
+/// <summary>تنظیمات نمایش گرید دسته‌بندی منتخب روی صفحهٔ اصلی.</summary>
+public class HomeCategoryGridVm
+{
+    public HomeCategoryStyle Style { get; set; } = HomeCategoryStyle.Bento;
+    public bool IsActive { get; set; } = true;
+    /// <summary>۰ یعنی بلافاصله پس از بنر هیرو (پیش‌فرض)؛ در غیر این صورت بین نوارها بر اساس همین عدد.</summary>
+    public int DisplayOrder { get; set; }
+    public string Title { get; set; } = "خرید بر اساس دسته‌بندی";
 }
 
 /// <summary>اسلاید بنر هیرو.</summary>

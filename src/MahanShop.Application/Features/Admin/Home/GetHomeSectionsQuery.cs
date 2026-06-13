@@ -1,4 +1,5 @@
 using MahanShop.Application.Common.Interfaces;
+using MahanShop.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,8 @@ public class GetHomeSectionsQueryHandler : IRequestHandler<GetHomeSectionsQuery,
 
     public async Task<List<HomeSectionAdminDto>> Handle(GetHomeSectionsQuery request, CancellationToken ct) =>
         await _db.HomeSections.AsNoTracking()
+            // رکورد تنظیماتِ گرید دسته‌بندی جدا مدیریت می‌شود؛ در این لیست نمایش داده نشود.
+            .Where(s => s.SectionType != HomeSectionType.CategoryGrid)
             .OrderBy(s => s.DisplayOrder).ThenBy(s => s.Id)
             .Select(s => new HomeSectionAdminDto
             {

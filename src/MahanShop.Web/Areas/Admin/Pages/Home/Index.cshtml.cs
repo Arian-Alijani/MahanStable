@@ -1,4 +1,5 @@
 using MahanShop.Application.Features.Admin.Home;
+using MahanShop.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -6,8 +7,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace MahanShop.Web.Areas.Admin.Pages.Home;
 
 /// <summary>
-/// مدیریت «صفحهٔ اصلی» — بنرهای هیرو (بالای صفحه) و نوارهای محصول و بنرهای میانی.
-/// تغییر عدد ترتیب، فعال/غیرفعال، حذف، و افزودن نوار/بنر جدید.
+/// مدیریت «صفحهٔ اصلی» — بنرهای هیرو (بالای صفحه)، نوارهای محصول، بنرهای میانی،
+/// و بخش «گرید دسته‌بندی منتخب» (انتخاب دسته‌ها + مرتب‌سازی هوشمند + سبک نمایش).
 /// دسترسی از policy AdminOnly روی کل Area تأمین می‌شود.
 /// </summary>
 public class IndexModel : PageModel
@@ -17,11 +18,13 @@ public class IndexModel : PageModel
 
     public List<HeroBannerAdminDto> HeroBanners { get; private set; } = new();
     public List<HomeSectionAdminDto> Sections { get; private set; } = new();
+    public HomeCategoryBoardDto CategoryBoard { get; private set; } = new();
 
     public async Task OnGetAsync()
     {
         HeroBanners = await _mediator.Send(new GetHeroBannersQuery());
         Sections = await _mediator.Send(new GetHomeSectionsQuery());
+        CategoryBoard = await _mediator.Send(new GetHomeCategoryBoardQuery());
     }
 
     /* ---------- بنر هیرو (بالای صفحه) ---------- */
@@ -67,6 +70,53 @@ public class IndexModel : PageModel
     {
         await _mediator.Send(new DeleteHomeSectionCommand(id));
         TempData["AdminOk"] = "نوار حذف شد.";
+        return RedirectToPage();
+    }
+
+    /* ---------- گرید دسته‌بندی صفحهٔ اصلی ---------- */
+
+    public async Task<IActionResult> OnPostCatAddAsync(int categoryId)
+    {
+        await _mediator.Send(new AddHomeCategoryCommand(categoryId));
+        TempData["AdminOk"] = "دسته به صفحهٔ اصلی افزوده شد.";
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostCatRemoveAsync(int categoryId)
+    {
+        await _mediator.Send(new RemoveHomeCategoryCommand(categoryId));
+        TempData["AdminOk"] = "دسته از صفحهٔ اصلی حذف شد.";
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostCatMoveAsync(int categoryId, bool up)
+    {
+        await _mediator.Send(new MoveHomeCategoryCommand(categoryId, up));
+        TempData["AdminOk"] = "ترتیب دسته‌ها به‌روزرسانی شد.";
+        return RedirectToPage();
+    }
+
+    /// <summary>مرتب‌سازی هوشمند با درگ‌ودراپ — لیست مرتب‌شدهٔ ID از فرم.</summary>
+    public async Task<IActionResult> OnPostCatReorderAsync(string orderedIds)
+    {
+        var ids = (orderedIds ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => int.TryParse(s, out var n) ? n : 0)
+            .Where(n => n > 0).ToList();
+
+        if (ids.Count > 0)
+        {
+            await _mediator.Send(new ReorderHomeCategoriesCommand(ids));
+            TempData["AdminOk"] = "ترتیب دسته‌ها ذخیره شد.";
+        }
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostCatSettingsAsync(
+        HomeCategoryStyle style, bool isActive, int displayOrder, string? title)
+    {
+        await _mediator.Send(new UpdateHomeCategorySettingsCommand(style, isActive, displayOrder, title));
+        TempData["AdminOk"] = "تنظیمات گرید دسته‌بندی ذخیره شد.";
         return RedirectToPage();
     }
 }

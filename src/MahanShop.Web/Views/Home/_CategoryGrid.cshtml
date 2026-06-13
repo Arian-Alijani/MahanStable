@@ -1,29 +1,89 @@
-@model List<FeaturedCategoryDto>
-@if (Model.Count == 0) { return; }
+@using MahanShop.Domain.Enums
+@model HomePageViewModel
 @{
-    // گرادیان ملایم هر تایل بر اساس اندیس (بدون تصویر/منبع خارجی) — مطابق Plus bento
+    var cats = Model.FeaturedCategories;
+    if (cats.Count == 0) { return; }
+
+    var style = Model.CategoryGrid.Style;
+    var title = string.IsNullOrWhiteSpace(Model.CategoryGrid.Title) ? "خرید بر اساس دسته‌بندی" : Model.CategoryGrid.Title;
+
+    // گرادیان ملایم هر تایل بر اساس اندیس (بدون تصویر/منبع خارجی)
     int[] hues = { 217, 265, 150, 190, 25, 330, 50, 280 };
-    var items = Model.Take(6).ToList();
+
+    // تعداد آیتم بسته به سبک
+    var items = style switch
+    {
+        HomeCategoryStyle.Bento => cats.Take(6).ToList(),
+        HomeCategoryStyle.Grid => cats.Take(8).ToList(),
+        HomeCategoryStyle.Pills => cats.Take(16).ToList(),
+        _ => cats.Take(12).ToList() // Scroll
+    };
+
+    string wrapClass = style switch
+    {
+        HomeCategoryStyle.Bento => "cat-bento",
+        HomeCategoryStyle.Grid => "cat-grid",
+        HomeCategoryStyle.Scroll => "cat-scroll",
+        HomeCategoryStyle.Pills => "cat-pills",
+        _ => "cat-bento"
+    };
 }
 
-<section class="cat-section" aria-label="دسته‌بندی‌ها">
+<section class="cat-section cat-section--@style.ToString().ToLowerInvariant()" aria-label="دسته‌بندی‌ها">
     <div class="sec-head">
         <span class="sec-head__bar" aria-hidden="true"></span>
-        <h2 class="sec-head__title">خرید بر اساس دسته‌بندی</h2>
+        <h2 class="sec-head__title">@title</h2>
     </div>
 
-    <div class="cat-bento">
-        @for (var i = 0; i < items.Count; i++)
-        {
-            var c = items[i];
-            var hue = hues[i % hues.Length];
-            <a class="cat-cell @(i == 0 ? "cat-cell--big" : "")" href="/products?CategorySlug=@Uri.EscapeDataString(c.Slug)" style="--h:@hue">
-                <span class="cat-cell__bg" aria-hidden="true"></span>
-                <span class="cat-cell__icon" aria-hidden="true">
-                    <img src="@(c.ImageUrl ?? "/img/categories/gadget.svg")" alt="" loading="lazy" decoding="async" />
-                </span>
-                <span class="cat-cell__name">@c.Name</span>
-            </a>
-        }
-    </div>
+    @if (style == HomeCategoryStyle.Pills)
+    {
+        <div class="cat-pills">
+            @for (var i = 0; i < items.Count; i++)
+            {
+                var c = items[i];
+                var hue = hues[i % hues.Length];
+                <a class="cat-pill" href="/products?CategorySlug=@Uri.EscapeDataString(c.Slug)" style="--h:@hue">
+                    <span class="cat-pill__icon" aria-hidden="true">
+                        <img src="@(c.ImageUrl ?? "/img/categories/gadget.svg")" alt="" loading="lazy" decoding="async" />
+                    </span>
+                    <span class="cat-pill__name">@c.Name</span>
+                </a>
+            }
+        </div>
+    }
+    else if (style == HomeCategoryStyle.Scroll)
+    {
+        <div class="cat-scroll" role="list">
+            @for (var i = 0; i < items.Count; i++)
+            {
+                var c = items[i];
+                var hue = hues[i % hues.Length];
+                <a class="cat-round" role="listitem" href="/products?CategorySlug=@Uri.EscapeDataString(c.Slug)" style="--h:@hue">
+                    <span class="cat-round__disc" aria-hidden="true">
+                        <img src="@(c.ImageUrl ?? "/img/categories/gadget.svg")" alt="" loading="lazy" decoding="async" />
+                    </span>
+                    <span class="cat-round__name">@c.Name</span>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        @* Bento یا Grid — تفاوتشان در کلاس ظرف و سلول اول بزرگ *@
+        <div class="@wrapClass">
+            @for (var i = 0; i < items.Count; i++)
+            {
+                var c = items[i];
+                var hue = hues[i % hues.Length];
+                var big = style == HomeCategoryStyle.Bento && i == 0;
+                <a class="cat-cell @(big ? "cat-cell--big" : "")" href="/products?CategorySlug=@Uri.EscapeDataString(c.Slug)" style="--h:@hue">
+                    <span class="cat-cell__bg" aria-hidden="true"></span>
+                    <span class="cat-cell__icon" aria-hidden="true">
+                        <img src="@(c.ImageUrl ?? "/img/categories/gadget.svg")" alt="" loading="lazy" decoding="async" />
+                    </span>
+                    <span class="cat-cell__name">@c.Name</span>
+                </a>
+            }
+        </div>
+    }
 </section>
