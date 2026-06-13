@@ -20,10 +20,9 @@
         });
     }
 
-    /* ---------- Hero slider (crossfade — no scroll, no page jump) ---------- */
+    /* ---------- Hero slider (crossfade خودکار — بدون دکمهٔ جابجایی، هر ۱۵ ثانیه) ---------- */
     document.querySelectorAll('[data-hero]').forEach(hero => {
         const slides = Array.from(hero.querySelectorAll('[data-hero-slide]'));
-        const dots = Array.from(hero.querySelectorAll('[data-hero-dot]'));
         if (slides.length < 2) return;
         let idx = 0, timer = null;
 
@@ -34,15 +33,11 @@
                 s.classList.toggle('is-active', on);
                 s.setAttribute('aria-hidden', on ? 'false' : 'true');
             });
-            dots.forEach((d, k) => d.classList.toggle('is-active', k === idx));
         }
-        function start() { stop(); timer = setInterval(() => go(idx + 1), 5000); }
+        function start() { stop(); timer = setInterval(() => go(idx + 1), 15000); }
         function stop() { if (timer) clearInterval(timer); }
 
-        dots.forEach((d, k) => d.addEventListener('click', () => { go(k); start(); }));
-        hero.querySelectorAll('[data-hero-prev]').forEach(b => b.addEventListener('click', () => { go(idx - 1); start(); }));
-        hero.querySelectorAll('[data-hero-next]').forEach(b => b.addEventListener('click', () => { go(idx + 1); start(); }));
-
+        // توقف هنگام hover، ادامه با خروج موس (UX استاندارد اسلایدر خودکار)
         hero.addEventListener('mouseenter', stop);
         hero.addEventListener('mouseleave', start);
         start();

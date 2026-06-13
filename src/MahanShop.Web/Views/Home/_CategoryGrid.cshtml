@@ -17,7 +17,7 @@
         {
             var c = items[i];
             var hue = hues[i % hues.Length];
-            <a class="cat-cell @(i == 0 ? "cat-cell--big" : "")" href="/@c.Slug" style="--h:@hue">
+            <a class="cat-cell @(i == 0 ? "cat-cell--big" : "")" href="/products?CategorySlug=@Uri.EscapeDataString(c.Slug)" style="--h:@hue">
                 <span class="cat-cell__bg" aria-hidden="true"></span>
                 <span class="cat-cell__icon" aria-hidden="true">
                     <img src="@(c.ImageUrl ?? "/img/categories/gadget.svg")" alt="" loading="lazy" decoding="async" />

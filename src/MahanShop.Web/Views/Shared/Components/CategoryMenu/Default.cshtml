@@ -5,7 +5,7 @@
         @foreach (var c in Model)
         {
             <li class="mega-item">
-                <a class="mega-link" href="/@c.Slug">
+                <a class="mega-link" href="/products?CategorySlug=@Uri.EscapeDataString(c.Slug)">
                     @c.Name
                     @if (c.Children.Any())
                     {
@@ -18,7 +18,7 @@
                         <ul class="mega-sub">
                             @foreach (var ch in c.Children)
                             {
-                                <li><a href="/@ch.Slug">@ch.Name</a></li>
+                                <li><a href="/products?CategorySlug=@Uri.EscapeDataString(ch.Slug)">@ch.Name</a></li>
                             }
                         </ul>
                     </div>
