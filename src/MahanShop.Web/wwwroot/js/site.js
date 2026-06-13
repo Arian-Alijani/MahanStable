@@ -186,6 +186,11 @@
         el.querySelectorAll('img, a').forEach(n => { n.setAttribute('draggable', 'false'); });
         el.addEventListener('dragstart', e => e.preventDefault());
 
+        // آستانهٔ درگ بزرگ‌تر تا فشردنِ سادهٔ دکمه (با لرزشِ جزئی انگشت/ماوس) درگ تلقی نشود.
+        const DRAG_THRESHOLD = 8;
+        // فقط وقتی واقعاً اسکرول‌درگ انجام شده، کلیکِ بلافاصله بعدی سرکوب می‌شود.
+        let suppressNextClick = false;
+
         el.addEventListener('pointerdown', e => {
             if (e.pointerType === 'mouse' && e.button !== 0) return;
             down = true; moved = false; startX = e.clientX; startScroll = el.scrollLeft; pid = e.pointerId;
@@ -196,7 +201,7 @@
         el.addEventListener('pointermove', e => {
             if (!down) return;
             const dx = e.clientX - startX;
-            if (!moved && Math.abs(dx) > 4) {
+            if (!moved && Math.abs(dx) > DRAG_THRESHOLD) {
                 // اولین لحظه‌ای که واقعاً درگ شروع شد: حالت درگ + capture
                 moved = true;
                 el.classList.add('dragging');
@@ -209,14 +214,22 @@
         });
         function up() {
             if (!down) return;
-            down = false; el.classList.remove('dragging');
+            down = false;
+            el.classList.remove('dragging');
             if (pid != null) { try { el.releasePointerCapture(pid); } catch (_) {} pid = null; }
+            // فقط اگر واقعاً درگ شد، کلیکِ بلافاصله بعدی را سرکوب کن — و بلافاصله ریست کن
+            // تا کلیک‌های بعدی (مثل افزودنِ اولین محصول هر نوار) بلوکه نشوند.
+            suppressNextClick = moved;
+            moved = false;
             updateEdges();
         }
         el.addEventListener('pointerup', up);
         el.addEventListener('pointercancel', up);
-        // جلوگیری از کلیک ناخواسته بعد از درگ (روی هر فرزندی)
-        el.addEventListener('click', e => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
+        // جلوگیری از کلیک ناخواسته فقط بلافاصله بعد از یک درگِ واقعی؛ سپس فوراً پاک می‌شود.
+        // علتِ باگ قبلی: پرچم moved بعد از درگ ریست نمی‌شد و اولین کلیکِ بعدی (اولین محصول هر نوار) را می‌بلعید.
+        el.addEventListener('click', e => {
+            if (suppressNextClick) { suppressNextClick = false; e.preventDefault(); e.stopPropagation(); }
+        }, true);
     });
 
     /* ---------- Add to cart (P6): ajax → /cart/add. قیمت سمت سرور. ---------- */
