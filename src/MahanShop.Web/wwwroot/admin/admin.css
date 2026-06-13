@@ -168,3 +168,101 @@
     .home-table { min-width:680px; }
     .home-thumb { width:84px; height:38px; }
 }
+
+/* =======================================================================
+   گرید دسته‌بندی صفحهٔ اصلی (پنل ادمین)
+   دو ستون: تنظیمات سبک (راست) + مدیریت دسته‌های منتخب/قابل‌افزودن (چپ)
+   ======================================================================= */
+.cat-board { display:grid; grid-template-columns:minmax(300px, 380px) 1fr; gap:18px; align-items:start; }
+.cat-board .admin-panel-box { overflow:visible; }
+
+/* ---------- کارت‌های انتخاب سبک نمایش ---------- */
+.cat-style-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+.cat-style-card {
+    display:flex; flex-direction:column; gap:7px; text-align:start;
+    padding:12px; border:1.5px solid var(--admin-border); border-radius:14px;
+    background:#fff; cursor:pointer; transition:border-color .15s, box-shadow .15s, transform .12s, background .15s;
+    font:inherit; color:inherit;
+}
+.cat-style-card:hover { border-color:#cbd5e1; transform:translateY(-2px); box-shadow:0 6px 18px -10px rgba(15,23,42,.3); }
+.cat-style-card:focus-visible { outline:2px solid var(--admin-accent); outline-offset:2px; }
+.cat-style-card.is-selected {
+    border-color:var(--admin-accent); background:#eff6ff;
+    box-shadow:0 0 0 3px rgba(37,99,235,.14);
+}
+.cat-style-card__label { font-size:14px; font-weight:700; color:#0f172a; }
+.cat-style-card.is-selected .cat-style-card__label { color:var(--admin-accent); }
+.cat-style-card__desc { font-size:11.5px; line-height:1.7; color:#64748b; }
+
+/* پیش‌نمایش بصریِ هر سبک — با ۴ مربع <i> ساخته می‌شود */
+.cat-style-card__preview {
+    display:block; height:54px; border-radius:10px; padding:8px;
+    background:linear-gradient(135deg,#f8fafc,#eef2f7); border:1px solid #eef2f7; overflow:hidden;
+}
+.cat-style-card__preview i { display:block; background:#cbd5e1; border-radius:4px; }
+.cat-style-card.is-selected .cat-style-card__preview { background:linear-gradient(135deg,#eff6ff,#dbeafe); border-color:#bfdbfe; }
+.cat-style-card.is-selected .cat-style-card__preview i { background:#93c5fd; }
+
+/* بنتو: سلول اول بزرگ */
+.cat-style-card__preview--bento { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:5px; }
+.cat-style-card__preview--bento i:nth-child(1) { grid-row:span 2; }
+/* گرید یکنواخت */
+.cat-style-card__preview--grid { display:grid; grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(2,1fr); gap:5px; }
+/* اسلایدر گرد: دایره‌ها در یک ردیف */
+.cat-style-card__preview--scroll { display:flex; align-items:center; gap:6px; }
+.cat-style-card__preview--scroll i { width:24px; height:24px; border-radius:50%; flex:none; }
+.cat-style-card__preview--scroll i:nth-child(4) { opacity:.5; }
+/* چیپس فشرده: قرص‌های افقی */
+.cat-style-card__preview--pills { display:flex; flex-wrap:wrap; align-content:center; gap:5px; }
+.cat-style-card__preview--pills i { height:13px; border-radius:999px; }
+.cat-style-card__preview--pills i:nth-child(1){ width:42px; } .cat-style-card__preview--pills i:nth-child(2){ width:30px; }
+.cat-style-card__preview--pills i:nth-child(3){ width:36px; } .cat-style-card__preview--pills i:nth-child(4){ width:24px; }
+
+/* ---------- لیست مرتب‌سازی دسته‌های منتخب (drag & drop) ---------- */
+.cat-reorder-hint { margin-bottom:12px; }
+.cat-sortable { list-style:none; margin:0 0 8px; padding:0; display:flex; flex-direction:column; gap:8px; }
+.cat-sortable__item {
+    display:flex; align-items:center; gap:10px; padding:9px 10px;
+    border:1px solid var(--admin-border); border-radius:12px; background:#fff;
+    transition:border-color .15s, box-shadow .15s, opacity .15s; cursor:default;
+}
+.cat-sortable__item:hover { border-color:#cbd5e1; box-shadow:0 4px 14px -10px rgba(15,23,42,.35); }
+.cat-sortable__item.is-dragging { opacity:.55; border-style:dashed; border-color:var(--admin-accent); }
+.cat-sortable__grip { display:inline-flex; color:#94a3b8; cursor:grab; flex:none; touch-action:none; }
+.cat-sortable__grip:active { cursor:grabbing; }
+.cat-sortable__thumb { width:38px; height:38px; object-fit:contain; border-radius:9px; border:1px solid #eef2f7; background:#f8fafc; padding:4px; flex:none; }
+.cat-sortable__name { display:flex; flex-direction:column; gap:1px; font-weight:600; font-size:14px; min-width:0; flex:1; }
+.cat-sortable__name small { font-weight:500; font-size:11.5px; }
+.cat-sortable__actions { display:inline-flex; align-items:center; gap:4px; margin-inline-start:auto; flex:none; }
+
+.cat-icon-btn {
+    display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px;
+    border:1px solid var(--admin-border); border-radius:9px; background:#fff; color:#475569; cursor:pointer;
+    transition:background .15s, color .15s, border-color .15s;
+}
+.cat-icon-btn:hover { background:#f1f5f9; color:#0f172a; border-color:#cbd5e1; }
+.cat-icon-btn:active { transform:scale(.92); }
+.cat-icon-btn--danger:hover { background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+
+/* ---------- دسته‌های قابل افزودن (چیپس) ---------- */
+.cat-board__avail-title { margin-top:20px; padding-top:16px; border-top:1px dashed var(--admin-border); }
+.cat-avail { display:flex; flex-wrap:wrap; gap:8px; }
+.cat-avail__form { margin:0; }
+.cat-avail__chip {
+    display:inline-flex; align-items:center; gap:6px; padding:8px 13px;
+    border:1.5px dashed #cbd5e1; border-radius:999px; background:#f8fafc; color:#334155;
+    font:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+    transition:border-color .15s, background .15s, color .15s, transform .12s;
+}
+.cat-avail__chip svg { color:#94a3b8; transition:color .15s; }
+.cat-avail__chip:hover { border-style:solid; border-color:var(--admin-accent); background:#eff6ff; color:var(--admin-accent); transform:translateY(-2px); }
+.cat-avail__chip:hover svg { color:var(--admin-accent); }
+
+/* ریسپانسیو: روی موبایل تک‌ستونه می‌شود */
+@media (max-width:900px) {
+    .cat-board { grid-template-columns:1fr; }
+    .cat-style-grid { grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:420px) {
+    .cat-style-grid { grid-template-columns:1fr; }
+}

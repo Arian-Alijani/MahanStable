@@ -51,20 +51,31 @@
     (dWide.addEventListener ? dWide.addEventListener('change', e => { if (e.matches) closeDrawer(); })
                            : dWide.addListener(e => { if (e.matches) closeDrawer(); }));
 
-    // فعال‌کردن آکاردئون داخل دراور (زیرمنوی دسته‌ها) با کلیک
+    // آکاردئون دسته‌های دراور — هر زمان فقط یک زیرمجموعه باز (UX تمیز)
     if (drawer) {
-        drawer.querySelectorAll('[data-drawer-acc]').forEach(item => {
+        const accItems = Array.prototype.slice.call(drawer.querySelectorAll('[data-drawer-acc]'));
+        accItems.forEach(item => {
             const trigger = item.querySelector('[data-drawer-acc-toggle]');
             if (!trigger) return;
             trigger.addEventListener('click', e => {
                 e.preventDefault();
-                const open = item.classList.toggle('is-expanded');
-                trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+                const willOpen = !item.classList.contains('is-expanded');
+                // بستن بقیه (رفتار آکاردئونی)
+                accItems.forEach(other => {
+                    if (other === item) return;
+                    other.classList.remove('is-expanded');
+                    const t = other.querySelector('[data-drawer-acc-toggle]');
+                    if (t) t.setAttribute('aria-expanded', 'false');
+                });
+                item.classList.toggle('is-expanded', willOpen);
+                trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
             });
         });
     }
 
-    /* ---------- فوتر دسکتاپ: ستون‌ها همیشه کامل باز باشند (details در دسکتاپ نباید جمع شود) ---------- */
+    /* ---------- فوتر: دسکتاپ همیشه کامل باز / موبایل تاشو ----------
+       HTML پیش‌فرض details را open می‌گذارد (تا حتی بدون JS هم دسکتاپ کامل دیده شود).
+       اینجا فقط در موبایل آن‌ها را می‌بندیم و هنگام تغییر اندازه همگام می‌کنیم. */
     const footerAccs = document.querySelectorAll('.footer-acc');
     const fWide = window.matchMedia('(min-width: 720px)');
     function syncFooterAcc(matches) {

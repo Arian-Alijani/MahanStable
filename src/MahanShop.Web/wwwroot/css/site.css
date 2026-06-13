@@ -282,28 +282,61 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .drawer__all > span { flex: 1; }
 .drawer__all-arrow { flex: none; }
 
-/* ناوبری دسته‌ها داخل دراور */
+/* ===== ناوبری دسته‌های دراور — آکاردئونیِ استاندارد ===== */
 .drawer__nav { display: block; }
-.drawer__nav .mega-item--all { display: none; }
-.drawer__nav .mega-root { flex-direction: column; align-items: stretch; gap: 4px; }
-.drawer__nav .mega-item { display: block; }
-.drawer__nav .mega-item + .mega-item::before { display: none; }
-.drawer__nav .mega-item + .mega-item { border-top: 0; }
-.drawer__nav .mega-link {
-    justify-content: space-between; color: var(--ink); padding: 13px 14px;
-    border-radius: 14px; font-weight: 600; transition: background .15s, color .15s;
+.dnav { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.dnav__item { border-radius: 14px; }
+
+/* ردیفِ یک دسته: لینک رفتن به دسته + دکمهٔ باز/بستهٔ زیرمجموعه */
+.dnav__row { display: flex; align-items: stretch; border-radius: 14px; overflow: hidden; transition: background .15s; }
+.dnav__row:hover { background: var(--primary-soft); }
+.dnav__link {
+    display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0;
+    padding: 13px 14px; font-size: 15px; font-weight: 600; color: var(--ink);
+    border-radius: 14px; transition: color .15s;
 }
-.drawer__nav .mega-link:hover, .drawer__nav .mega-link:focus-visible { background: var(--primary-soft); color: var(--primary); }
-.drawer__nav .mega-link::after { display: none; }
-.drawer__nav .mega-panel {
-    position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none;
-    border: 0; border-radius: 0; padding: 2px 0 6px; min-width: 0;
+.dnav__row:hover .dnav__link { color: var(--primary); }
+.dnav__link--leaf { justify-content: flex-start; }
+.dnav__link--leaf:hover { background: var(--primary-soft); color: var(--primary); }
+.dnav__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); flex: none; opacity: .55; transition: opacity .15s, transform .15s; }
+.dnav__row:hover .dnav__dot, .dnav__link--leaf:hover .dnav__dot { opacity: 1; transform: scale(1.15); }
+.dnav__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dnav__go { margin-inline-start: auto; color: var(--muted); flex: none; }
+.dnav__link--leaf:hover .dnav__go { color: var(--primary); }
+
+/* دکمهٔ توگل زیرمجموعه */
+.dnav__toggle {
+    flex: none; width: 48px; display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: 0; color: var(--muted); cursor: pointer;
+    border-inline-start: 1px solid var(--line-soft); transition: color .15s, background .15s;
 }
-.drawer__nav .mega-sub a {
-    padding: 10px 14px; padding-inline-start: 30px; color: var(--muted); font-size: 13.5px;
-    border-radius: 12px; display: block; transition: background .15s, color .15s;
+.dnav__toggle:hover { color: var(--primary); background: rgba(37,99,235,.06); }
+.dnav__toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.dnav__chev { transition: transform .28s cubic-bezier(0.16,1,0.3,1); }
+.dnav__item.is-expanded > .dnav__row .dnav__chev { transform: rotate(180deg); }
+.dnav__item.is-expanded > .dnav__row { background: var(--primary-soft); }
+.dnav__item.is-expanded > .dnav__row .dnav__link { color: var(--primary); }
+
+/* پنل زیرمجموعه — انیمیشن باز/بسته با grid-template-rows */
+.dnav__panel {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows .3s cubic-bezier(0.16,1,0.3,1);
 }
-.drawer__nav .mega-sub a:hover { background: var(--bg); color: var(--ink); }
+.dnav__item.is-expanded > .dnav__panel { grid-template-rows: 1fr; }
+.dnav__sub { list-style: none; margin: 0; padding: 0; min-height: 0; overflow: hidden; }
+.dnav__item.is-expanded > .dnav__panel > .dnav__sub { padding: 4px 0 8px; }
+.dnav__sub-link {
+    display: block; padding: 10px 14px; padding-inline-start: 32px; border-radius: 12px;
+    font-size: 14px; color: var(--muted); transition: background .15s, color .15s;
+}
+.dnav__sub-link:hover { background: var(--bg); color: var(--ink); }
+.dnav__sub-link--all { color: var(--primary); font-weight: 600; }
+.dnav__sub-link--all:hover { background: var(--primary-soft); color: var(--primary-d); }
+
+@media (prefers-reduced-motion: reduce) {
+    .dnav__panel { transition: none; }
+    .dnav__chev { transition: none; }
+}
 
 /* پای دراور — خروج از حساب */
 .drawer__foot { padding: 14px 18px; border-top: 1px solid var(--line-soft); flex: none; background: var(--surface, #fff); }
@@ -588,24 +621,28 @@ html[dir="rtl"] .prow__viewport::after  { background: linear-gradient(to right, 
 .footer-contact li { display: flex; align-items: center; gap: 8px; }
 .footer-contact svg { color: #60A5FA; flex: none; }
 
-/* آکاردئون فوتر — دسکتاپ همیشه باز و بدون فلش؛ موبایل تاشو */
+/* آکاردئون فوتر — دسکتاپ همیشه کامل باز؛ موبایل تاشو */
 .footer-acc { padding-block: 18px 0; }
 .footer-acc > summary { list-style: none; cursor: default; display: flex; align-items: center; justify-content: space-between; }
 .footer-acc > summary::-webkit-details-marker { display: none; }
 .footer-acc__chev { display: none; color: #94A3B8; transition: transform .2s; }
 
-/* روی دسکتاپ، صرف‌نظر از باز/بستهٔ <details>، محتوای ستون فوتر همیشه کامل نمایش داده شود.
-   مرورگرهای مدرن روی <details> بسته از content-visizility/display:none داخلی استفاده می‌کنند؛
-   بنابراین باید هم خودِ details را همیشه «باز» رفتار دهیم و هم هر فرزند غیر-summary را force نمایش دهیم. */
+/* ===== دسکتاپ: ستون فوتر همیشه کامل دیده شود =====
+   هر ستونِ <details class="footer-acc"> یک سلولِ گرید (.footer-grid) است و باید بلوکی
+   بماند (نه display:contents) تا چیدمان ۴-ستونه حفظ شود.
+   نکتهٔ کلیدی: مرورگرها روی <details> بستهٔ فرزندانِ بعد از summary را با مکانیزم داخلی
+   (content-visibility) مخفی می‌کنند؛ بنابراین علاوه بر display باید content-visibility را
+   هم به‌صورت صریح visible کنیم. ضمناً JS هم در دسکتاپ صفت open را اضافه می‌کند (پشتیبان). */
 @media (min-width: 720px) {
     .footer-acc { display: block; }
-    .footer-acc > summary { pointer-events: none; }
+    .footer-acc > summary { pointer-events: none; cursor: default; }
     .footer-acc__chev { display: none !important; }
-    /* مهم: حتی وقتی details بسته است، محتوا روی دسکتاپ کامل دیده شود */
-    .footer-acc:not([open]) > *:not(summary),
-    .footer-acc[open] > *:not(summary) { display: revert; }
-    .footer-acc .footer-links { display: grid !important; }
-    .footer-acc .footer-contact { display: grid !important; }
+    /* فرزندان غیر-summary صریحاً نمایش داده شوند؛ !important برای غلبه بر UA stylesheet */
+    .footer-acc > .footer-links {
+        display: grid !important;
+        content-visibility: visible !important;
+    }
+    .footer-acc > .footer-contact { display: grid !important; }
 }
 
 .footer-bottom {

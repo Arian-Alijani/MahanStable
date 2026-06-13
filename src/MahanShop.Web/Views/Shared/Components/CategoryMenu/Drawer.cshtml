@@ -1,0 +1,53 @@
+@model List<MenuCategoryDto>
+@*
+    منوی دسته‌بندی نسخهٔ دراور (موبایل) — آکاردئونی و استاندارد.
+    - دسته‌ای که فرزند دارد: یک ردیفِ دکمه‌ای که با کلیک زیرمنویش را باز/بسته می‌کند (data-drawer-acc).
+    - دستهٔ بدون فرزند: لینک مستقیم به صفحهٔ محصولات آن دسته.
+    JS مربوطه در site.js با [data-drawer-acc-toggle] کنترل می‌شود.
+*@
+<ul class="dnav" role="list">
+    @foreach (var c in Model)
+    {
+        var hasChildren = c.Children.Any();
+        var catUrl = "/products?CategorySlug=" + Uri.EscapeDataString(c.Slug);
+
+        if (hasChildren)
+        {
+            <li class="dnav__item" data-drawer-acc>
+                <div class="dnav__row">
+                    <a class="dnav__link" href="@catUrl">
+                        <span class="dnav__dot" aria-hidden="true"></span>
+                        <span class="dnav__name">@c.Name</span>
+                    </a>
+                    <button type="button" class="dnav__toggle" data-drawer-acc-toggle
+                            aria-expanded="false" aria-label="باز کردن زیرمجموعهٔ @c.Name">
+                        <svg class="dnav__chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                </div>
+                <div class="dnav__panel">
+                    <ul class="dnav__sub" role="list">
+                        <li>
+                            <a class="dnav__sub-link dnav__sub-link--all" href="@catUrl">همهٔ @c.Name</a>
+                        </li>
+                        @foreach (var ch in c.Children)
+                        {
+                            <li>
+                                <a class="dnav__sub-link" href="/products?CategorySlug=@Uri.EscapeDataString(ch.Slug)">@ch.Name</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </li>
+        }
+        else
+        {
+            <li class="dnav__item">
+                <a class="dnav__link dnav__link--leaf" href="@catUrl">
+                    <span class="dnav__dot" aria-hidden="true"></span>
+                    <span class="dnav__name">@c.Name</span>
+                    <svg class="dnav__go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                </a>
+            </li>
+        }
+    }
+</ul>

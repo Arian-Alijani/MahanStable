@@ -11,9 +11,16 @@ public class CategoryMenuViewComponent : ViewComponent
 
     public CategoryMenuViewComponent(IMediator mediator) => _mediator = mediator;
 
-    public async Task<IViewComponentResult> InvokeAsync()
+    /// <param name="variant">
+    /// "header" → مگامنوی افقیِ دسکتاپ (پیش‌فرض)؛
+    /// "drawer" → فهرست آکاردئونیِ منوی موبایل (هر دسته با کلیک باز/بسته می‌شود).
+    /// </param>
+    public async Task<IViewComponentResult> InvokeAsync(string variant = "header")
     {
         var categories = await _mediator.Send(new GetMenuCategoriesQuery());
-        return View(categories);
+        var view = string.Equals(variant, "drawer", System.StringComparison.OrdinalIgnoreCase)
+            ? "Drawer"
+            : "Default";
+        return View(view, categories);
     }
 }

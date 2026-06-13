@@ -115,7 +115,7 @@
 
             <p class="drawer__section-label">دسته‌بندی‌ها</p>
             <nav class="drawer__nav" aria-label="دسته‌بندی‌ها">
-                @await Component.InvokeAsync("CategoryMenu")
+                @await Component.InvokeAsync("CategoryMenu", new { variant = "drawer" })
             </nav>
         </div>
 
