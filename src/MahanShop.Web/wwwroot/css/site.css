@@ -204,18 +204,25 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 }
 .drawer.is-open .drawer__backdrop { opacity: 1; }
 
-/* پنل: از سمت راست (inset-inline-end در RTL) اسلاید می‌شود */
+/* پنل: روی لبهٔ راستِ فیزیکی صفحه می‌نشیند و از همان سمت راست اسلاید می‌شود.
+   مهم: transform/translateX به جهتِ سند (dir=rtl) وابسته نیست و همیشه محور فیزیکی X را
+   به کار می‌برد (مثبت = راست). بنابراین مقادیر فیزیکی right/translateX(100%) را می‌گذاریم
+   تا در RTL هم دقیقاً از سمت راست بیاید و همان‌جا (سمت راست) بماند — نه اینکه روی چپ بپرد. */
 .drawer__panel {
-    position: absolute; top: 0; inset-inline-end: 0; height: 100%; height: 100dvh;
+    /* همیشه به لبهٔ راستِ فیزیکی صفحه قفل — مستقل از dir سند.
+       از right/left فیزیکی با !important استفاده می‌کنیم تا هیچ قاعدهٔ RTL (بوت‌استرپ یا UA)
+       نتواند آن را به چپ ببرد؛ علت گزارشِ «بعد از باز شدن می‌پرد سمت چپ». */
+    position: absolute; top: 0;
+    right: 0 !important; left: auto !important;
+    height: 100%; height: 100dvh;
     width: min(86vw, 348px); background: var(--surface, #fff);
     display: flex; flex-direction: column; overflow: hidden;
     box-shadow: -18px 0 50px -12px rgba(15,23,42,.35);
-    transform: translateX(100%); /* در RTL یعنی خارج از کادر سمت راست */
-    transition: transform .32s cubic-bezier(0.16,1,0.3,1);
+    transform: translate3d(100%, 0, 0); /* خارج از کادر، سمت راست (فیزیکی) */
+    transition: transform .34s cubic-bezier(0.16,1,0.3,1);
     will-change: transform;
 }
-[dir="ltr"] .drawer__panel { transform: translateX(-100%); }
-.drawer.is-open .drawer__panel { transform: translateX(0); }
+.drawer.is-open .drawer__panel { transform: translate3d(0, 0, 0) !important; }
 
 /* سر دراور */
 .drawer__head {

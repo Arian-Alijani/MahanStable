@@ -65,6 +65,7 @@
             item.classList.remove('is-dragging');
             dragging = null;
             markDirty();
+            pulse(item);
         });
     });
 
@@ -75,6 +76,42 @@
         if (after == null) list.appendChild(dragging);
         else list.insertBefore(dragging, after);
     });
+
+    // پالس کوتاه روی آیتمِ تازه‌جابه‌جاشده — بازخورد بصری «انجام شد»
+    function pulse(el) {
+        if (!el) return;
+        el.classList.remove('just-moved');
+        void el.offsetWidth; // ری‌فلو تا انیمیشن دوباره اجرا شود
+        el.classList.add('just-moved');
+        setTimeout(function () { el.classList.remove('just-moved'); }, 650);
+    }
+
+    /* ---------- پشتیبانی لمسی (موبایل/تبلت): درگ با گرفتنِ دستگیره ---------- */
+    var touchItem = null;
+    list.querySelectorAll('.cat-sortable__grip').forEach(function (grip) {
+        grip.addEventListener('touchstart', function (e) {
+            touchItem = grip.closest('.cat-sortable__item');
+            if (touchItem) touchItem.classList.add('is-dragging');
+        }, { passive: true });
+    });
+    list.addEventListener('touchmove', function (e) {
+        if (!touchItem) return;
+        e.preventDefault(); // جلوگیری از اسکرول صفحه هنگام جابه‌جایی
+        var t = e.touches[0];
+        var after = getAfterElement(t.clientY);
+        if (after == null) list.appendChild(touchItem);
+        else list.insertBefore(touchItem, after);
+    }, { passive: false });
+    function endTouch() {
+        if (!touchItem) return;
+        var moved = touchItem;
+        touchItem.classList.remove('is-dragging');
+        touchItem = null;
+        markDirty();
+        pulse(moved);
+    }
+    list.addEventListener('touchend', endTouch);
+    list.addEventListener('touchcancel', endTouch);
 
     // سینک اولیه تا اگر کاربر بدون درگ هم ذخیره زد، ترتیب فعلی برود
     syncOrder();

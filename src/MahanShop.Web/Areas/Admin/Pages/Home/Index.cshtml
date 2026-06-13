@@ -235,9 +235,12 @@
                     <input name="displayOrder" type="number" min="0" value="@board.DisplayOrder" class="form-control" />
                 </div>
             </div>
-            <div class="form-check mb-3">
-                <input name="isActive" value="true" type="checkbox" class="form-check-input" checked="@board.IsActive" />
-                <label class="form-check-label">نمایش گرید دسته‌بندی روی صفحهٔ اصلی</label>
+            <div class="form-check form-switch mb-3 cat-active-switch">
+                @* مهم: مقدار false برای checkbox تیک‌نزده هم پست شود تا «خاموش‌کردن» کار کند *@
+                <input type="hidden" name="isActive" value="false" />
+                <input name="isActive" value="true" type="checkbox" id="catIsActive" class="form-check-input"
+                       @(board.IsActive ? "checked" : "") />
+                <label class="form-check-label" for="catIsActive">نمایش گرید دسته‌بندی روی صفحهٔ اصلی</label>
             </div>
             <button type="submit" class="btn btn-primary">ذخیرهٔ تنظیمات</button>
         </form>
