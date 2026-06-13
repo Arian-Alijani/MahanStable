@@ -10,6 +10,7 @@ public class VariantAttributeValue : BaseEntity
 
     public string Value { get; set; } = null!;
     public string? ColorHex { get; set; }  // فقط برای attribute رنگ
+    public string? LogoUrl { get; set; }   // فقط برای مقادیرِ برند (لوگوی برند)
     public int DisplayOrder { get; set; }
 
     public ICollection<ProductVariantValue> VariantValues { get; set; } = new List<ProductVariantValue>();

@@ -33,6 +33,26 @@ public class CartController : Controller
         return Json(new { count = vm.TotalQuantity, payable = vm.PayableAmount });
     }
 
+    // POST /cart/add-batch — افزودن چند گزینه به‌صورت یکجا (سبد انتخاب صفحهٔ محصول)
+    public class CartBatchItem
+    {
+        public int ProductId { get; set; }
+        public int? VariantId { get; set; }
+        public int Quantity { get; set; } = 1;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddBatch([FromBody] List<CartBatchItem> items)
+    {
+        if (items is { Count: > 0 })
+        {
+            foreach (var it in items)
+                _cart.Add(it.ProductId, it.VariantId, it.Quantity);
+        }
+        var vm = await _mediator.Send(new GetCartQuery(_cart.GetItems()));
+        return Json(new { count = vm.TotalQuantity, payable = vm.PayableAmount });
+    }
+
     // POST /cart/update — تنظیم مقدار دقیق
     [HttpPost]
     public async Task<IActionResult> Update(int productId, int? variantId, int quantity)

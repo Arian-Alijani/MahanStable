@@ -1,13 +1,14 @@
 using FluentValidation;
 using MahanShop.Application.Common.Interfaces;
 using MahanShop.Domain.Entities;
+using MahanShop.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace MahanShop.Application.Features.Admin.Variants;
 
 /// <summary>ایجاد ویژگی متغیر جدید (برند/مدل/رنگ/...).</summary>
-public record CreateVariantAttributeCommand(string Name, bool IsColor, int DisplayOrder) : IRequest<int>;
+public record CreateVariantAttributeCommand(string Name, bool IsColor, VariantAttributeKind Kind, int DisplayOrder) : IRequest<int>;
 
 public class CreateVariantAttributeCommandValidator : AbstractValidator<CreateVariantAttributeCommand>
 {
@@ -29,10 +30,12 @@ public class CreateVariantAttributeCommandHandler : IRequestHandler<CreateVarian
         if (await _db.VariantAttributes.AnyAsync(a => a.Name == name, ct))
             throw new ValidationException("ویژگی با این نام قبلاً ثبت شده است.");
 
+        var isColor = request.IsColor || request.Kind == VariantAttributeKind.Color;
         var attr = new VariantAttribute
         {
             Name = name,
-            IsColor = request.IsColor,
+            IsColor = isColor,
+            Kind = request.Kind,
             DisplayOrder = request.DisplayOrder
         };
         _db.VariantAttributes.Add(attr);
@@ -42,7 +45,7 @@ public class CreateVariantAttributeCommandHandler : IRequestHandler<CreateVarian
 }
 
 /// <summary>ویرایش ویژگی متغیر موجود.</summary>
-public record UpdateVariantAttributeCommand(int Id, string Name, bool IsColor, int DisplayOrder) : IRequest<bool>;
+public record UpdateVariantAttributeCommand(int Id, string Name, bool IsColor, VariantAttributeKind Kind, int DisplayOrder) : IRequest<bool>;
 
 public class UpdateVariantAttributeCommandValidator : AbstractValidator<UpdateVariantAttributeCommand>
 {
@@ -69,7 +72,8 @@ public class UpdateVariantAttributeCommandHandler : IRequestHandler<UpdateVarian
             throw new ValidationException("ویژگی با این نام قبلاً ثبت شده است.");
 
         attr.Name = name;
-        attr.IsColor = request.IsColor;
+        attr.IsColor = request.IsColor || request.Kind == VariantAttributeKind.Color;
+        attr.Kind = request.Kind;
         attr.DisplayOrder = request.DisplayOrder;
         attr.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);

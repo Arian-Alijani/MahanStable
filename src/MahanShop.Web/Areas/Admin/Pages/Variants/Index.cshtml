@@ -26,7 +26,15 @@
         {
             <tr>
                 <td>@a.Name</td>
-                <td>@(a.IsColor ? "رنگ" : "متن")</td>
+                <td>
+                    @(a.Kind switch
+                    {
+                        MahanShop.Domain.Enums.VariantAttributeKind.Brand => "برند",
+                        MahanShop.Domain.Enums.VariantAttributeKind.Model => "مدل",
+                        MahanShop.Domain.Enums.VariantAttributeKind.Color => "رنگ",
+                        _ => a.IsColor ? "رنگ" : "عمومی"
+                    })
+                </td>
                 <td>@a.ValueCount</td>
                 <td>@a.DisplayOrder</td>
                 <td class="admin-actions">

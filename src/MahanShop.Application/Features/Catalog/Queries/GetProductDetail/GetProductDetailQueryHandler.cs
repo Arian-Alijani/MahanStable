@@ -49,10 +49,11 @@ public class GetProductDetailQueryHandler : IRequestHandler<GetProductDetailQuer
                         Id = a.Id,
                         Name = a.Name,
                         IsColor = a.IsColor,
+                        Kind = a.Kind,
                         Values = a.Values
                             .Where(av => av.VariantValues.Any(vv => vv.ProductVariant.ProductId == p.Id))
                             .OrderBy(av => av.DisplayOrder).ThenBy(av => av.Value)
-                            .Select(av => new ProductAttributeValueDto { Id = av.Id, Value = av.Value, ColorHex = av.ColorHex })
+                            .Select(av => new ProductAttributeValueDto { Id = av.Id, Value = av.Value, ColorHex = av.ColorHex, LogoUrl = av.LogoUrl })
                             .ToList()
                     })
                     .ToList(),

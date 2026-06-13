@@ -1,4 +1,5 @@
 using MahanShop.Domain.Common;
+using MahanShop.Domain.Enums;
 
 namespace MahanShop.Domain.Entities;
 
@@ -10,6 +11,9 @@ public class VariantAttribute : BaseEntity
 
     /// <summary>اگر true، مقادیر این ویژگی رنگ‌اند و با swatch نمایش داده می‌شوند (ColorHex).</summary>
     public bool IsColor { get; set; }
+
+    /// <summary>نقش ویژگی در UI: برند/مدل → جریان دستگاه، رنگ → swatch، سایر → دراپ‌داون.</summary>
+    public VariantAttributeKind Kind { get; set; } = VariantAttributeKind.Other;
 
     public ICollection<VariantAttributeValue> Values { get; set; } = new List<VariantAttributeValue>();
 }

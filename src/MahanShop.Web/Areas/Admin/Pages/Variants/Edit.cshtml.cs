@@ -1,5 +1,6 @@
 using FluentValidation;
 using MahanShop.Application.Features.Admin.Variants;
+using MahanShop.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -15,13 +16,14 @@ public class EditModel : PageModel
     [BindProperty] public int Id { get; set; }
     [BindProperty] public string Name { get; set; } = "";
     [BindProperty] public bool IsColor { get; set; }
+    [BindProperty] public VariantAttributeKind Kind { get; set; } = VariantAttributeKind.Other;
     [BindProperty] public int DisplayOrder { get; set; }
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var a = await _mediator.Send(new GetVariantAttributeForEditQuery(id));
         if (a is null) return NotFound();
-        Id = a.Id; Name = a.Name; IsColor = a.IsColor; DisplayOrder = a.DisplayOrder;
+        Id = a.Id; Name = a.Name; IsColor = a.IsColor; Kind = a.Kind; DisplayOrder = a.DisplayOrder;
         return Page();
     }
 
@@ -29,7 +31,7 @@ public class EditModel : PageModel
     {
         try
         {
-            await _mediator.Send(new UpdateVariantAttributeCommand(Id, Name, IsColor, DisplayOrder));
+            await _mediator.Send(new UpdateVariantAttributeCommand(Id, Name, IsColor, Kind, DisplayOrder));
             TempData["AdminOk"] = "ویژگی به‌روزرسانی شد.";
             return RedirectToPage("Index");
         }

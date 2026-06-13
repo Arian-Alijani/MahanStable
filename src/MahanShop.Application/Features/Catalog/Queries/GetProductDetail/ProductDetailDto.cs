@@ -1,4 +1,13 @@
+using MahanShop.Domain.Enums;
+
 namespace MahanShop.Application.Features.Catalog.Queries.GetProductDetail;
+
+/// <summary>چینش UI صفحهٔ محصول: ساده (swatch/dropdown) یا مبتنی بر دستگاه (برند→مدل[→رنگ]).</summary>
+public enum ProductVariantLayout
+{
+    Simple = 0,
+    Device = 1
+}
 
 public class ProductImageDto
 {
@@ -13,6 +22,7 @@ public class ProductAttributeDto
     public int Id { get; set; }
     public string Name { get; set; } = null!;
     public bool IsColor { get; set; }
+    public VariantAttributeKind Kind { get; set; }
     public List<ProductAttributeValueDto> Values { get; set; } = new();
 }
 
@@ -21,6 +31,7 @@ public class ProductAttributeValueDto
     public int Id { get; set; }   // VariantAttributeValue.Id
     public string Value { get; set; } = null!;
     public string? ColorHex { get; set; }
+    public string? LogoUrl { get; set; }
 }
 
 /// <summary>یک گزینه فروش (variant) با قیمت/موجودی مستقل + idهای مقادیر ویژگیِ سازنده‌اش.</summary>
@@ -80,4 +91,12 @@ public class ProductDetailDto
 
     public long FinalPrice => DiscountPrice is > 0 && DiscountPrice < Price ? DiscountPrice.Value : Price;
     public bool HasDiscount => DiscountPrice is > 0 && DiscountPrice < Price;
+
+    /// <summary>برند در میان ویژگی‌ها؟</summary>
+    public bool HasBrandAttr => Attributes.Any(a => a.Kind == VariantAttributeKind.Brand);
+    public bool HasModelAttr => Attributes.Any(a => a.Kind == VariantAttributeKind.Model);
+
+    /// <summary>اگر هم برند هم مدل داشت → جریان دستگاه؛ وگرنه ساده.</summary>
+    public ProductVariantLayout Layout =>
+        HasVariants && HasBrandAttr && HasModelAttr ? ProductVariantLayout.Device : ProductVariantLayout.Simple;
 }

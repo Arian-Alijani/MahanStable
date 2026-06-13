@@ -28,6 +28,13 @@
                     <input asp-for="NewColorHex" type="color" class="form-control form-control-color" />
                 </div>
             }
+            @if (Model.IsBrand)
+            {
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">آدرس لوگوی برند</label>
+                    <input asp-for="NewLogoUrl" class="form-control" placeholder="/img/brands/apple.svg" />
+                </div>
+            }
             <div class="col-md-2 mb-2">
                 <label class="form-label">ترتیب</label>
                 <input asp-for="NewDisplayOrder" type="number" class="form-control" />
@@ -50,6 +57,10 @@
                 @if (Model.IsColor)
                 {
                     <input type="color" name="colorHex" value="@(v.ColorHex ?? "#000000")" class="form-control form-control-color form-control-sm" />
+                }
+                @if (Model.IsBrand)
+                {
+                    <input type="text" name="logoUrl" value="@v.LogoUrl" placeholder="آدرس لوگو" class="form-control form-control-sm" />
                 }
                 <input type="number" name="displayOrder" value="@v.DisplayOrder" class="form-control form-control-sm admin-stock-input" />
                 <button type="submit" class="btn btn-sm btn-outline-primary">ذخیره</button>

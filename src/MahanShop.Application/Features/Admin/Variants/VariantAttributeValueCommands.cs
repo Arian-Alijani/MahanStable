@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MahanShop.Application.Features.Admin.Variants;
 
 /// <summary>افزودن یک مقدار به pool یک ویژگی (مثلا سامسونگ به ویژگی برند).</summary>
-public record CreateVariantAttributeValueCommand(int AttributeId, string Value, string? ColorHex, int DisplayOrder) : IRequest<int>;
+public record CreateVariantAttributeValueCommand(int AttributeId, string Value, string? ColorHex, string? LogoUrl, int DisplayOrder) : IRequest<int>;
 
 public class CreateVariantAttributeValueCommandValidator : AbstractValidator<CreateVariantAttributeValueCommand>
 {
@@ -39,6 +39,7 @@ public class CreateVariantAttributeValueCommandHandler : IRequestHandler<CreateV
             AttributeId = request.AttributeId,
             Value = value,
             ColorHex = string.IsNullOrWhiteSpace(request.ColorHex) ? null : request.ColorHex.Trim(),
+            LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl) ? null : request.LogoUrl.Trim(),
             DisplayOrder = request.DisplayOrder
         };
         _db.VariantAttributeValues.Add(entity);
@@ -48,7 +49,7 @@ public class CreateVariantAttributeValueCommandHandler : IRequestHandler<CreateV
 }
 
 /// <summary>ویرایش یک مقدار در pool.</summary>
-public record UpdateVariantAttributeValueCommand(int Id, string Value, string? ColorHex, int DisplayOrder) : IRequest<bool>;
+public record UpdateVariantAttributeValueCommand(int Id, string Value, string? ColorHex, string? LogoUrl, int DisplayOrder) : IRequest<bool>;
 
 public class UpdateVariantAttributeValueCommandValidator : AbstractValidator<UpdateVariantAttributeValueCommand>
 {
@@ -77,6 +78,7 @@ public class UpdateVariantAttributeValueCommandHandler : IRequestHandler<UpdateV
 
         entity.Value = value;
         entity.ColorHex = string.IsNullOrWhiteSpace(request.ColorHex) ? null : request.ColorHex.Trim();
+        entity.LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl) ? null : request.LogoUrl.Trim();
         entity.DisplayOrder = request.DisplayOrder;
         entity.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);

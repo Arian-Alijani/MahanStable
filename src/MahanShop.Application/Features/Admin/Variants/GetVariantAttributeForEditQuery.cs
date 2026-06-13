@@ -20,6 +20,7 @@ public class GetVariantAttributeForEditQueryHandler : IRequestHandler<GetVariant
                 Id = a.Id,
                 Name = a.Name,
                 IsColor = a.IsColor,
+                Kind = a.Kind,
                 DisplayOrder = a.DisplayOrder
             })
             .FirstOrDefaultAsync(ct);
@@ -43,6 +44,7 @@ public class GetVariantAttributeValuesQueryHandler : IRequestHandler<GetVariantA
                 AttributeId = v.AttributeId,
                 Value = v.Value,
                 ColorHex = v.ColorHex,
+                LogoUrl = v.LogoUrl,
                 DisplayOrder = v.DisplayOrder
             })
             .ToListAsync(ct);

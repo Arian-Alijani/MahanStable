@@ -28,6 +28,7 @@ public class GetVariantAttributesQueryHandler : IRequestHandler<GetVariantAttrib
                 Id = a.Id,
                 Name = a.Name,
                 IsColor = a.IsColor,
+                Kind = a.Kind,
                 DisplayOrder = a.DisplayOrder,
                 ValueCount = a.Values.Count
             })

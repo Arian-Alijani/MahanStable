@@ -1,5 +1,6 @@
 using FluentValidation;
 using MahanShop.Application.Features.Admin.Variants;
+using MahanShop.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -14,6 +15,7 @@ public class CreateModel : PageModel
 
     [BindProperty] public string Name { get; set; } = "";
     [BindProperty] public bool IsColor { get; set; }
+    [BindProperty] public VariantAttributeKind Kind { get; set; } = VariantAttributeKind.Other;
     [BindProperty] public int DisplayOrder { get; set; }
 
     public void OnGet() { }
@@ -22,7 +24,7 @@ public class CreateModel : PageModel
     {
         try
         {
-            await _mediator.Send(new CreateVariantAttributeCommand(Name, IsColor, DisplayOrder));
+            await _mediator.Send(new CreateVariantAttributeCommand(Name, IsColor, Kind, DisplayOrder));
             TempData["AdminOk"] = "ویژگی ساخته شد.";
             return RedirectToPage("Index");
         }

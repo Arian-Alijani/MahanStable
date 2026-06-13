@@ -44,6 +44,7 @@ public class VariantAttributeValueConfiguration : IEntityTypeConfiguration<Varia
     {
         b.Property(x => x.Value).HasMaxLength(150).IsRequired();
         b.Property(x => x.ColorHex).HasMaxLength(9);
+        b.Property(x => x.LogoUrl).HasMaxLength(500);
         b.HasIndex(x => new { x.AttributeId, x.Value }).IsUnique();
 
         b.HasOne(x => x.Attribute)

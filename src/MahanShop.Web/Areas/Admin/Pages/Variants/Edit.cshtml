@@ -14,6 +14,15 @@
             <input asp-for="Name" class="form-control" />
         </div>
         <div class="mb-3">
+            <label class="form-label">نقش ویژگی</label>
+            <select asp-for="Kind" class="form-select">
+                <option value="0">عمومی — دراپ‌داون</option>
+                <option value="1">برند دستگاه</option>
+                <option value="2">مدل دستگاه</option>
+                <option value="3">رنگ (swatch)</option>
+            </select>
+        </div>
+        <div class="mb-3">
             <label class="form-label">ترتیب نمایش</label>
             <input asp-for="DisplayOrder" type="number" class="form-control" />
         </div>
