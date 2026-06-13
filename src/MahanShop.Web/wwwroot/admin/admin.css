@@ -992,3 +992,179 @@
     .u9-stats { grid-template-columns: repeat(2, 1fr); }
     .u9-filters .form-select { min-width: 0; flex: 1 1 45%; }
 }
+
+/* =================================================================
+   F10 — تب «داشبورد» گرافیکی (dash10-*)
+   کارت‌های آماری، نمودار SVG ۷روزه، سفارش‌های اخیر، موجودی کم.
+   ================================================================= */
+
+/* سربرگ */
+.dash10-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    flex-wrap: wrap; gap: 14px; margin-bottom: 22px;
+}
+.dash10-title { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; }
+.dash10-subtitle { font-size: 13.5px; color: #64748b; margin: 4px 0 0; }
+.dash10-head-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.dash10-head-actions .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 13.5px; font-weight: 600; padding: 8px 14px; border-radius: 10px;
+}
+
+/* کارت‌های آماری اصلی (۴تایی گرافیکی) */
+.dash10-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px;
+}
+.dash10-stat {
+    display: flex; align-items: stretch; gap: 14px;
+    padding: 18px; border-radius: 16px;
+    background: var(--admin-card); border: 1.5px solid var(--admin-border);
+    box-shadow: var(--admin-shadow); text-decoration: none; color: inherit;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+    position: relative; overflow: hidden;
+}
+.dash10-stat::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(135deg, transparent 60%, rgba(255,255,255,.4));
+    opacity: 0; transition: opacity .2s;
+}
+.dash10-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -14px rgba(15,23,42,.35);
+    border-color: #cbd5e1;
+}
+.dash10-stat:hover::before { opacity: 1; }
+
+.dash10-stat__icon {
+    width: 52px; height: 52px; flex: none; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; box-shadow: 0 6px 14px -6px rgba(15,23,42,.45);
+}
+.dash10-stat__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.dash10-stat__label { font-size: 12.5px; color: #64748b; font-weight: 600; }
+.dash10-stat__value {
+    font-size: 24px; font-weight: 800; color: #0f172a;
+    line-height: 1.1; word-break: keep-all; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+}
+.dash10-stat__unit { font-size: 11.5px; font-weight: 500; color: #94a3b8; }
+.dash10-stat__sub  { font-size: 11.5px; color: #64748b; margin-top: 2px; line-height: 1.6; }
+
+/* رنگ‌های هر کارت */
+.dash10-stat--sales    .dash10-stat__icon { background: linear-gradient(135deg, #10b981, #047857); }
+.dash10-stat--orders   .dash10-stat__icon { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.dash10-stat--users    .dash10-stat__icon { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.dash10-stat--products .dash10-stat__icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+.dash10-stat--sales    .dash10-stat__value { color: #047857; }
+.dash10-stat--orders   .dash10-stat__value { color: #1d4ed8; }
+.dash10-stat--users    .dash10-stat__value { color: #6d28d9; }
+.dash10-stat--products .dash10-stat__value { color: #b45309; }
+
+.dash10-warn { color: #b91c1c; font-weight: 700; }
+
+/* نمودار SVG ۷روزه */
+.dash10-chart-box {
+    background: var(--admin-card); border: 1px solid var(--admin-border);
+    border-radius: 16px; padding: 18px 20px 14px;
+    box-shadow: var(--admin-shadow); margin-bottom: 18px;
+}
+.dash10-chart-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 10px;
+}
+.dash10-chart-title { font-size: 15.5px; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
+.dash10-chart-sub  { font-size: 12.5px; color: #64748b; line-height: 1.7; }
+.dash10-chart-sub strong { color: #1e293b; font-weight: 700; }
+
+.dash10-legend { display: flex; flex-wrap: wrap; gap: 14px; }
+.dash10-legend__item {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: #475569; font-weight: 600;
+}
+.dash10-legend__dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.dash10-legend__dot--orders { background: #2563eb; }
+.dash10-legend__dot--sales  { background: #10b981; }
+
+.dash10-chart { width: 100%; }
+.dash10-chart svg {
+    width: 100%; height: auto; max-height: 260px;
+    direction: ltr;   /* SVG هماهنگ‌تر در LTR ترسیم می‌شود */
+    display: block;
+}
+
+/* گرید پایین: سفارش‌های اخیر + موجودی کم */
+.dash10-grid {
+    display: grid; grid-template-columns: 1.7fr 1fr; gap: 16px;
+}
+.dash10-panel {
+    background: var(--admin-card); border: 1px solid var(--admin-border);
+    border-radius: 14px; padding: 18px;
+    box-shadow: var(--admin-shadow); display: flex; flex-direction: column;
+}
+.dash10-panel__head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; gap: 10px; flex-wrap: wrap;
+}
+.dash10-panel__title {
+    font-size: 15px; font-weight: 800; color: #0f172a; margin: 0;
+    display: flex; align-items: center; gap: 7px;
+}
+.dash10-panel__title svg { color: #64748b; }
+.dash10-count-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 24px; height: 22px; padding: 0 8px;
+    background: #fee2e2; color: #b91c1c;
+    border-radius: 999px; font-size: 12px; font-weight: 700;
+    margin-inline-start: 4px;
+}
+
+.dash10-tablebox { overflow-x: auto; }
+.dash10-table { width: 100%; margin: 0; }
+.dash10-table thead th {
+    font-size: 12px; color: #94a3b8; font-weight: 700;
+    border-bottom: 1px solid var(--admin-border); padding: 8px 10px;
+    text-transform: none;
+}
+.dash10-table tbody td {
+    padding: 11px 10px; border-bottom: 1px solid #f1f5f9;
+    font-size: 13.5px; vertical-align: middle;
+}
+.dash10-table tbody tr:last-child td { border-bottom: none; }
+.dash10-table tbody tr:hover { background: #f8fafc; }
+.dash10-code   { font-family: ui-monospace, "Vazirmatn", monospace; font-size: 13px; color: #1e293b; }
+.dash10-cust   { font-weight: 600; color: #1e293b; }
+.dash10-date   { color: #64748b; font-size: 12.5px; white-space: nowrap; }
+.dash10-amount { font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; }
+.dash10-prod-name { font-weight: 600; color: #1e293b; max-width: 220px; }
+.dash10-variant { color: #64748b; font-size: 12.5px; }
+.dash10-empty {
+    text-align: center; color: #94a3b8; font-size: 13px;
+    padding: 28px 10px !important;
+}
+
+.dash10-table--compact tbody td { padding: 9px 10px; }
+
+/* بج موجودی */
+.dash10-stock-badge {
+    display: inline-block; min-width: 36px; text-align: center;
+    padding: 3px 10px; border-radius: 999px;
+    font-weight: 700; font-size: 12.5px; font-variant-numeric: tabular-nums;
+}
+.dash10-stock-badge.is-low  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.dash10-stock-badge.is-zero { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* ── ریسپانسیو ── */
+@media (max-width: 1200px) {
+    .dash10-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 992px) {
+    .dash10-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+    .dash10-stats { grid-template-columns: 1fr; }
+    .dash10-head { flex-direction: column; align-items: flex-start; }
+    .dash10-stat__value { font-size: 21px; }
+    .dash10-stat__icon { width: 46px; height: 46px; border-radius: 12px; }
+    .dash10-table { min-width: 560px; }
+}
