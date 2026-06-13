@@ -4,6 +4,7 @@ using MahanShop.Application.Features.Account.Commands.AddAddress;
 using MahanShop.Application.Features.Account.Queries.GetUserAddresses;
 using MahanShop.Application.Features.Cart.Commands.PlaceOrder;
 using MahanShop.Application.Features.Cart.Queries.GetCart;
+using MahanShop.Application.Features.Cart.Queries.GetShippingMethods;
 using MahanShop.Web.Models.Checkout;
 using MahanShop.Web.Services;
 using MediatR;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MahanShop.Web.Controllers;
 
-/// <summary>تسویه: انتخاب/افزودن آدرس + ثبت سفارش (Pending). فقط کاربر لاگین. UserId از claim — هرگز از فرم. anti-forgery گلوبال.</summary>
+/// <summary>تسویه: انتخاب/افزودن آدرس + انتخاب روش ارسال + ثبت سفارش (Pending). فقط کاربر لاگین. UserId از claim — هرگز از فرم. anti-forgery گلوبال. نرخ ارسال از DB — هرگز از client.</summary>
 [Authorize]
 public class CheckoutController : Controller
 {
@@ -28,13 +29,13 @@ public class CheckoutController : Controller
     private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     // GET /checkout
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int? shippingMethodId = null)
     {
         var cart = await _mediator.Send(new GetCartQuery(_cart.GetItems()));
         if (cart.Lines.Count == 0)
             return RedirectToAction("Index", "Cart");
 
-        var vm = await BuildVm(cart);
+        var vm = await BuildVm(cart, shippingMethodId);
         return View(vm);
     }
 
@@ -48,13 +49,13 @@ public class CheckoutController : Controller
             var id = await _mediator.Send(new AddAddressCommand(
                 UserId, n.Province ?? "", n.City ?? "", n.PostalCode ?? "",
                 n.FullAddress ?? "", n.ReceiverName ?? "", n.ReceiverPhone ?? ""));
-            return RedirectToAction(nameof(Index), new { addressId = id });
+            return RedirectToAction(nameof(Index), new { addressId = id, shippingMethodId = form.SelectedShippingMethodId });
         }
         catch (ValidationException ex)
         {
             var cart = await _mediator.Send(new GetCartQuery(_cart.GetItems()));
             if (cart.Lines.Count == 0) return RedirectToAction("Index", "Cart");
-            var vm = await BuildVm(cart);
+            var vm = await BuildVm(cart, form.SelectedShippingMethodId);
             vm.NewAddress = n;
             foreach (var e in ex.Errors) ModelState.AddModelError(string.Empty, e.ErrorMessage);
             return View(nameof(Index), vm);
@@ -63,18 +64,18 @@ public class CheckoutController : Controller
 
     // POST /checkout/place — ثبت سفارش
     [HttpPost]
-    public async Task<IActionResult> Place(int addressId)
+    public async Task<IActionResult> Place(int addressId, int shippingMethodId)
     {
         PlaceOrderResult result;
         try
         {
-            result = await _mediator.Send(new PlaceOrderCommand(UserId, addressId, _cart.GetItems()));
+            result = await _mediator.Send(new PlaceOrderCommand(UserId, addressId, shippingMethodId, _cart.GetItems()));
         }
         catch (ValidationException ex)
         {
             var cart = await _mediator.Send(new GetCartQuery(_cart.GetItems()));
             if (cart.Lines.Count == 0) return RedirectToAction("Index", "Cart");
-            var vm = await BuildVm(cart);
+            var vm = await BuildVm(cart, shippingMethodId);
             foreach (var e in ex.Errors) ModelState.AddModelError(string.Empty, e.ErrorMessage);
             return View(nameof(Index), vm);
         }
@@ -99,14 +100,24 @@ public class CheckoutController : Controller
         return View();
     }
 
-    private async Task<CheckoutViewModel> BuildVm(CartViewModel cart)
+    private async Task<CheckoutViewModel> BuildVm(CartViewModel cart, int? selectedShippingMethodId = null)
     {
         var addresses = await _mediator.Send(new GetUserAddressesQuery(UserId));
+        var shippingMethods = await _mediator.Send(new GetShippingMethodsForCheckoutQuery());
+
+        // اگر روش ارسال انتخابی معتبر نیست، اولین گزینه فعال پیش‌فرض می‌شود
+        int? resolvedShippingId = selectedShippingMethodId.HasValue
+            && shippingMethods.Any(s => s.Id == selectedShippingMethodId.Value)
+            ? selectedShippingMethodId
+            : shippingMethods.FirstOrDefault()?.Id;
+
         return new CheckoutViewModel
         {
             Cart = cart,
             Addresses = addresses,
-            SelectedAddressId = addresses.FirstOrDefault()?.Id
+            SelectedAddressId = addresses.FirstOrDefault()?.Id,
+            ShippingMethods = shippingMethods,
+            SelectedShippingMethodId = resolvedShippingId
         };
     }
 }

@@ -119,7 +119,10 @@ public class InvoicePdfService
                         }
                         Row("جمع کل", Money(o.TotalAmount));
                         if (o.DiscountAmount > 0) Row("تخفیف", "- " + Money(o.DiscountAmount));
-                        Row("هزینه ارسال", Money(o.ShippingCost));
+                        var shippingLabel = string.IsNullOrEmpty(o.ShippingMethodName)
+                            ? "هزینه ارسال"
+                            : $"ارسال ({o.ShippingMethodName})";
+                        Row(shippingLabel, o.ShippingCost == 0 ? "رایگان" : Money(o.ShippingCost));
                         s.Item().LineHorizontal(1).LineColor("#E5E7EB");
                         Row("مبلغ پرداختی", Money(o.FinalAmount), true);
                     });

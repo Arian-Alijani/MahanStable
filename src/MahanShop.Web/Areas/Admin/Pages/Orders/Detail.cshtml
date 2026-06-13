@@ -90,7 +90,12 @@
             {
                 <tr><td colspan="3" class="text-start">تخفیف</td><td>@o.DiscountAmount.ToString("N0")-</td></tr>
             }
-            <tr><td colspan="3" class="text-start">هزینه ارسال</td><td>@(o.ShippingCost == 0 ? "رایگان" : o.ShippingCost.ToString("N0"))</td></tr>
+            <tr>
+                <td colspan="3" class="text-start">
+                    @(string.IsNullOrEmpty(o.ShippingMethodName) ? "هزینه ارسال" : $"ارسال ({o.ShippingMethodName})")
+                </td>
+                <td>@(o.ShippingCost == 0 ? "رایگان" : o.ShippingCost.ToString("N0") + " تومان")</td>
+            </tr>
             <tr><td colspan="3" class="text-start"><strong>مبلغ نهایی</strong></td><td><strong>@o.FinalAmount.ToString("N0") تومان</strong></td></tr>
         </tfoot>
     </table>
