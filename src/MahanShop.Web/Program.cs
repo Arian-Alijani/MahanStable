@@ -94,12 +94,16 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 var app = builder.Build();
 
-// Seed داده‌ی نمونه فقط در Development (migrate + کاتالوگ + محتوای صفحه اصلی)
-if (app.Environment.IsDevelopment())
+// Seed: در Development داده‌ی نمونه‌ی کامل (migrate + کاتالوگ + صفحه اصلی + ادمین اولیه).
+// در سایر محیط‌ها (Production) فقط ادمین اولیه تضمین می‌شود (بدون داده‌ی نمونه) تا شماره‌ی
+// ادمین همیشه دسترسی پنل داشته باشد. هر دو idempotent‌اند.
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<MahanShop.Infra.Data.Context.MyDbContext>();
-    await MahanShop.Infra.Data.Seed.DataSeeder.SeedAsync(db);
+    if (app.Environment.IsDevelopment())
+        await MahanShop.Infra.Data.Seed.DataSeeder.SeedAsync(db);
+    else
+        await MahanShop.Infra.Data.Seed.DataSeeder.SeedAdminOnlyAsync(db);
 }
 
 if (!app.Environment.IsDevelopment())
