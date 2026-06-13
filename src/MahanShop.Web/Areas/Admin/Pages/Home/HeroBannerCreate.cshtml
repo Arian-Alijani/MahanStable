@@ -1,0 +1,46 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Home.HeroBannerCreateModel
+@{
+    ViewData["Title"] = "بنر بالای صفحه جدید";
+    ViewData["AdminActive"] = "home";
+}
+
+<h1 class="admin-page-title">بنر بالای صفحه جدید</h1>
+
+<div class="admin-panel-box admin-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <form method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label class="form-label">تصویر بنر (دسکتاپ)</label>
+            <input asp-for="ImageFile" type="file" accept="image/*" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">تصویر موبایل (اختیاری)</label>
+            <input asp-for="MobileImageFile" type="file" accept="image/*" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">متن جایگزین تصویر (الزامی برای SEO و دسترس‌پذیری)</label>
+            <input asp-for="AltText" maxlength="200" class="form-control" placeholder="مثلاً: فروش ویژهٔ گوشی‌های سامسونگ" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">عنوان داخلی (اختیاری)</label>
+            <input asp-for="Title" maxlength="200" class="form-control" placeholder="برای شناسایی در پنل" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">لینک مقصد (اختیاری)</label>
+            <input asp-for="LinkUrl" maxlength="500" class="form-control" placeholder="/products?CategorySlug=mobile" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">عدد ترتیب (کوچک‌تر = زودتر در اسلایدر)</label>
+            <input asp-for="DisplayOrder" type="number" min="0" class="form-control" />
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">فعال</label>
+        </div>
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+</div>
