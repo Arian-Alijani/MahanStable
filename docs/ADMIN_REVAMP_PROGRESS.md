@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F8 (تب «سفارش‌ها») ✅ تمام. قدم بعد = F9 (تب «کاربران»: جست‌وجو + حذف + ادمین‌کردن + جزییات+سفارش‌ها).**
+**فاز جاری: F9 (تب «کاربران») ✅ تمام. قدم بعد = F10 (داشبورد گرافیکی: آمار + سفارش‌های اخیر + نمودار SVG).**
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -27,7 +27,7 @@
 - [x] **F6** — تب محصولات: باکس آماری + جست‌وجو/فیلتر.
 - [x] **F7** — تب موجودی: product-group view، واریانت کامل، کنترل تفکیکی.
 - [x] **F8** — تب سفارش‌ها: سورت/جست‌وجو/تغییر‌وضعیت/کدرهگیری/فاکتور.
-- [ ] **F9** — تب کاربران: جست‌وجو/جزئیات/حذف/ادمین‌کردن.
+- [x] **F9** — تب کاربران: جست‌وجو/جزئیات/حذف/ادمین‌کردن.
 - [ ] **F10** — داشبورد گرافیکی.
 - [ ] **F11** — نمایش محصول عمومی: تب ویژگی‌ها + انتخاب مدل/زیرمدل + تخفیف کارت.
 - [ ] **F12** — پولیش UI/UX + تست یکپارچه + پاکسازی تب‌های مرده.
@@ -35,6 +35,34 @@
 ---
 
 ## دفتر ثبت (هر فاز: چه شد / فایل‌ها / لمس فروشگاه عمومی / migration / قدم بعد)
+
+### F9 — تب «کاربران» (آمار + جست‌وجو + حذف + ادمین‌کردن + جزییات) ✅ (2026-06-13)
+- **چه شد:** تب «کاربران» از لیست ساده با فیلتر به یک کنسول کامل مدیریت کاربر بازطراحی شد.
+- **تصمیم‌های طراحی:**
+  - **کارت‌های آمار ۵‌تایی:** Total/Active/Inactive/Admins/WithOrders — هر کارت فیلتر سریع است (آمار روی همه کاربران محاسبه می‌شود، فارغ از فیلتر جاری).
+  - **فیلتر سه‌گانه:** نقش (همه/مدیران) + وضعیت (همه/غیرفعال) + سفارش (همه/دارای سفارش) — همه به‌صورت GET سمت سرور.
+  - **چیپس فیلتر فعال:** جستجو/نقش/وضعیت/سفارش با لینک حذف تفکیکی.
+  - **حذف کاربر:** سیاست «منع حذف اگر سفارش دارد» — در هر دو صفحه Index (دکمه حذف فقط برای کاربران بدون سفارش) و Detail (دکمه در ناحیه خطر).
+  - **محافظت آخرین ادمین:** `ToggleUserAdminCommand` حالا قبل از سلب نقش شمار ادمین‌ها را چک می‌کند؛ اگر آخرین بود `ValidationException` پرتاب می‌کند.
+  - **آواتار حروف اول:** در لیست و صفحه جزییات، حروف اول نام (یا موبایل) به عنوان آواتار نمایش داده می‌شود.
+  - **جزییات بهبودیافته:** پروفایل + تعداد کل سفارش‌ها + آدرس‌ها + ۲۰ سفارش اخیر با لینک به جزییات هر سفارش.
+  - **`OnlyWithOrders` فیلتر جدید:** در `GetUsersQuery` اضافه شد تا فقط کاربران دارای سفارش نشان داده شوند.
+- **فایل‌های تغییریافته:**
+  - `src/MahanShop.Application/Features/Admin/Users/UserCommands.cs` — `DeleteUserCommand` (+Handler: منع اگر سفارش دارد + محافظت آخرین ادمین) جدید؛ `ToggleUserAdminCommand` با گارد آخرین ادمین.
+  - `src/MahanShop.Application/Features/Admin/Users/UserAdminDtos.cs` — `AdminUserStatsDto` جدید؛ `AdminUserListResult` حالا `Stats` دارد؛ `AdminUserDetailDto` حالا `TotalOrderCount` دارد.
+  - `src/MahanShop.Application/Features/Admin/Users/GetUsersQuery.cs` — `OnlyWithOrders` پارامتر جدید + `BuildStatsAsync` (آمار کلی) + `Stats` در result.
+  - `src/MahanShop.Application/Features/Admin/Users/GetUserDetailQuery.cs` — `TotalOrderCount` به projection + Take(20) به‌جای Take(10).
+  - `src/MahanShop.Web/Areas/Admin/Pages/Users/Index.cshtml.cs` — `OnlyWithOrders` + `HasFilter` + `OnPostDeleteAsync` handler.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Users/Index.cshtml` — بازنویسی کامل: کارت‌های آمار + filterbar با چیپس + جدول با آواتار + دکمه حذف (فقط بدون سفارش) + صفحه‌بندی.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Users/Detail.cshtml.cs` — `OnPostDeleteUserAsync` handler جدید.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Users/Detail.cshtml` — بازنویسی کامل: آواتار بزرگ + آمار + دسترسی + ناحیه خطر (حذف) + آدرس‌ها + ۲۰ سفارش اخیر.
+  - `src/MahanShop.Web/wwwroot/admin/admin.css` — بلوک `u9-*` F9: آمار/filterbar/chip/جدول/آواتار/جزییات/ناحیه‌خطر + ریسپانسیو.
+- **لمس فروشگاه عمومی:** هیچ. فقط `Areas/Admin/Users`, `Features/Admin/Users`, `wwwroot/admin/admin.css`.
+- **migration:** هیچ. صفر تغییر Domain/DB.
+- **build:** ✅ `dotnet build MahanShop.sln` = **0 Error** (5 warning همگی pre-existing). `node --check` = 8 ok. JS tests = 10 passed. Domestic-only: صفر URL خارجی.
+- **قدم بعد = F10** (داشبورد گرافیکی: باکس‌های آماری + سفارش‌های اخیر + نمودار SVG/CSS سبک).
+
+---
 
 ### F8 — تب «سفارش‌ها» (سورت/آمار/جست‌وجو/کدرهگیری/جزییات) ✅ (2026-06-13)
 - **چه شد:** تب «سفارش‌ها» از لیست ساده به یک کنسول کامل مدیریت سفارش بازطراحی شد.
