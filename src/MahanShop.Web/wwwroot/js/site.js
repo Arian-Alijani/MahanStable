@@ -43,9 +43,42 @@
         start();
     });
 
-    /* ---------- Drag-to-scroll carousels (pointer) ---------- */
+    /* ---------- Drag-to-scroll carousels (pointer) + ناوبری/لبه‌های محو ---------- */
     document.querySelectorAll('[data-carousel]').forEach(el => {
         let down = false, startX = 0, startScroll = 0, moved = false, pid = null;
+
+        const viewport = el.closest('.prow__viewport');
+        const prevBtn = viewport ? viewport.querySelector('[data-carousel-prev]') : null;
+        const nextBtn = viewport ? viewport.querySelector('[data-carousel-next]') : null;
+        // در RTL، scrollLeft می‌تواند منفی/معکوس باشد؛ با |scrollLeft| یکدست می‌کنیم
+        const maxScroll = () => el.scrollWidth - el.clientWidth;
+
+        // به‌روزرسانی وضعیت لبه‌های محو و فعال/غیرفعالیِ دکمه‌ها
+        function updateEdges() {
+            if (!viewport) return;
+            const max = maxScroll();
+            const pos = Math.abs(el.scrollLeft);
+            const atStart = pos <= 1;
+            const atEnd = pos >= max - 1;
+            const scrollable = max > 2;
+            viewport.classList.toggle('can-prev', scrollable && !atStart);
+            viewport.classList.toggle('can-next', scrollable && !atEnd);
+            if (prevBtn) prevBtn.hidden = !scrollable || atStart;
+            if (nextBtn) nextBtn.hidden = !scrollable || atEnd;
+        }
+
+        // پیمایش به اندازهٔ ۸۰٪ عرضِ دید (جهت با RTL سازگار)
+        function page(dir) {
+            const rtl = document.documentElement.getAttribute('dir') === 'rtl';
+            const amount = el.clientWidth * 0.8 * dir * (rtl ? -1 : 1);
+            el.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+        if (prevBtn) prevBtn.addEventListener('click', () => page(-1));
+        if (nextBtn) nextBtn.addEventListener('click', () => page(1));
+
+        el.addEventListener('scroll', updateEdges, { passive: true });
+        window.addEventListener('resize', updateEdges);
+        updateEdges();
 
         // جلوگیری از درگ native تصاویر/لینک‌ها (که باعث بهم‌ریختگی می‌شد)
         el.querySelectorAll('img, a').forEach(n => { n.setAttribute('draggable', 'false'); });
@@ -70,6 +103,7 @@
             if (!down) return;
             down = false; el.classList.remove('dragging');
             if (pid != null) { try { el.releasePointerCapture(pid); } catch (_) {} pid = null; }
+            updateEdges();
         }
         el.addEventListener('pointerup', up);
         el.addEventListener('pointercancel', up);

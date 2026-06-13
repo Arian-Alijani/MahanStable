@@ -13,10 +13,18 @@
         }
     </div>
 
-    <div class="prow__scroller" data-carousel>
-        @foreach (var p in Model.Products)
-        {
-            @await Html.PartialAsync("_ProductCard", p)
-        }
+    <div class="prow__viewport">
+        <button type="button" class="prow__nav prow__nav--prev" data-carousel-prev aria-label="محصولات قبلی" hidden>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <div class="prow__scroller" data-carousel>
+            @foreach (var p in Model.Products)
+            {
+                @await Html.PartialAsync("_ProductCard", p)
+            }
+        </div>
+        <button type="button" class="prow__nav prow__nav--next" data-carousel-next aria-label="محصولات بعدی" hidden>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
     </div>
 </section>

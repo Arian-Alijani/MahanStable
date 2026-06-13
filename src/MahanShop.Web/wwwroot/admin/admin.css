@@ -160,3 +160,11 @@
 .home-thumb { width:120px; height:46px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0; }
 .home-preview { max-width:360px; width:100%; border-radius:10px; border:1px solid #e2e8f0; }
 .home-dot { color:#cbd5e1; margin-inline:4px; }
+
+/* ریسپانسیو: جدولِ نوارها روی صفحه‌های کوچک اسکرولِ افقی می‌گیرد، اکشن‌ها سطربندی می‌شوند */
+.home-table .admin-actions { flex-wrap:wrap; gap:6px; }
+@media (max-width:768px) {
+    .admin-panel-box { padding:12px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .home-table { min-width:680px; }
+    .home-thumb { width:84px; height:38px; }
+}
