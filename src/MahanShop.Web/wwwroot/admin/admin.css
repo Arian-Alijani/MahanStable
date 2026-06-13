@@ -228,6 +228,12 @@
 }
 .cat-sortable__item:hover { border-color:#cbd5e1; box-shadow:0 4px 14px -10px rgba(15,23,42,.35); }
 .cat-sortable__item.is-dragging { opacity:.55; border-style:dashed; border-color:var(--admin-accent); }
+.cat-sortable__item.just-moved { animation:catMovedPulse .65s ease; }
+@keyframes catMovedPulse {
+    0%   { box-shadow:0 0 0 0 rgba(37,99,235,.35); border-color:var(--admin-accent); }
+    100% { box-shadow:0 0 0 8px rgba(37,99,235,0); }
+}
+@media (prefers-reduced-motion: reduce) { .cat-sortable__item.just-moved { animation:none; } }
 .cat-sortable__grip { display:inline-flex; color:#94a3b8; cursor:grab; flex:none; touch-action:none; }
 .cat-sortable__grip:active { cursor:grabbing; }
 .cat-sortable__thumb { width:38px; height:38px; object-fit:contain; border-radius:9px; border:1px solid #eef2f7; background:#f8fafc; padding:4px; flex:none; }
