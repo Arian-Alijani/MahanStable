@@ -1,0 +1,132 @@
+@page
+@using MahanShop.Application.Features.Admin.Inventory
+@model MahanShop.Web.Areas.Admin.Pages.Inventory.IndexModel
+@{
+    ViewData["Title"] = "مدیریت موجودی";
+    ViewData["AdminActive"] = "inventory";
+
+    string StockTone(int s) => s == 0 ? "is-out" : s <= 5 ? "is-low" : "is-in";
+    string StockLabel(int s) => s == 0 ? "ناموجود" : s <= 5 ? $"فقط {s} عدد" : "موجود";
+}
+
+@if (TempData["AdminOk"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["AdminErr"] is string err) { <div class="alert alert-danger">@err</div> }
+
+@* نوار هشدار کمبود موجودی *@
+@if (Model.Data.LowStockCount > 0 && Model.Status != StockStatusFilter.Low)
+{
+    <a class="inv-lowbar" asp-route-Status="@StockStatusFilter.Low" asp-route-Search="@Model.Search"
+       asp-route-BrandValueId="@Model.BrandValueId" asp-route-Model="@Model.Model">
+        ⚠️ شما @Model.Data.LowStockCount آیتم با موجودی کمتر از ۵ دارید — برای دیدن کلیک کنید.
+    </a>
+}
+
+@* فیلترها *@
+<div class="admin-toolbar">
+    <form method="get" class="admin-search admin-search--wide">
+        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="نام محصول یا SKU..." />
+        <select name="BrandValueId" class="form-select">
+            <option value="">همه برندها</option>
+            @foreach (var b in Model.Data.BrandOptions)
+            {
+                <option value="@b.ValueId" selected="@(Model.BrandValueId == b.ValueId)">@b.Name</option>
+            }
+        </select>
+        <input type="text" name="Model" value="@Model.Model" class="form-control" placeholder="مدل (مثلاً A31)" />
+        <select name="Status" class="form-select">
+            <option value="@StockStatusFilter.All" selected="@(Model.Status == StockStatusFilter.All)">همه</option>
+            <option value="@StockStatusFilter.InStock" selected="@(Model.Status == StockStatusFilter.InStock)">موجود</option>
+            <option value="@StockStatusFilter.Low" selected="@(Model.Status == StockStatusFilter.Low)">موجودی محدود (کمتر از ۵)</option>
+            <option value="@StockStatusFilter.Out" selected="@(Model.Status == StockStatusFilter.Out)">ناموجود</option>
+        </select>
+        <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+    </form>
+    <div class="admin-toolbar__actions">
+        <a class="btn btn-outline-secondary" asp-page-handler="Export"
+           asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId"
+           asp-route-Model="@Model.Model" asp-route-Status="@Model.Status">دانلود CSV</a>
+        <form method="post" asp-page-handler="Import" enctype="multipart/form-data" class="admin-inline-form">
+            <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" required />
+            <button type="submit" class="btn btn-outline-success btn-sm">بارگذاری CSV</button>
+        </form>
+    </div>
+</div>
+
+@* عملیات دسته‌ای *@
+<form method="post" asp-page-handler="Bulk" id="invBulkForm"
+      asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId"
+      asp-route-Model="@Model.Model" asp-route-Status="@Model.Status"
+      asp-route-Page="@Model.Page" asp-route-Sort="@Model.Sort" asp-route-Desc="@Model.Desc">
+    <div class="inv-bulkbar">
+        <span class="admin-muted"><span id="invSelCount">0</span> ردیف انتخاب‌شده</span>
+        <select name="operation" class="form-select form-select-sm inv-bulk-op">
+            <option value="@BulkStockOperation.Set">تنظیم موجودی روی</option>
+            <option value="@BulkStockOperation.Increase">افزایش به مقدار</option>
+            <option value="@BulkStockOperation.Decrease">کاهش به مقدار</option>
+            <option value="@BulkStockOperation.IncreasePercent">افزایش درصدی (٪)</option>
+        </select>
+        <input type="number" name="amount" min="0" value="0" class="form-control form-control-sm admin-stock-input" />
+        <button type="submit" class="btn btn-sm btn-warning">اعمال روی انتخاب‌شده‌ها</button>
+    </div>
+
+    <div class="admin-panel-box">
+        <table class="table admin-table inv-table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" class="inv-check-all" aria-label="انتخاب همه" /></th>
+                    <th><a asp-route-Sort="product" asp-route-Desc="@(Model.Sort == "product" && !Model.Desc)" asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId" asp-route-Model="@Model.Model" asp-route-Status="@Model.Status">نام محصول</a></th>
+                    <th>برند</th>
+                    <th>مدل / ویژگی اصلی</th>
+                    <th>رنگ / سایر</th>
+                    <th><a asp-route-Sort="stock" asp-route-Desc="@(Model.Sort == "stock" && !Model.Desc)" asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId" asp-route-Model="@Model.Model" asp-route-Status="@Model.Status">موجودی</a></th>
+                    <th><a asp-route-Sort="sku" asp-route-Desc="@(Model.Sort == "sku" && !Model.Desc)" asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId" asp-route-Model="@Model.Model" asp-route-Status="@Model.Status">SKU</a></th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Data.Rows)
+            {
+                <tr data-variant="@r.VariantId">
+                    <td><input type="checkbox" name="ids" value="@r.VariantId" class="inv-row-check" /></td>
+                    <td><a asp-page="/Products/Edit" asp-route-id="@r.ProductId">@r.ProductTitle</a></td>
+                    <td>@(string.IsNullOrEmpty(r.Brand) ? "—" : r.Brand)</td>
+                    <td>@(string.IsNullOrEmpty(r.Model) ? "—" : r.Model)</td>
+                    <td>@(string.IsNullOrEmpty(r.OtherAttributes) ? "—" : r.OtherAttributes)</td>
+                    <td>
+                        <span class="inv-dot @StockTone(r.Stock)" title="@StockLabel(r.Stock)"></span>
+                        <input type="number" min="0" value="@r.Stock" class="form-control form-control-sm admin-stock-input inv-stock"
+                               data-variant="@r.VariantId" aria-label="موجودی @r.ProductTitle" />
+                    </td>
+                    <td>@(string.IsNullOrEmpty(r.Sku) ? "—" : r.Sku)</td>
+                    <td class="admin-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary inv-adj" data-variant="@r.VariantId" data-delta="-1" aria-label="کاهش یک عدد">−</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary inv-adj" data-variant="@r.VariantId" data-delta="1" aria-label="افزایش یک عدد">+</button>
+                        <a class="btn btn-sm btn-outline-primary" asp-page="/Products/Edit" asp-route-id="@r.ProductId">ویرایش</a>
+                    </td>
+                </tr>
+            }
+            @if (Model.Data.Rows.Count == 0)
+            {
+                <tr><td colspan="8" class="admin-muted text-center">واریانتی یافت نشد.</td></tr>
+            }
+            </tbody>
+        </table>
+
+        @if (Model.Data.TotalPages > 1)
+        {
+            <nav class="admin-pager">
+                @for (int i = 1; i <= Model.Data.TotalPages; i++)
+                {
+                    <a class="admin-pager__link @(i == Model.Data.Page ? "is-active" : "")"
+                       asp-route-Page="@i" asp-route-Search="@Model.Search" asp-route-BrandValueId="@Model.BrandValueId"
+                       asp-route-Model="@Model.Model" asp-route-Status="@Model.Status"
+                       asp-route-Sort="@Model.Sort" asp-route-Desc="@Model.Desc">@i</a>
+                }
+            </nav>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/admin/inventory.js" asp-append-version="true"></script>
+}

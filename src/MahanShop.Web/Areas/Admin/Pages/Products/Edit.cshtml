@@ -133,7 +133,18 @@
 @if (Model.VariantsView is not null)
 {
     <div class="admin-panel-box admin-form">
-        <h3 class="admin-section-title">گزینه‌ها و موجودی</h3>
+        <div class="admin-panel-box__head">
+            <h3 class="admin-section-title">گزینه‌ها و موجودی</h3>
+            <div class="admin-toolbar__actions">
+                <a class="btn btn-sm btn-outline-secondary" asp-page-handler="ExportVariants" asp-route-id="@Model.Id">دانلود CSV</a>
+                <form method="post" asp-page-handler="ImportVariants" enctype="multipart/form-data" class="admin-inline-form">
+                    <input type="hidden" asp-for="Id" />
+                    <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" required />
+                    <button type="submit" class="btn btn-sm btn-outline-success">بارگذاری CSV</button>
+                </form>
+            </div>
+        </div>
+        <p class="admin-muted" style="font-size:13px;">ساختار CSV: <code>brand,model,color,stock,sku</code> — تطبیق با SKU یا ترکیب برند/مدل/رنگ؛ مقادیر تازه ساخته می‌شوند.</p>
         @if (!Model.VariantsView.HasVariants)
         {
             <p class="admin-muted">این محصول «ساده» است (تیک «دارای واریانت» را بزنید و ذخیره کنید تا گزینه‌ها فعال شوند). در حالت ساده موجودی از خود محصول خوانده می‌شود.</p>
