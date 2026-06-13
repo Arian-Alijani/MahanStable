@@ -32,19 +32,29 @@
 | SMS | provider فعلی |
 | Deploy | Plesk IIS in-process |
 
+## 🔴 ADMIN REVAMP در جریان (بازطراحی بزرگ پنل ادمین + ساختار محصولات)
+یک بازطراحی بزرگ چندفازی در حال انجام است. **هر فاز در یک سشن جداست و مدل حافظهٔ سشن قبل را ندارد.**
+- نقشهٔ کاملِ خودبسنده: **`docs/ADMIN_REVAMP_ROADMAP.md`** (۱۲ فاز، هر فاز دقیق).
+- حافظهٔ زندهٔ بین‌سشنی: **`docs/ADMIN_REVAMP_PROGRESS.md`** (کجاییم، قدم بعد).
+- اگر روی این بازطراحی کار می‌کنی: این دو فایل را **حتماً** قبل کد بخوان.
+
 ## Session continuity rules (مهم — جلوگیری از خرابی بین سشن‌ها)
-1. **شروع هر سشن:** اول `docs/AI_CONTEXT.md` (نقشه) بعد `docs/PROGRESS.md` (وضعیت فعلی + قدم بعد). کار پنل ادمین → جزئیات ادمین هم در `PROGRESS.md` + `AI_CONTEXT.md` §۵.
+1. **شروع هر سشن:** اول `docs/AI_CONTEXT.md` (نقشه) بعد `docs/PROGRESS.md` (وضعیت فعلی + قدم بعد). **اگر کار = ADMIN REVAMP → بعدش `docs/ADMIN_REVAMP_ROADMAP.md` + `docs/ADMIN_REVAMP_PROGRESS.md`.** کار پنل ادمین → جزئیات ادمین هم در `PROGRESS.md` + `AI_CONTEXT.md` §۵.
 2. **قبل کد زدن:** `docs/ARCHITECTURE.md` + `docs/CONVENTIONS.md` چک کن (تنوع/موجودی → `docs/VARIANTS.md`).
 3. **نسخه پکیج:** فقط نسخه‌های پین‌شده `docs/STACK.md`. نسخه جدید بدون آپدیت اون فایل اضافه نکن.
 4. **بعد هر تسک کامل:** `docs/PROGRESS.md` آپدیت کن (چی شد، قدم بعد). اگر نقشهٔ پروژه عوض شد → `docs/AI_CONTEXT.md` هم fix کن.
 5. **هیچوقت** TargetFramework رو از net8.0 عوض نکن. هیچوقت Node/SPA اضافه نکن.
 6. تغییر تصمیم استک → اول از کاربر بپرس، بعد این فایل + STACK.md آپدیت.
+7. **تست/بیلد:** ادعای «build سبز» فقط بعد از `bash tools/build.sh` و دیدن «0 Error». فقط View/JS/CSS؟ → `bash tools/check-js.sh`. روش/اعداد کامل: `docs/ENV_TESTING.md`. (dotnet با `source tools/setup-dotnet.sh` در ~17s نصب می‌شه.)
 
 ## Pointers (فقط فایل‌های موجود)
 - `docs/AI_CONTEXT.md` — ⭐ نقشهٔ فشردهٔ کل پروژه (کجا چی) — اول اینو بخون
+- `docs/ADMIN_REVAMP_ROADMAP.md` — 🔴 نقشهٔ کامل بازطراحی بزرگ ادمین/محصولات (۱۲ فاز خودبسنده)
+- `docs/ADMIN_REVAMP_PROGRESS.md` — 🔴 حافظهٔ زندهٔ بازطراحی ادمین (کجاییم/قدم بعد)
 - `docs/PROGRESS.md` — وضعیت زنده + changelog کامل هر فاز (هر سشن آپدیت)
 - `docs/STACK.md` — نسخه دقیق پکیج‌ها (پین‌شده)
 - `docs/ARCHITECTURE.md` — نقشه لایه‌ها، قواعد وابستگی، ساختار پوشه
 - `docs/CONVENTIONS.md` — قواعد کدنویسی + Domestic-only + ترتیب middleware
 - `docs/VARIANTS.md` — طراحی سیستم تنوع (EAV) + موجودی per-variant (LOCKED)
 - `docs/DEPLOYMENT.md` — Plesk + web.config + env vars
+- `docs/ENV_TESTING.md` — ⚙️ تست/بیلد تو sandbox: نصب dotnet (~17s) + اسکریپت‌های `tools/` + چی جواب میده/نمیده (اعداد واقعی)

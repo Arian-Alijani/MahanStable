@@ -27,5 +27,9 @@ run-local.ps1
 Thumbs.db
 .DS_Store
 
+# core dumps (از تست اجرای واقعی برنامه بدون SQL Server در sandbox)
+core
+core.*
+
 # Admin uploads (dev data — never commit)
 src/MahanShop.Web/wwwroot/AdminPanel/
