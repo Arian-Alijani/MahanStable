@@ -1,15 +1,16 @@
 # PROGRESS — Living state (هر سشن آپدیت کن)
 
-> شروع هر سشن: این رو اول بخون. آخر هر تسک: آپدیت کن. این فایل = حافظه بین سشن‌ها.
+> شروع هر سشن: اول `docs/AI_CONTEXT.md` (نقشه) بعد این رو. آخر هر تسک: آپدیت کن. این فایل = حافظه بین سشن‌ها.
 
 ## Current phase
-**Phase 7 — Payment (Zarinpal) ✅ DONE (Request/Verify + کسر استوک بعد پرداخت موفق + creds درگاه ست شد، Sandbox).**
-قدم بعد = **Phase 8 (User Panel)**. فازبندی کامل: `docs/ROADMAP.md`.
+**Phase 9 — Admin Panel 🔄 در حال توسعه (پایه پیاده‌سازی‌شده و زنده).**
+P0–P8 ✅ تمام. پنل ادمین (`Areas/Admin`، ۳۲ صفحهٔ Razor، `Features/Admin` ۶۱ فایل) شامل: داشبورد، محصولات (+wizard/MultiBrand)، تنوع/موجودی (+CSV)، دسته/برند/ویژگی/تگ، سفارش، کاربر، مدیریت صفحهٔ اصلی.
+قدم بعد = تکمیل ادمین سپس **P10 Security · P11 Perf · P12 Deploy**.
 
 ### ⚠️ Dev setup لازم (قبل اجرا)
 - `Otp__Pepper` باید ست شود (env یا `appsettings.Development.json`) وگرنه `OtpHasher` در اولین لاگین throw می‌کند. هیچ default در سورس.
 - بدون `Sms__ApiKey` در dev → `FakeSmsSender` (کد در لاگ سرور warn). با کلید → SMS.ir واقعی (نیاز `Sms__TemplateId`).
-- لینک `/Panel` در هدر (کاربر لاگین) تا Phase 8 وجود ندارد → 404 موقت.
+- ادمین اولیه (`DataSeeder`) = `09037882674` — لاگین OTP با این شماره → دسترسی `/Admin`. نقش Admin هر درخواست از DB re-check می‌شود (`OnValidatePrincipal`).
 
 ## Prerequisites (نصب‌شده)
 - .NET 8 SDK = 8.0.422 ✅ (مسیر: `C:\Program Files\dotnet`؛ تو bash جدا `export PATH="/c/Program Files/dotnet:$PATH"`)
@@ -28,10 +29,10 @@
 - **Domestic-only**: سایت بدون اینترنت بین‌الملل کامل کار کنه — صفر CDN/سرویس خارجی، همه asset self-host، سرویس فقط داخلی ✅ (جزییات: CLAUDE.md + CONVENTIONS.md)
 
 ## Next steps
-قدم بعد = **Phase 9 (Admin Panel)** — رودمپ ۴ مرحله‌ای قابل‌برگشت در `docs/ADMIN_ROADMAP.md`، پیشرفت زنده در `docs/ADMIN_PROGRESS.md`. baseline تمیز قبل از پنل ادمین = tag `baseline-before-admin-panel` (commit `f279aa6`). فازها به ترتیب:
+پنل ادمین (Phase 9) پایه پیاده‌سازی شده و زنده است — در حال تکمیل/پالایش. baseline تمیز قبل از پنل ادمین = tag `baseline-before-admin-panel` (دستور بازگشت کامل: `git reset --hard baseline-before-admin-panel`). مرز کد ادمین = `Areas/Admin`, `wwwroot/admin`, `wwwroot/AdminPanel`, `Features/Admin` + بلوک‌های مارکردار `=== ADMIN-PANEL START/END ===` در `Program.cs`. فازها:
 - [x] P0 Scaffold · [x] P1 Domain+Data · [x] P2 Infra+Config · [x] P3 Layout+Home
 - [x] P4 Catalog (4A✅ / 4B✅ / 4C❌حذف) · [x] P5 Auth · [x] P6 Cart+Checkout · [x] P7 Payment
-- [x] P8 UserPanel · [ ] P9 Admin (رودمپ آماده، کد=صفر) · [ ] P10 Security · [ ] P11 Perf · [ ] P12 Deploy
+- [x] P8 UserPanel · [~] P9 Admin (پایه زنده، در حال تکمیل) · [ ] P10 Security · [ ] P11 Perf · [ ] P12 Deploy
 
 ## Open questions (از کاربر بپرس وقتی رسیدی)
 - جزییات ارتقای UI نسبت به نمونه؟
@@ -110,3 +111,10 @@
   3. **بخش «گرید دسته‌بندی صفحهٔ اصلی» در پنل ادمین = از قبل کامل پیاده‌سازی شده بود** (کامیت‌های `MAIN PAGE`/`header and fother`): انتخاب دسته‌ها (افزودن/حذف)، مرتب‌سازی هوشمند (درگ‌ودراپ + دکمه‌های بالا/پایین)، ۴ سبک ظاهری با کارت پیش‌نمایش (Bento/Grid/Scroll/Pills)، عنوان/ترتیب/فعال‌بودن — همگی end-to-end از پنل تا `Views/Home/_CategoryGrid.cshtml`. **بهبود این سشن:** افزودن **پشتیبانی لمسی (touch drag)** به `wwwroot/admin/home-categories.js` تا مرتب‌سازی درگ‌ودراپ روی موبایل/تبلت هم کار کند (گرفتن دستگیره → جابه‌جایی با لمس).
   - **توجه:** بیلد در این محیط اجرا نشد (بدون dotnet)؛ تغییرات فقط CSS/JS و با `node --check` از نظر سینتکس تأیید شد.
   - **اسکیل‌ها:** کاربر خواست از `caveman`/`frontend-design`/`ux-designer` استفاده شود؛ این اسکیل‌ها در محیط فعلی **در دسترس نبودند** (`/mnt/skills/` موجود نیست و activate خطای not available داد). کار با اصول طراحی/UX به‌صورت دستی انجام شد.
+- 2026-06-13: **بازرسی کامل کدبیس + بهینه‌سازی مستندات برای AI (به‌خواست کاربر):**
+  - **بررسی جزء‌به‌جز** کل ساختار (5 پروژه، 21 entity، 6 enum، 100 فایل Feature شامل 61 ادمین، 7 migration، 6 controller، 27 view، 32 صفحهٔ Razor ادمین، سرویس‌ها، Program.cs، DbContext، الگوی CQRS) انجام شد.
+  - **فایل جدید `docs/AI_CONTEXT.md`** (سبک caveman — فشرده/پرسیگنال): نقشهٔ کامل پروژه برای AI تا با حداقل توکن جهت‌یابی کند بدون اسکن کل کدبیس. شامل: نگاه کلی، وضعیت، نقشهٔ ۵ پروژه + جهت وابستگی، الگوی CQRS کپی‌پیست، «کجا چی پیدا کنم» (همهٔ مسیرهای پرکاربرد)، قانون‌های اجرایی، چرخهٔ کار، و gotchaها.
+  - **اصلاح ناهماهنگی‌های مستندات** که در بازرسی کشف شد:
+    1. `CLAUDE.md` به سه فایل **ناموجود** ارجاع می‌داد (`ROADMAP.md`، `ADMIN_ROADMAP.md`، `ADMIN_PROGRESS.md`) → ارجاعات حذف/اصلاح، بخش Pointers فقط فایل‌های موجود + ارجاع به `AI_CONTEXT.md` به‌عنوان «اول این را بخوان».
+    2. `PROGRESS.md` می‌گفت «Current phase = Phase 7» و «P9 Admin کد=صفر» در حالی که پنل ادمین **عملاً کامل پیاده‌سازی شده و زنده است** (Areas/Admin + Features/Admin + بلوک‌های Program.cs) → Current phase به «Phase 9 در حال توسعه» و وضعیت P9 به `[~]` اصلاح شد.
+  - **توجه:** بیلد در این محیط (Linux sandbox، بدون dotnet) اجرا نشد؛ تغییرات فقط مستندات (`.md`) هستند، صفر تغییر کد.
