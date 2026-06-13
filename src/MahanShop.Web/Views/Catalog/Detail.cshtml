@@ -7,6 +7,7 @@
 
     var mainImg = Model.Images.FirstOrDefault()?.Url ?? "/img/products/p1.svg";
     var catUrl = Url.RouteUrl("category", new { slug = Model.CategorySlug });
+    var isDevice = Model.Layout == MahanShop.Application.Features.Catalog.Queries.GetProductDetail.ProductVariantLayout.Device;
 }
 
 @section Styles {
@@ -30,12 +31,16 @@
     <section class="pd-grid" data-pd>
         @* ---- گالری ---- *@
         <div class="pd-col pd-col--gallery">
-            <div class="pd-card">
+            <div class="pd-card pd-card--gallery">
                 <div class="pd-media">
                     <img id="pd-main-image" class="pd-main-image" src="@mainImg" alt="@Model.Title" loading="eager" decoding="async" />
                     @if (Model.HasDiscount)
                     {
                         <span class="pd-badge">@Model.DiscountPercent٪ تخفیف</span>
+                    }
+                    @if (!Model.InStock)
+                    {
+                        <span class="pd-badge pd-badge--out">ناموجود</span>
                     }
                     @if (Model.Images.Count > 1)
                     {
@@ -68,34 +73,38 @@
             <div class="pd-card">
                 <h1 class="pd-title">@Model.Title</h1>
 
-                <p class="pd-subtitle">
+                <div class="pd-meta-row">
                     @if (!string.IsNullOrEmpty(Model.BrandName))
                     {
-                        <span>برند: <a class="pd-brand" href="@Url.RouteUrl("catalog")?BrandSlug=@Model.BrandSlug">@Model.BrandName</a></span>
+                        <span class="pd-meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+                            برند: <a class="pd-brand" href="@Url.RouteUrl("catalog")?BrandSlug=@Model.BrandSlug">@Model.BrandName</a>
+                        </span>
                     }
-                    <span class="pd-sep">|</span>
-                    <span>کد کالا: <b>@Model.Id</b></span>
-                </p>
+                    <span class="pd-meta-item pd-meta-id">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+                        کد: <b>@Model.Id</b>
+                    </span>
+                </div>
 
                 @if (Model.Tags.Count > 0)
                 {
                     <div class="pd-tags">
                         @foreach (var t in Model.Tags)
                         {
-                            <span class="pd-tag">@t.Name</span>
+                            <a class="pd-tag" href="@Url.RouteUrl("catalog")?TagSlug=@t.Slug">@t.Name</a>
                         }
                     </div>
                 }
 
                 <hr class="pd-divider" />
 
+                @* انتخابگر تنوع (JS پر می‌کند) *@
                 @if (Model.HasVariants && Model.Variants.Count > 0)
                 {
-                    @* محل سوارشدن انتخابگر تنوع — JS بر اساس layout پر می‌کند (Device یا Simple). *@
                     <div class="pv" data-pv-root
-                         data-pv-layout="@(Model.Layout == MahanShop.Application.Features.Catalog.Queries.GetProductDetail.ProductVariantLayout.Device ? "device" : "simple")"
+                         data-pv-layout="@(isDevice ? "device" : "simple")"
                          data-pv-product="@Model.Id">
-                        @* fallback بدون JS: لیست ساده گزینه‌ها *@
                         <noscript>
                             <ul class="pv-noscript">
                                 @foreach (var v in Model.Variants)
@@ -113,34 +122,58 @@
                 @if (!string.IsNullOrEmpty(Model.ShortDescription))
                 {
                     <div class="pd-field">
-                        <span class="pd-field__label">معرفی کوتاه</span>
+                        <span class="pd-field__label">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                            معرفی کوتاه
+                        </span>
                         <p class="pd-short">@Model.ShortDescription</p>
                     </div>
                 }
 
+                @* ویژگی‌های کلیدی (تا ۵ مورد اول) *@
                 @if (Model.Features.Count > 0)
                 {
                     <div class="pd-field">
-                        <span class="pd-field__label">ویژگی‌های کلیدی</span>
-                        <ul class="pd-bullets">
+                        <span class="pd-field__label">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                            ویژگی‌های کلیدی
+                        </span>
+                        <div class="pd-keyspecs">
                             @foreach (var f in Model.Features.Take(5))
                             {
-                                <li class="pd-bullet">@f.Name: @f.Value</li>
+                                <div class="pd-keyspec">
+                                    <span class="pd-keyspec__k">@f.Name</span>
+                                    <span class="pd-keyspec__sep"></span>
+                                    <span class="pd-keyspec__v">@f.Value</span>
+                                </div>
                             }
-                        </ul>
+                            @if (Model.Features.Count > 5)
+                            {
+                                <button class="pd-keyspec-more" type="button" data-pd-scroll-to-specs>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                    @(Model.Features.Count - 5) ویژگی دیگر
+                                </button>
+                            }
+                        </div>
                     </div>
                 }
 
-                <div class="pd-stock @(Model.InStock ? "is-in" : "is-out")">
-                    @if (Model.InStock)
+                <div class="pd-stock-row">
+                    <div class="pd-stock @(Model.InStock ? "is-in" : "is-out")">
+                        @if (Model.InStock)
+                        {
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            <span>موجود در انبار</span>
+                        }
+                        else
+                        {
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            <span>ناموجود</span>
+                        }
+                    </div>
+                    @if (Model.HasVariants && Model.Variants.Count > 0)
                     {
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                        <span>موجود در انبار</span>
-                    }
-                    else
-                    {
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                        <span>ناموجود</span>
+                        <span class="pd-variant-count">@Model.Variants.Count گزینه موجود</span>
                     }
                 </div>
             </div>
@@ -149,27 +182,35 @@
         @* ---- جعبه خرید ---- *@
         <div class="pd-col pd-col--buy">
             <div class="pd-card pd-buy">
-                <div class="pd-buy__head">
-                    <div class="pd-buy__price">
-                        <span class="pd-buy__k">قیمت</span>
-                        <span class="pd-buy__old" data-pd-old hidden="@(!Model.HasDiscount)">@Model.Price.ToString("#,0")</span>
+                <div class="pd-buy__price-block">
+                    @if (Model.HasDiscount)
+                    {
+                        <div class="pd-buy__discount-row">
+                            <span class="pd-buy__old" data-pd-old>@Model.Price.ToString("#,0") تومان</span>
+                            <span class="pd-buy__discount-badge">@Model.DiscountPercent٪</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <span data-pd-old hidden></span>
+                    }
+                    <div class="pd-buy__now-row">
+                        <span class="pd-buy__k">قیمت:</span>
                         <div class="pd-buy__now">
-                            <b data-pd-price>@Model.FinalPrice.ToString("#,0")</b> <span class="pd-buy__unit">تومان</span>
+                            <b data-pd-price>@Model.FinalPrice.ToString("#,0")</b>
+                            <span class="pd-buy__unit">تومان</span>
                         </div>
                     </div>
-                    <div class="pd-buy__ship">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7M5.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM18.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
-                        <span>ارسال سریع</span>
-                    </div>
+                </div>
+
+                <div class="pd-buy__ship">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7M5.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM18.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+                    <span>ارسال سریع</span>
                 </div>
 
                 <hr class="pd-divider" />
 
-                @{
-                    var isDevice = Model.Layout == MahanShop.Application.Features.Catalog.Queries.GetProductDetail.ProductVariantLayout.Device;
-                }
-
-                @* در جریان دستگاه دکمهٔ تکی پنهان است (افزودن از طریق «سبد انتخاب») *@
+                @* دکمه افزودن به سبد (جریان ساده / بدون تنوع) *@
                 <button class="pd-cta @(Model.InStock ? "" : "is-disabled")" type="button"
                         data-add="@Model.Id"
                         @(Model.HasVariants ? "data-has-variants" : "")
@@ -213,26 +254,37 @@
 
                 <ul class="pd-perks">
                     <li>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
                         ضمانت اصالت و سلامت کالا
                     </li>
                     <li>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1v-7M5 18H4a2 2 0 0 1-2-2v-1"/></svg>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        گارانتی معتبر
+                    </li>
+                    <li>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1v-7M5 18H4a2 2 0 0 1-2-2v-1"/></svg>
                         پشتیبانی ۲۴ ساعته
                     </li>
                 </ul>
             </div>
         </div>
 
-        @* ---- تب‌ها ---- *@
-        <div class="pd-col pd-col--tabs">
+        @* ---- تب‌های محصول (معرفی + ویژگی‌ها) ---- *@
+        <div class="pd-col pd-col--tabs" id="pd-tabs-section">
             <div class="pd-card">
                 <div class="pd-tabs" role="tablist" aria-label="اطلاعات محصول">
-                    <button class="pd-tab is-active" type="button" role="tab" aria-selected="true" data-pd-tab="desc">معرفی</button>
-                    @if (Model.Features.Count > 0)
-                    {
-                        <button class="pd-tab" type="button" role="tab" aria-selected="false" data-pd-tab="specs">مشخصات</button>
-                    }
+                    <button class="pd-tab is-active" type="button" role="tab" aria-selected="true" data-pd-tab="desc">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h12"/></svg>
+                        معرفی
+                    </button>
+                    <button class="pd-tab" type="button" role="tab" aria-selected="false" data-pd-tab="specs" id="pd-specs-tab">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                        ویژگی‌ها
+                        @if (Model.Features.Count > 0)
+                        {
+                            <span class="pd-tab-badge">@Model.Features.Count</span>
+                        }
+                    </button>
                 </div>
 
                 <div class="pd-tabwrap">
@@ -240,7 +292,7 @@
                         <h2 class="pd-panel__title">معرفی محصول</h2>
                         @if (!string.IsNullOrEmpty(Model.Description))
                         {
-                            <p class="pd-desc">@Model.Description</p>
+                            <div class="pd-desc">@Html.Raw(Model.Description)</div>
                         }
                         else if (!string.IsNullOrEmpty(Model.ShortDescription))
                         {
@@ -252,10 +304,10 @@
                         }
                     </section>
 
-                    @if (Model.Features.Count > 0)
-                    {
-                        <section class="pd-panel" role="tabpanel" data-pd-panel="specs" hidden>
-                            <h2 class="pd-panel__title">مشخصات فنی</h2>
+                    <section class="pd-panel" role="tabpanel" data-pd-panel="specs" hidden id="pd-panel-specs">
+                        <h2 class="pd-panel__title">مشخصات فنی</h2>
+                        @if (Model.Features.Count > 0)
+                        {
                             <div class="pd-specs">
                                 @foreach (var f in Model.Features)
                                 {
@@ -265,8 +317,15 @@
                                     </div>
                                 }
                             </div>
-                        </section>
-                    }
+                        }
+                        else
+                        {
+                            <div class="pd-specs-empty">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                                <p>مشخصات فنی این محصول هنوز ثبت نشده است.</p>
+                            </div>
+                        }
+                    </section>
                 </div>
             </div>
         </div>
@@ -317,4 +376,19 @@
     {
         <script src="~/js/product-variant.js" asp-append-version="true"></script>
     }
+    <script>
+    // دکمه «X ویژگی دیگر» → اسکرول و باز کردن تب ویژگی‌ها
+    (function() {
+        var btn = document.querySelector('[data-pd-scroll-to-specs]');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+            var specsTab = document.getElementById('pd-specs-tab');
+            if (specsTab) {
+                specsTab.click();
+                var tabsSection = document.getElementById('pd-tabs-section');
+                if (tabsSection) tabsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    })();
+    </script>
 }
