@@ -1,0 +1,55 @@
+@page "{id:int}"
+@model MahanShop.Web.Areas.Admin.Pages.Shipping.EditModel
+@{
+    ViewData["Title"] = "ویرایش روش ارسال";
+    ViewData["AdminActive"] = "attributes";
+}
+
+<div class="admin-panel-box admin-form">
+    <div class="admin-form__header">
+        <h2 class="admin-page-title">ویرایش روش ارسال</h2>
+        <a href="/Admin/Shipping" class="btn btn-outline-secondary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            بازگشت
+        </a>
+    </div>
+
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    <form method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label class="form-label">نام روش ارسال <span class="text-danger">*</span></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">هزینهٔ ارسال (تومان) <span class="text-danger">*</span></label>
+            <input asp-for="Cost" type="number" min="0" class="form-control" />
+            <div class="form-text">نرخ ثابت به تومان. صفر = رایگان.</div>
+            <span asp-validation-for="Cost" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">توضیح (اختیاری)</label>
+            <input asp-for="Description" class="form-control" placeholder="مثال: ۲ تا ۳ روز کاری" />
+            <span asp-validation-for="Description" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">ترتیب نمایش</label>
+            <input asp-for="DisplayOrder" type="number" min="0" class="form-control" />
+        </div>
+
+        <div class="form-check mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">فعال (در چک‌اوت نشان داده شود)</label>
+        </div>
+
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+</div>

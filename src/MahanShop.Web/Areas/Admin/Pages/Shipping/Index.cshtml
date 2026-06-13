@@ -1,0 +1,99 @@
+@page
+@model MahanShop.Web.Areas.Admin.Pages.Shipping.IndexModel
+@{
+    ViewData["Title"] = "نوع‌های پست";
+    ViewData["AdminActive"] = "attributes";
+}
+
+@if (TempData["AdminOk"] is string ok)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @ok
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["AdminErr"] is string err)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @err
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="admin-toolbar">
+    <div class="admin-toolbar__start">
+        <a href="/Admin/Attributes" class="btn btn-outline-secondary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="15 18 9 12 15 6"/></svg>
+            کنترل ویژگی
+        </a>
+    </div>
+    <form method="get" class="admin-search">
+        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="جستجوی روش ارسال..." />
+        <button type="submit" class="btn btn-outline-secondary">جستجو</button>
+    </form>
+    <a asp-page="Create" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        روش ارسال جدید
+    </a>
+</div>
+
+<div class="admin-panel-box">
+    <table class="table admin-table">
+        <thead>
+            <tr>
+                <th>ترتیب</th>
+                <th>نام</th>
+                <th>هزینه (تومان)</th>
+                <th>توضیح</th>
+                <th>وضعیت</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var m in Model.Methods)
+        {
+            <tr>
+                <td class="admin-muted">@m.DisplayOrder</td>
+                <td><strong>@m.Name</strong></td>
+                <td>
+                    <span class="shipping-cost">@m.Cost.ToString("N0")</span>
+                </td>
+                <td class="admin-muted">@(m.Description ?? "—")</td>
+                <td>
+                    @if (m.IsActive)
+                    {
+                        <span class="badge bg-success">فعال</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">غیرفعال</span>
+                    }
+                </td>
+                <td class="admin-actions">
+                    <a asp-page="Edit" asp-route-id="@m.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                    <form method="post" asp-page-handler="Toggle" asp-route-id="@m.Id" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">
+                            @(m.IsActive ? "غیرفعال" : "فعال")
+                        </button>
+                    </form>
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@m.Id" class="d-inline"
+                          onsubmit="return confirm('روش ارسال «@m.Name» حذف شود؟');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (Model.Methods.Count == 0)
+        {
+            <tr>
+                <td colspan="6" class="admin-muted text-center py-4">روش ارسالی یافت نشد.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="admin-info-box mt-3">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1 text-info"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    نرخ هزینهٔ ارسال <strong>فقط اینجا تنظیم می‌شود</strong>. در هنگام ثبت سفارش، هزینه از پایگاه‌داده خوانده می‌شود و در سفارش snapshot می‌گردد — قابل دستکاری توسط کاربر نیست.
+</div>
