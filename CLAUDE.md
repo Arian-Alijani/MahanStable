@@ -1,6 +1,10 @@
 # MahanShop — Project Instructions (READ FIRST EVERY SESSION)
 
-> هر سشن خودکار لود می‌شه. منبع حقیقت استک و ساختار. هر تصمیم اینجا قفل — تغییر نده مگر کاربر صریح بگه.
+> هر سشن خودکار لود می‌شه. منبع حقیقت استک و تصمیم‌ها. هر تصمیم اینجا قفل — تغییر نده مگر کاربر صریح بگه.
+>
+> 📍 **اول از هر چیز `docs/AI_CONTEXT.md` رو بخون** — نقشهٔ فشردهٔ کل پروژه (کجا چی هست). باهاش با حداقل توکن جهت‌یابی می‌کنی.
+>
+> **تقسیم کار فایل‌ها:** `CLAUDE.md` = تصمیم/قانون (ثابت) · `AI_CONTEXT.md` = نقشه/ایندکس (کجا چی) · `PROGRESS.md` = وضعیت زنده (چی شد/قدم بعد).
 
 ## What this is
 فروشگاه آنلاین موبایل (متوسط). بازنویسی تمیز از صفر. داده قبلی مهم نیست. UI مشابه نمونه `Old UI` با ارتقا.
@@ -29,19 +33,18 @@
 | Deploy | Plesk IIS in-process |
 
 ## Session continuity rules (مهم — جلوگیری از خرابی بین سشن‌ها)
-1. **شروع هر سشن:** اول `docs/PROGRESS.md` بخون — وضعیت فعلی و قدم بعد اونجاست. **اگر روی پنل ادمین (Phase 9) کار می‌کنی، بعدش `docs/ADMIN_PROGRESS.md` رو هم بخون.**
-2. **قبل کد زدن:** `docs/ARCHITECTURE.md` + `docs/CONVENTIONS.md` چک کن.
+1. **شروع هر سشن:** اول `docs/AI_CONTEXT.md` (نقشه) بعد `docs/PROGRESS.md` (وضعیت فعلی + قدم بعد). کار پنل ادمین → جزئیات ادمین هم در `PROGRESS.md` + `AI_CONTEXT.md` §۵.
+2. **قبل کد زدن:** `docs/ARCHITECTURE.md` + `docs/CONVENTIONS.md` چک کن (تنوع/موجودی → `docs/VARIANTS.md`).
 3. **نسخه پکیج:** فقط نسخه‌های پین‌شده `docs/STACK.md`. نسخه جدید بدون آپدیت اون فایل اضافه نکن.
-4. **بعد هر تسک کامل:** `docs/PROGRESS.md` آپدیت کن (چی شد، قدم بعد).
+4. **بعد هر تسک کامل:** `docs/PROGRESS.md` آپدیت کن (چی شد، قدم بعد). اگر نقشهٔ پروژه عوض شد → `docs/AI_CONTEXT.md` هم fix کن.
 5. **هیچوقت** TargetFramework رو از net8.0 عوض نکن. هیچوقت Node/SPA اضافه نکن.
 6. تغییر تصمیم استک → اول از کاربر بپرس، بعد این فایل + STACK.md آپدیت.
 
-## Pointers
-- `docs/ROADMAP.md` — فازبندی 12-مرحله‌ای (با done-criteria)
-- `docs/ADMIN_ROADMAP.md` — رودمپ ۴ مرحله‌ای پنل ادمین (Phase 9) با معیار rollback هر مرحله + tag `baseline-before-admin-panel`
-- `docs/ADMIN_PROGRESS.md` — پیشرفت زندهٔ پنل ادمین (هر سشن کار ادمین آپدیت)
-- `docs/STACK.md` — نسخه دقیق پکیج‌ها
+## Pointers (فقط فایل‌های موجود)
+- `docs/AI_CONTEXT.md` — ⭐ نقشهٔ فشردهٔ کل پروژه (کجا چی) — اول اینو بخون
+- `docs/PROGRESS.md` — وضعیت زنده + changelog کامل هر فاز (هر سشن آپدیت)
+- `docs/STACK.md` — نسخه دقیق پکیج‌ها (پین‌شده)
 - `docs/ARCHITECTURE.md` — نقشه لایه‌ها، قواعد وابستگی، ساختار پوشه
+- `docs/CONVENTIONS.md` — قواعد کدنویسی + Domestic-only + ترتیب middleware
+- `docs/VARIANTS.md` — طراحی سیستم تنوع (EAV) + موجودی per-variant (LOCKED)
 - `docs/DEPLOYMENT.md` — Plesk + web.config + env vars
-- `docs/CONVENTIONS.md` — قواعد کدنویسی
-- `docs/PROGRESS.md` — وضعیت زنده (هر سشن آپدیت)
