@@ -16,6 +16,7 @@
 <body class="admin-body">
     @Html.AntiForgeryToken()
     <div class="admin-shell">
+        <div class="admin-backdrop" onclick="document.body.classList.remove('admin-sidebar-open')" aria-hidden="true"></div>
         @await Html.PartialAsync("_AdminSidebar")
         <div class="admin-main">
             <header class="admin-topbar">

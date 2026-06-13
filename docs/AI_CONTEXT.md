@@ -82,7 +82,7 @@ join: `ProductFeature`/`Feature` · `ProductTag`/`Tag` · `ProductImage` · `Pro
 `Controllers/` (6: Home, Catalog, Cart, Checkout, Account, Payment) — فروشگاه عمومی MVC.
 `Views/` (27 .cshtml) — per controller + `Shared/_Layout`,`_Header`,`_Footer`,`_ProductCard` + `Components/CategoryMenu`.
 `Pages/Panel/` — پنل کاربر (Razor Pages، `AuthorizeFolder("/Panel")`). base = `PanelPageModel` (UserId از claim).
-`Areas/Admin/Pages/` — پنل ادمین (32 صفحه، `AuthorizeAreaFolder("Admin",...,"AdminOnly")`). Shared: `_AdminLayout`,`_AdminSidebar`. زیرپوشه‌ها = Products/Variants/Categories/Brands/Features/Tags/Inventory/Orders/Users/Home.
+`Areas/Admin/Pages/` — پنل ادمین (`AuthorizeAreaFolder("Admin",...,"AdminOnly")`). Shared: `_AdminLayout`,`_AdminSidebar`. زیرپوشه‌ها = Products/Variants/Categories/Brands/Features/Tags/Inventory/Orders/Users/Home/**Attributes**. **سایدبار از F1 = ۶ تب** (داشبورد/محصولات/موجودی/**کنترل‌ویژگی**=`/Admin/Attributes` hub/سفارش‌ها/کاربران) + زیرمنوی «تنظیمات بیشتر»(صفحهٔ‌اصلی=`/Admin/Home`) + بازگشت‌به‌فروشگاه. keyهای `AdminActive`: `dashboard|products|inventory|attributes|orders|users|home` (Brands/Categories/Features/Tags/Variants همگی → `attributes`).
 `Services/`: `CartStore` (سبد session-based، فقط ProductId/VariantId/Qty — **هیچ قیمتی client**) · `ImageUploadService` (whitelist پسوند/نوع/حجم → wwwroot/AdminPanel) · `InvoicePdfService` (QuestPDF، فونت family=`Vazir`).
 `wwwroot/`: `css/` `js/` `lib/` (bootstrap RTL، jquery، validation — همه self-host) `fonts/vazirmatn/` `admin/` (JS ادمین) `AdminPanel/` (آپلودها، gitignored) `img/`.
 
