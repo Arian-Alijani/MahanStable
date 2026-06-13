@@ -1,15 +1,19 @@
 @page
 @using MahanShop.Web.Helpers
+@using MahanShop.Application.Features.Admin.Orders
 @model MahanShop.Web.Areas.Admin.Pages.Orders.IndexModel
 @{
     ViewData["Title"] = "سفارش‌ها";
     ViewData["AdminActive"] = "orders";
+
     var statuses = new[]
     {
         OrderStatus.Paid, OrderStatus.Processing, OrderStatus.Shipped,
         OrderStatus.Delivered, OrderStatus.Canceled, OrderStatus.Refunded,
         OrderStatus.Pending, OrderStatus.AwaitingPayment
     };
+
+    var st = Model.Result.Stats;
 }
 
 @if (TempData["AdminOk"] is string ok)
@@ -17,38 +21,186 @@
     <div class="alert alert-success">@ok</div>
 }
 
-<div class="admin-toolbar">
-    <form method="get" class="admin-search admin-search--wide">
-        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="کد سفارش / نام / موبایل / رهگیری..." />
-        <select name="Status" class="form-select">
-            <option value="">همه وضعیت‌ها</option>
-            @foreach (var s in statuses)
+@* ── سربرگ صفحه  *@
+<div class="orders8-head">
+    <div>
+        <h2 class="admin-page-title">سفارش‌ها</h2>
+        <p class="admin-muted" style="margin-top:4px">مدیریت و پیگیری همه سفارش‌های فروشگاه</p>
+    </div>
+</div>
+
+@* ── کارت‌های آمار  *@
+<div class="orders8-stats">
+    <a href="?@(BuildQuery(null, null))" class="orders8-stat orders8-stat--total @(Model.Status is null && !Model.HasFilter ? "is-active" : "")">
+        <span class="orders8-stat__value">@st.Total</span>
+        <span class="orders8-stat__label">همه سفارش‌ها</span>
+    </a>
+    <a href="?@(BuildQuery(OrderStatus.Pending, null))" class="orders8-stat orders8-stat--pending @(Model.Status == OrderStatus.Pending ? "is-active" : "")">
+        <span class="orders8-stat__value">@st.Pending</span>
+        <span class="orders8-stat__label">در انتظار</span>
+    </a>
+    <a href="?@(BuildQuery(OrderStatus.Paid, null))" class="orders8-stat orders8-stat--paid @(Model.Status == OrderStatus.Paid ? "is-active" : "")">
+        <span class="orders8-stat__value">@st.Paid</span>
+        <span class="orders8-stat__label">پرداخت‌شده</span>
+    </a>
+    <a href="?@(BuildQuery(OrderStatus.Processing, null))" class="orders8-stat orders8-stat--processing @(Model.Status == OrderStatus.Processing ? "is-active" : "")">
+        <span class="orders8-stat__value">@st.Processing</span>
+        <span class="orders8-stat__label">در پردازش</span>
+    </a>
+    <a href="?@(BuildQuery(OrderStatus.Shipped, null))" class="orders8-stat orders8-stat--shipped @(Model.Status == OrderStatus.Shipped ? "is-active" : "")">
+        <span class="orders8-stat__value">@st.Shipped</span>
+        <span class="orders8-stat__label">ارسال‌شده</span>
+    </a>
+    <a href="?@(BuildQuery(OrderStatus.Delivered, null))" class="orders8-stat orders8-stat--delivered @(Model.Status == OrderStatus.Delivered ? "is-active" : "")">
+        <span class="orders8-stat__value">@st.Delivered</span>
+        <span class="orders8-stat__label">تحویل‌شده</span>
+    </a>
+    <a href="?@(BuildQuery(OrderStatus.Canceled, null))" class="orders8-stat orders8-stat--canceled @(Model.Status == OrderStatus.Canceled ? "is-active" : "")">
+        <span class="orders8-stat__value">@st.Canceled</span>
+        <span class="orders8-stat__label">لغو/مرجوع</span>
+    </a>
+</div>
+
+@* ── نوار فیلتر/جست‌وجو  *@
+<div class="orders8-filterbar">
+    <form method="get" class="orders8-filterform">
+        @* ردیف ۱: جست‌وجو  *@
+        <div class="orders8-search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" name="Search" value="@Model.Search" class="form-control"
+                   placeholder="کد سفارش / نام مشتری / موبایل / کد رهگیری..." />
+        </div>
+        @* ردیف ۲: فیلترها  *@
+        <div class="orders8-filters">
+            <select name="Status" class="form-select">
+                <option value="">همه وضعیت‌ها</option>
+                @foreach (var s in statuses)
+                {
+                    <option value="@s" selected="@(Model.Status == s)">@OrderStatusView.Label(s)</option>
+                }
+            </select>
+            <input type="date" name="FromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" class="form-control" title="از تاریخ" />
+            <input type="date" name="ToDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" class="form-control" title="تا تاریخ" />
+            <select name="Sort" class="form-select orders8-sort-select">
+                <option value="@((int)OrderSortOption.Newest)" selected="@(Model.Sort == OrderSortOption.Newest)">جدیدترین</option>
+                <option value="@((int)OrderSortOption.Oldest)" selected="@(Model.Sort == OrderSortOption.Oldest)">قدیمی‌ترین</option>
+                <option value="@((int)OrderSortOption.AmountDesc)" selected="@(Model.Sort == OrderSortOption.AmountDesc)">مبلغ (زیاد به کم)</option>
+                <option value="@((int)OrderSortOption.AmountAsc)" selected="@(Model.Sort == OrderSortOption.AmountAsc)">مبلغ (کم به زیاد)</option>
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                جست‌وجو
+            </button>
+            @if (Model.HasFilter)
             {
-                <option value="@s" selected="@(Model.Status == s)">@OrderStatusView.Label(s)</option>
+                <a href="?" class="btn btn-outline-secondary">حذف فیلتر</a>
             }
-        </select>
-        <input type="date" name="FromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" class="form-control" title="از تاریخ" />
-        <input type="date" name="ToDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" class="form-control" title="تا تاریخ" />
-        <button type="submit" class="btn btn-outline-secondary">فیلتر</button>
+        </div>
     </form>
 </div>
 
-<div class="admin-panel-box">
-    <table class="table admin-table">
+@* ── خلاصه نتایج و چیپس‌های فیلتر فعال  *@
+<div class="orders8-resultbar">
+    <span class="orders8-count">
+        @Model.Result.TotalCount سفارش
+    </span>
+    @if (Model.HasFilter || Model.Status is not null)
+    {
+        <div class="orders8-chips">
+            @if (!string.IsNullOrWhiteSpace(Model.Search))
+            {
+                <a class="orders8-chip" href="?@(BuildQuery(Model.Status, Model.Sort, search: null))">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    جست‌وجو: @Model.Search
+                </a>
+            }
+            @if (Model.Status is OrderStatus filterStatus)
+            {
+                <a class="orders8-chip" href="?@(BuildQuery(null, Model.Sort))">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    وضعیت: @OrderStatusView.Label(filterStatus)
+                </a>
+            }
+            @if (Model.FromDate is not null || Model.ToDate is not null)
+            {
+                <a class="orders8-chip" href="?@(BuildQuery(Model.Status, Model.Sort, from: null, to: null))">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    تاریخ
+                </a>
+            }
+        </div>
+    }
+</div>
+
+@* ── جدول سفارش‌ها  *@
+<div class="admin-panel-box orders8-tablebox">
+    <table class="table admin-table orders8-table">
         <thead>
-            <tr><th>کد سفارش</th><th>مشتری</th><th>تاریخ ثبت</th><th>اقلام</th><th>مبلغ</th><th>وضعیت</th><th>رهگیری</th><th></th></tr>
+            <tr>
+                <th>
+                    <a href="?@(BuildQuery(Model.Status, OrderSortOption.Newest))" class="orders8-sort-link @(Model.Sort == OrderSortOption.Newest || Model.Sort == OrderSortOption.Oldest ? "is-active" : "")">
+                        تاریخ
+                        @if (Model.Sort == OrderSortOption.Newest)
+                        {
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg>
+                        }
+                        else if (Model.Sort == OrderSortOption.Oldest)
+                        {
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                        }
+                    </a>
+                </th>
+                <th>کد سفارش</th>
+                <th>مشتری</th>
+                <th>اقلام</th>
+                <th>
+                    <a href="?@(BuildQuery(Model.Status, Model.Sort == OrderSortOption.AmountDesc ? OrderSortOption.AmountAsc : OrderSortOption.AmountDesc))" class="orders8-sort-link @(Model.Sort == OrderSortOption.AmountDesc || Model.Sort == OrderSortOption.AmountAsc ? "is-active" : "")">
+                        مبلغ (تومان)
+                        @if (Model.Sort == OrderSortOption.AmountDesc)
+                        {
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg>
+                        }
+                        else if (Model.Sort == OrderSortOption.AmountAsc)
+                        {
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                        }
+                    </a>
+                </th>
+                <th>وضعیت</th>
+                <th>روش ارسال</th>
+                <th>رهگیری</th>
+                <th></th>
+            </tr>
         </thead>
         <tbody>
         @foreach (var o in Model.Result.Items)
         {
             <tr>
-                <td><strong>@o.OrderCode</strong></td>
-                <td>@o.CustomerName<br /><span class="admin-muted">@o.CustomerPhone</span></td>
-                <td>@o.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
-                <td>@o.ItemCount</td>
-                <td>@o.FinalAmount.ToString("N0")</td>
-                <td><span class="badge admin-status-badge @OrderStatusView.Tone(o.Status)">@OrderStatusView.Label(o.Status)</span></td>
-                <td>@(string.IsNullOrEmpty(o.TrackingCode) ? "—" : o.TrackingCode)</td>
+                <td class="orders8-date">
+                    <span>@o.CreatedAt.ToString("yyyy/MM/dd")</span>
+                    <small class="admin-muted">@o.CreatedAt.ToString("HH:mm")</small>
+                </td>
+                <td><strong class="orders8-code">@o.OrderCode</strong></td>
+                <td>
+                    <span class="orders8-customer">@o.CustomerName</span>
+                    <small class="admin-muted d-block">@o.CustomerPhone</small>
+                </td>
+                <td class="text-center">@o.ItemCount</td>
+                <td class="orders8-amount">@o.FinalAmount.ToString("N0")</td>
+                <td>
+                    <span class="badge admin-status-badge @OrderStatusView.Tone(o.Status)">@OrderStatusView.Label(o.Status)</span>
+                </td>
+                <td class="admin-muted">@(string.IsNullOrEmpty(o.ShippingMethodName) ? "—" : o.ShippingMethodName)</td>
+                <td>
+                    @if (string.IsNullOrEmpty(o.TrackingCode))
+                    {
+                        <span class="admin-muted">—</span>
+                    }
+                    else
+                    {
+                        <span class="orders8-tracking">@o.TrackingCode</span>
+                    }
+                </td>
                 <td class="admin-actions">
                     <a asp-page="Detail" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">جزییات</a>
                 </td>
@@ -56,21 +208,47 @@
         }
         @if (Model.Result.Items.Count == 0)
         {
-            <tr><td colspan="8" class="admin-muted text-center">سفارشی یافت نشد.</td></tr>
+            <tr>
+                <td colspan="9">
+                    <div class="prod-empty">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>
+                        <p>سفارشی یافت نشد.</p>
+                    </div>
+                </td>
+            </tr>
         }
         </tbody>
     </table>
-
-    @if (Model.Result.TotalPages > 1)
-    {
-        <nav class="admin-pager">
-            @for (int i = 1; i <= Model.Result.TotalPages; i++)
-            {
-                <a class="admin-pager__link @(i == Model.Result.Page ? "is-active" : "")"
-                   asp-route-Page="@i" asp-route-Search="@Model.Search" asp-route-Status="@Model.Status"
-                   asp-route-FromDate="@(Model.FromDate?.ToString("yyyy-MM-dd"))"
-                   asp-route-ToDate="@(Model.ToDate?.ToString("yyyy-MM-dd"))">@i</a>
-            }
-        </nav>
-    }
 </div>
+
+@* ── صفحه‌بندی  *@
+@if (Model.Result.TotalPages > 1)
+{
+    <nav class="admin-pager">
+        @for (int i = 1; i <= Model.Result.TotalPages; i++)
+        {
+            <a class="admin-pager__link @(i == Model.Result.Page ? "is-active" : "")"
+               href="?Page=@i&Search=@Model.Search&Status=@Model.Status&Sort=@((int)Model.Sort)&FromDate=@(Model.FromDate?.ToString("yyyy-MM-dd"))&ToDate=@(Model.ToDate?.ToString("yyyy-MM-dd"))">@i</a>
+        }
+    </nav>
+}
+
+@functions {
+    string BuildQuery(OrderStatus? status, OrderSortOption? sort,
+        string? search = null, DateTime? from = null, DateTime? to = null)
+    {
+        // null = حذف پارامتر، استفاده از مقدار فعلی
+        var s = search == null ? (object?)Model.Search : (object?)(search == "" ? null : search);
+        var f = from == null ? Model.FromDate : from;
+        var t = to == null ? Model.ToDate : to;
+        var so = sort ?? Model.Sort;
+
+        var parts = new List<string>();
+        if (s is string sv && !string.IsNullOrWhiteSpace(sv)) parts.Add($"Search={Uri.EscapeDataString(sv)}");
+        if (status is OrderStatus sv2) parts.Add($"Status={sv2}");
+        if (f is DateTime fd) parts.Add($"FromDate={fd:yyyy-MM-dd}");
+        if (t is DateTime td) parts.Add($"ToDate={td:yyyy-MM-dd}");
+        if (so != OrderSortOption.Newest) parts.Add($"Sort={(int)so}");
+        return string.Join("&", parts);
+    }
+}

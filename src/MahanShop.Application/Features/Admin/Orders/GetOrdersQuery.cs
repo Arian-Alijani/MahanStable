@@ -5,11 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MahanShop.Application.Features.Admin.Orders;
 
-/// <summary>لیست سفارش‌ها برای ادمین: جستجو (کد سفارش/نام/موبایل) + فیلتر وضعیت + بازه تاریخ + صفحه‌بندی.</summary>
+/// <summary>
+/// لیست سفارش‌ها برای ادمین: جستجو + فیلتر وضعیت + بازه تاریخ + سورت + صفحه‌بندی.
+/// پیش‌فرض سورت = جدیدترین.
+/// </summary>
 public record GetOrdersQuery(
-    string? Search = null, OrderStatus? Status = null,
-    DateTime? FromDate = null, DateTime? ToDate = null,
-    int Page = 1, int PageSize = 20) : IRequest<AdminOrderListResult>;
+    string? Search = null,
+    OrderStatus? Status = null,
+    DateTime? FromDate = null,
+    DateTime? ToDate = null,
+    OrderSortOption Sort = OrderSortOption.Newest,
+    int Page = 1,
+    int PageSize = 20) : IRequest<AdminOrderListResult>;
 
 public class GetOrdersQueryHandler : IRequestHandler<GetOrdersQuery, AdminOrderListResult>
 {
@@ -23,6 +30,7 @@ public class GetOrdersQueryHandler : IRequestHandler<GetOrdersQuery, AdminOrderL
 
         var q = _db.Orders.AsNoTracking();
 
+        // ── جست‌وجو
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var term = request.Search.Trim();
@@ -31,14 +39,29 @@ public class GetOrdersQueryHandler : IRequestHandler<GetOrdersQuery, AdminOrderL
                           || o.User.PhoneNumber.Contains(term)
                           || (o.TrackingCode != null && o.TrackingCode.Contains(term)));
         }
+
+        // ── فیلتر وضعیت
         if (request.Status is OrderStatus st) q = q.Where(o => o.Status == st);
+
+        // ── بازه تاریخ
         if (request.FromDate is DateTime from) q = q.Where(o => o.CreatedAt >= from);
         if (request.ToDate is DateTime to) q = q.Where(o => o.CreatedAt < to.AddDays(1));
 
+        // ── آمار (روی query فیلترشده — یعنی آمار را هم با فیلتر‌های فعال محاسبه می‌کنیم)
+        var stats = await BuildStatsAsync(q, ct);
+
         var total = await q.CountAsync(ct);
 
-        var items = await q
-            .OrderByDescending(o => o.CreatedAt)
+        // ── سورت
+        IQueryable<Domain.Entities.Order> sorted = request.Sort switch
+        {
+            OrderSortOption.Oldest    => q.OrderBy(o => o.CreatedAt),
+            OrderSortOption.AmountDesc => q.OrderByDescending(o => o.FinalAmount),
+            OrderSortOption.AmountAsc  => q.OrderBy(o => o.FinalAmount),
+            _                          => q.OrderByDescending(o => o.CreatedAt)   // Newest (default)
+        };
+
+        var items = await sorted
             .Skip((page - 1) * size).Take(size)
             .Select(o => new AdminOrderListItemDto
             {
@@ -51,10 +74,43 @@ public class GetOrdersQueryHandler : IRequestHandler<GetOrdersQuery, AdminOrderL
                 CustomerName = o.User.FullName,
                 CustomerPhone = o.User.PhoneNumber,
                 ItemCount = o.Items.Count,
-                TrackingCode = o.TrackingCode
+                TrackingCode = o.TrackingCode,
+                ShippingMethodName = o.ShippingMethodName
             })
             .ToListAsync(ct);
 
-        return new AdminOrderListResult { Items = items, TotalCount = total, Page = page, PageSize = size };
+        return new AdminOrderListResult
+        {
+            Items = items,
+            TotalCount = total,
+            Page = page,
+            PageSize = size,
+            Stats = stats
+        };
+    }
+
+    private static async Task<AdminOrderStatsDto> BuildStatsAsync(
+        IQueryable<Domain.Entities.Order> q, CancellationToken ct)
+    {
+        // یک query گروه‌بندی‌شده برای همه وضعیت‌ها
+        var groups = await q
+            .GroupBy(o => o.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        var dict = groups.ToDictionary(x => x.Status, x => x.Count);
+
+        int Get(OrderStatus s) => dict.TryGetValue(s, out var c) ? c : 0;
+
+        return new AdminOrderStatsDto
+        {
+            Total      = dict.Values.Sum(),
+            Pending    = Get(OrderStatus.Pending) + Get(OrderStatus.AwaitingPayment),
+            Paid       = Get(OrderStatus.Paid),
+            Processing = Get(OrderStatus.Processing),
+            Shipped    = Get(OrderStatus.Shipped),
+            Delivered  = Get(OrderStatus.Delivered),
+            Canceled   = Get(OrderStatus.Canceled) + Get(OrderStatus.Refunded)
+        };
     }
 }

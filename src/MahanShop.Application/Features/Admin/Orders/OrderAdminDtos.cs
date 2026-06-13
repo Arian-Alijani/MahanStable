@@ -15,6 +15,7 @@ public class AdminOrderListItemDto
     public string CustomerPhone { get; set; } = string.Empty;
     public int ItemCount { get; set; }
     public string? TrackingCode { get; set; }
+    public string? ShippingMethodName { get; set; }
 }
 
 /// <summary>نتیجه صفحه‌بندی‌شده لیست سفارش‌ها.</summary>
@@ -25,4 +26,26 @@ public class AdminOrderListResult
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
     public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    public AdminOrderStatsDto Stats { get; set; } = new();
+}
+
+/// <summary>آمار کلی سفارش‌ها برای نوار بالای صفحه.</summary>
+public class AdminOrderStatsDto
+{
+    public int Total { get; set; }
+    public int Pending { get; set; }         // Pending + AwaitingPayment
+    public int Paid { get; set; }            // Paid
+    public int Processing { get; set; }      // Processing
+    public int Shipped { get; set; }         // Shipped
+    public int Delivered { get; set; }       // Delivered
+    public int Canceled { get; set; }        // Canceled + Refunded
+}
+
+/// <summary>گزینه‌های سورت لیست سفارش‌ها.</summary>
+public enum OrderSortOption
+{
+    Newest = 0,   // پیش‌فرض
+    Oldest = 1,
+    AmountDesc = 2,
+    AmountAsc = 3
 }
