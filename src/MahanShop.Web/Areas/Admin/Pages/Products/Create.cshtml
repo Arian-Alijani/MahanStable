@@ -3,11 +3,38 @@
 @{
     ViewData["Title"] = "محصول جدید";
     ViewData["AdminActive"] = "products";
+    var mode = (ViewData["WizardMode"] as string) ?? "simple";
+    var wizard = Model.Wizard;
 }
 
-<div class="admin-panel-box admin-form">
+<div class="admin-panel-box admin-form" id="product-wizard"
+     data-wizard='@System.Text.Json.JsonSerializer.Serialize(wizard)'>
+
     <div asp-validation-summary="All" class="text-danger"></div>
-    <form method="post">
+
+    <!-- انتخاب نوع محصول -->
+    <div class="mb-4">
+        <label class="form-label fw-bold">نوع محصول</label>
+        <div class="btn-group" role="group" id="wizard-mode-toggle">
+            <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-simple" value="simple"
+                   autocomplete="off" @(mode == "simple" ? "checked" : "") />
+            <label class="btn btn-outline-primary" for="mode-simple">ساده (یک محصول)</label>
+
+            <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-multi" value="multi"
+                   autocomplete="off" @(mode == "multi" ? "checked" : "")
+                   @(wizard.HasBrandModelAttributes ? "" : "disabled") />
+            <label class="btn btn-outline-primary" for="mode-multi">چندبرندی (تولید خودکار گزینه‌ها)</label>
+        </div>
+        @if (!wizard.HasBrandModelAttributes)
+        {
+            <p class="admin-muted mt-2 mb-0">
+                برای استفاده از حالت چندبرندی، ابتدا در «ویژگی‌های متغیر» یک ویژگی از نوع «برند» و یک ویژگی از نوع «مدل» تعریف کنید و مدل‌ها را به برندشان وصل کنید.
+            </p>
+        }
+    </div>
+
+    <!-- ============ مسیر ساده ============ -->
+    <form method="post" asp-page-handler="Simple" id="form-simple" class="wizard-pane" data-mode="simple">
         <div class="mb-3">
             <label class="form-label">عنوان</label>
             <input asp-for="Title" class="form-control" />
@@ -70,17 +97,161 @@
             <input asp-for="IsActive" class="form-check-input" />
             <label class="form-check-label">فعال</label>
         </div>
-        <div class="form-check mb-2">
+        <div class="form-check mb-3">
             <input asp-for="IsFeatured" class="form-check-input" />
             <label class="form-check-label">محصول منتخب</label>
-        </div>
-        <div class="form-check mb-3">
-            <input asp-for="HasVariants" class="form-check-input" />
-            <label class="form-check-label">دارای واریانت (قیمت/موجودی از گزینه‌ها)</label>
         </div>
         <div class="admin-form__actions">
             <button type="submit" class="btn btn-primary">ذخیره و ادامه</button>
             <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
         </div>
     </form>
+
+    <!-- ============ مسیر چندبرندی ============ -->
+    @if (wizard.HasBrandModelAttributes)
+    {
+        <form method="post" asp-page-handler="Multi" id="form-multi" class="wizard-pane d-none" data-mode="multi">
+            <div class="mb-3">
+                <label class="form-label">عنوان</label>
+                <input asp-for="Title" class="form-control" />
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">برند اصلی محصول</label>
+                    <select asp-for="BrandId" class="form-select">
+                        <option value="">— انتخاب برند —</option>
+                        @foreach (var b in Model.Brands)
+                        {
+                            <option value="@b.Id">@b.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">دسته</label>
+                    <select asp-for="CategoryId" class="form-select">
+                        <option value="">— انتخاب دسته —</option>
+                        @foreach (var c in Model.Categories)
+                        {
+                            <option value="@c.Id">@(new string('—', c.Depth)) @c.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <!-- انتخاب برندها و گوشی‌ها -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">گوشی‌ها (گروه‌بندی‌شده بر اساس برند)</label>
+                @if (wizard.UnlinkedModelCount > 0)
+                {
+                    <p class="admin-muted">
+                        @wizard.UnlinkedModelCount مدل هنوز به هیچ برندی وصل نشده‌اند و اینجا نمایش داده نمی‌شوند.
+                    </p>
+                }
+                <div class="wizard-brand-list border rounded p-2">
+                    @foreach (var b in wizard.Brands)
+                    {
+                        <div class="wizard-brand mb-2" data-brand-id="@b.ValueId">
+                            <div class="form-check">
+                                <input class="form-check-input wizard-brand-check" type="checkbox" id="brand-@b.ValueId" />
+                                <label class="form-check-label fw-bold" for="brand-@b.ValueId">@b.Name</label>
+                                <span class="admin-muted">(@b.Models.Count مدل)</span>
+                            </div>
+                            <div class="wizard-models ps-4 d-none">
+                                @if (b.Models.Count == 0)
+                                {
+                                    <span class="admin-muted">— مدلی برای این برند تعریف نشده —</span>
+                                }
+                                @foreach (var m in b.Models)
+                                {
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input wizard-model-check" type="checkbox"
+                                               name="ModelValueIds" value="@m.ValueId" id="model-@m.ValueId" />
+                                        <label class="form-check-label" for="model-@m.ValueId">@m.Name</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- رنگ‌ها (اختیاری) -->
+            @if (wizard.Colors.Count > 0)
+            {
+                <div class="mb-3">
+                    <label class="form-label fw-bold">رنگ‌ها (اختیاری — برای هر مدل ضرب می‌شود)</label>
+                    <div class="border rounded p-2">
+                        @foreach (var c in wizard.Colors)
+                        {
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox"
+                                       name="ColorValueIds" value="@c.ValueId" id="color-@c.ValueId" />
+                                <label class="form-check-label" for="color-@c.ValueId">
+                                    @if (!string.IsNullOrEmpty(c.ColorHex))
+                                    {
+                                        <span class="wizard-color-dot" style="background:@c.ColorHex"></span>
+                                    }
+                                    @c.Name
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="alert alert-info py-2" id="wizard-variant-summary">
+                با انتخاب گوشی‌ها، تعداد گزینه‌هایی که ساخته می‌شود اینجا نمایش داده می‌شود.
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">قیمت اولیهٔ همهٔ گزینه‌ها (تومان)</label>
+                    <input asp-for="BasePrice" type="number" class="form-control" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">قیمت با تخفیف اولیه (اختیاری)</label>
+                    <input asp-for="BaseDiscountPrice" type="number" class="form-control" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">موجودی اولیهٔ هر گزینه</label>
+                    <input asp-for="BaseStock" type="number" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">توضیح کوتاه</label>
+                <input asp-for="ShortDescription" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">توضیحات</label>
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">عنوان متا (SEO)</label>
+                    <input asp-for="MetaTitle" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">توضیح متا (SEO)</label>
+                    <input asp-for="MetaDescription" class="form-control" />
+                </div>
+            </div>
+            <div class="form-check mb-2">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label class="form-check-label">فعال</label>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="IsFeatured" class="form-check-input" />
+                <label class="form-check-label">محصول منتخب</label>
+            </div>
+            <div class="admin-form__actions">
+                <button type="submit" class="btn btn-primary">ساخت محصول و تولید گزینه‌ها</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+            </div>
+        </form>
+    }
 </div>
+
+@section Scripts {
+    <script src="~/admin/product-wizard.js" asp-append-version="true"></script>
+}

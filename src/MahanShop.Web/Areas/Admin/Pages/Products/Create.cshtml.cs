@@ -77,8 +77,8 @@ public class CreateModel : PageModel
                 Title, Slug, ShortDescription, Description, IsActive, IsFeatured,
                 MetaTitle, MetaDescription, BrandId, CategoryId,
                 ModelValueIds, ColorValueIds, BasePrice, BaseDiscountPrice, BaseStock));
-            TempData["AdminOk"] = "محصول چندبرندی و همهٔ گزینه‌هایش ساخته شد. اکنون قیمت/موجودی هر گوشی را در «مدیریت موجودی محصول» تنظیم کنید.";
-            return RedirectToPage("Inventory", new { id });
+            TempData["AdminOk"] = "محصول چندبرندی و همهٔ گزینه‌هایش ساخته شد. اکنون قیمت/موجودی هر گوشی را در زبانهٔ «گزینه‌ها و موجودی» تنظیم کنید.";
+            return RedirectToPage("Edit", new { id });
         }
         catch (ValidationException ex)
         {
