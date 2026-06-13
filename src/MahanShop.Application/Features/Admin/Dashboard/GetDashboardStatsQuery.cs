@@ -13,12 +13,23 @@ public class DashboardStatsDto
     public long TodaySales { get; set; }
     public long TotalSales { get; set; }
     public int TodayOrderCount { get; set; }
+    public int TotalOrderCount { get; set; }          // F10: کل سفارش‌های واقعی (غیر از Pending/AwaitingPayment)
     public int PendingProcessingCount { get; set; }   // پرداخت‌شده‌های منتظر پردازش/ارسال
     public int LowStockCount { get; set; }
     public int ProductCount { get; set; }
     public int UserCount { get; set; }
     public List<DashboardRecentOrderDto> RecentOrders { get; set; } = new();
     public List<DashboardLowStockDto> LowStockProducts { get; set; } = new();
+
+    /// <summary>F10: سری ۷ روز اخیر (شامل امروز) — برای نمودار SVG داشبورد.</summary>
+    public List<DashboardDailyPointDto> Last7Days { get; set; } = new();
+}
+
+public class DashboardDailyPointDto
+{
+    public DateTime Date { get; set; }            // تاریخ روز (UTC date)
+    public int OrderCount { get; set; }            // تعداد سفارش‌های sold همان روز
+    public long Sales { get; set; }                // مجموع فروش sold همان روز
 }
 
 public class DashboardRecentOrderDto
@@ -65,6 +76,9 @@ public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQu
         dto.TotalSales = await sold.SumAsync(o => (long?)o.FinalAmount, ct) ?? 0;
 
         dto.TodayOrderCount = await sold.CountAsync(o => o.PaidAt >= today, ct);
+        // F10: کل سفارش‌ها (به‌غیر از سفارش‌های هنوز پرداخت‌نشده) — برای کارت آماری «کل سفارش‌ها».
+        dto.TotalOrderCount = await _db.Orders.AsNoTracking()
+            .CountAsync(o => o.Status != OrderStatus.Pending && o.Status != OrderStatus.AwaitingPayment, ct);
         dto.PendingProcessingCount = await _db.Orders.AsNoTracking()
             .CountAsync(o => o.Status == OrderStatus.Paid || o.Status == OrderStatus.Processing, ct);
 
@@ -113,6 +127,28 @@ public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQu
                 FinalAmount = o.FinalAmount
             })
             .ToListAsync(ct);
+
+        // F10: سری ۷ روز اخیر (شامل امروز) — برای نمودار SVG داشبورد.
+        // معیار «روز» = PaidAt (روز پرداخت). فقط sold statuses شمرده می‌شود تا با کارت‌های فروش هم‌خوان باشد.
+        var weekStart = today.AddDays(-6);   // ۷ روز شامل امروز
+        var dailyRaw = await sold
+            .Where(o => o.PaidAt >= weekStart)
+            .GroupBy(o => o.PaidAt!.Value.Date)
+            .Select(g => new
+            {
+                Date = g.Key,
+                OrderCount = g.Count(),
+                Sales = g.Sum(o => (long?)o.FinalAmount) ?? 0
+            })
+            .ToListAsync(ct);
+
+        var dailyMap = dailyRaw.ToDictionary(x => x.Date, x => x);
+        dto.Last7Days = Enumerable.Range(0, 7)
+            .Select(i => weekStart.AddDays(i))
+            .Select(d => dailyMap.TryGetValue(d, out var v)
+                ? new DashboardDailyPointDto { Date = d, OrderCount = v.OrderCount, Sales = v.Sales }
+                : new DashboardDailyPointDto { Date = d, OrderCount = 0, Sales = 0 })
+            .ToList();
 
         return dto;
     }

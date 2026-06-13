@@ -4,95 +4,300 @@
 @{
     ViewData["Title"] = "داشبورد";
     ViewData["AdminActive"] = "dashboard";
+
+    // F10: داده‌های نمودار ۷ روزه — برای نگاشت SVG.
+    var days = Model.Stats.Last7Days;
+    var maxOrders = days.Count > 0 ? Math.Max(1, days.Max(d => d.OrderCount)) : 1;
+    var maxSales  = days.Count > 0 ? Math.Max(1L, days.Max(d => d.Sales)) : 1L;
+    var weekOrders = days.Sum(d => d.OrderCount);
+    var weekSales  = days.Sum(d => d.Sales);
+
+    // نام روزهای هفته به فارسی (Sunday=0 .. Saturday=6 → نگاشت دستی به نام‌های فارسی)
+    string PersianDayName(DayOfWeek d) => d switch
+    {
+        DayOfWeek.Saturday  => "شنبه",
+        DayOfWeek.Sunday    => "یک‌ش",
+        DayOfWeek.Monday    => "دوش",
+        DayOfWeek.Tuesday   => "سه‌ش",
+        DayOfWeek.Wednesday => "چها",
+        DayOfWeek.Thursday  => "پنج",
+        DayOfWeek.Friday    => "جمعه",
+        _ => "-"
+    };
+
+    // ابعاد نمودار SVG (viewBox)
+    const int CHART_W = 700;
+    const int CHART_H = 220;
+    const int PAD_L = 36;
+    const int PAD_R = 16;
+    const int PAD_T = 20;
+    const int PAD_B = 36;
+    var innerW = CHART_W - PAD_L - PAD_R;
+    var innerH = CHART_H - PAD_T - PAD_B;
+    var slotW  = innerW / Math.Max(1, days.Count);
+    var barW   = Math.Min(38, slotW - 16);
 }
 
-<div class="admin-stats">
-    <div class="admin-stat-card">
-        <div class="admin-stat-card__label">فروش امروز</div>
-        <div class="admin-stat-card__value">@Model.Stats.TodaySales.ToString("N0") <span class="admin-stat-card__unit">تومان</span></div>
+<!-- ── F10: سر صفحهٔ داشبورد ── -->
+<div class="dash10-head">
+    <div>
+        <h1 class="dash10-title">داشبورد</h1>
+        <p class="dash10-subtitle">یک نگاه کلی به وضعیت فروشگاه</p>
     </div>
-    <div class="admin-stat-card">
-        <div class="admin-stat-card__label">سفارش‌های منتظر پردازش</div>
-        <div class="admin-stat-card__value">@Model.Stats.PendingProcessingCount.ToString("N0")</div>
-    </div>
-    <div class="admin-stat-card">
-        <div class="admin-stat-card__label">موجودی کم</div>
-        <div class="admin-stat-card__value">@Model.Stats.LowStockCount.ToString("N0")</div>
-    </div>
-    <div class="admin-stat-card">
-        <div class="admin-stat-card__label">کل محصولات فعال</div>
-        <div class="admin-stat-card__value">@Model.Stats.ProductCount.ToString("N0")</div>
-    </div>
-</div>
-
-<div class="admin-stats admin-stats--secondary">
-    <div class="admin-stat-card admin-stat-card--soft">
-        <div class="admin-stat-card__label">فروش کل</div>
-        <div class="admin-stat-card__value">@Model.Stats.TotalSales.ToString("N0") <span class="admin-stat-card__unit">تومان</span></div>
-    </div>
-    <div class="admin-stat-card admin-stat-card--soft">
-        <div class="admin-stat-card__label">سفارش‌های امروز</div>
-        <div class="admin-stat-card__value">@Model.Stats.TodayOrderCount.ToString("N0")</div>
-    </div>
-    <div class="admin-stat-card admin-stat-card--soft">
-        <div class="admin-stat-card__label">کل کاربران</div>
-        <div class="admin-stat-card__value">@Model.Stats.UserCount.ToString("N0")</div>
+    <div class="dash10-head-actions">
+        <a class="btn btn-primary" asp-area="Admin" asp-page="/Orders/Index">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg>
+            مدیریت سفارش‌ها
+        </a>
+        <a class="btn btn-outline-primary" asp-area="Admin" asp-page="/Products/Index">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7L12 3 4 7l8 4 8-4z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M12 11v10"/></svg>
+            مدیریت محصولات
+        </a>
     </div>
 </div>
 
-<div class="admin-dashboard-grid">
-    <div class="admin-panel-box">
-        <div class="admin-panel-box__head">
-            <h2 class="admin-panel-box__title">سفارش‌های اخیر</h2>
-            <a class="btn btn-sm btn-outline-primary" href="/Admin/Orders">همه سفارش‌ها</a>
+<!-- ── F10: کارت‌های آماری اصلی (۴تایی گرافیکی) ── -->
+<div class="dash10-stats">
+    <a class="dash10-stat dash10-stat--sales" asp-area="Admin" asp-page="/Orders/Index">
+        <div class="dash10-stat__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6"/></svg>
         </div>
-        <table class="table admin-table">
-            <thead>
-                <tr><th>کد سفارش</th><th>مشتری</th><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th><th></th></tr>
-            </thead>
-            <tbody>
-            @foreach (var o in Model.Stats.RecentOrders)
-            {
-                <tr>
-                    <td><strong>@o.OrderCode</strong></td>
-                    <td>@o.CustomerName</td>
-                    <td>@o.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
-                    <td>@o.FinalAmount.ToString("N0")</td>
-                    <td><span class="badge admin-status-badge @OrderStatusView.Tone(o.Status)">@OrderStatusView.Label(o.Status)</span></td>
-                    <td class="admin-actions"><a asp-area="Admin" asp-page="/Orders/Detail" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">جزییات</a></td>
-                </tr>
-            }
-            @if (Model.Stats.RecentOrders.Count == 0)
-            {
-                <tr><td colspan="6" class="admin-muted text-center">سفارشی ثبت نشده است.</td></tr>
-            }
-            </tbody>
-        </table>
+        <div class="dash10-stat__body">
+            <div class="dash10-stat__label">فروش کل</div>
+            <div class="dash10-stat__value">@Model.Stats.TotalSales.ToString("N0") <span class="dash10-stat__unit">تومان</span></div>
+            <div class="dash10-stat__sub">امروز: @Model.Stats.TodaySales.ToString("N0")</div>
+        </div>
+    </a>
+
+    <a class="dash10-stat dash10-stat--orders" asp-area="Admin" asp-page="/Orders/Index">
+        <div class="dash10-stat__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg>
+        </div>
+        <div class="dash10-stat__body">
+            <div class="dash10-stat__label">کل سفارش‌ها</div>
+            <div class="dash10-stat__value">@Model.Stats.TotalOrderCount.ToString("N0")</div>
+            <div class="dash10-stat__sub">امروز: @Model.Stats.TodayOrderCount.ToString("N0") · منتظر پردازش: @Model.Stats.PendingProcessingCount.ToString("N0")</div>
+        </div>
+    </a>
+
+    <a class="dash10-stat dash10-stat--users" asp-area="Admin" asp-page="/Users/Index">
+        <div class="dash10-stat__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="dash10-stat__body">
+            <div class="dash10-stat__label">کل کاربران</div>
+            <div class="dash10-stat__value">@Model.Stats.UserCount.ToString("N0")</div>
+            <div class="dash10-stat__sub">مشتری‌های ثبت‌نام‌شده</div>
+        </div>
+    </a>
+
+    <a class="dash10-stat dash10-stat--products" asp-area="Admin" asp-page="/Products/Index">
+        <div class="dash10-stat__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7L12 3 4 7l8 4 8-4z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M12 11v10"/></svg>
+        </div>
+        <div class="dash10-stat__body">
+            <div class="dash10-stat__label">محصولات فعال</div>
+            <div class="dash10-stat__value">@Model.Stats.ProductCount.ToString("N0")</div>
+            <div class="dash10-stat__sub">
+                @if (Model.Stats.LowStockCount > 0)
+                {
+                    <span class="dash10-warn">⚠ موجودی کم: @Model.Stats.LowStockCount.ToString("N0")</span>
+                }
+                else
+                {
+                    <span>موجودی همه کافی</span>
+                }
+            </div>
+        </div>
+    </a>
+</div>
+
+<!-- ── F10: نمودار ۷ روزه (SVG دستی، Domestic-only) ── -->
+<div class="dash10-chart-box">
+    <div class="dash10-chart-head">
+        <div>
+            <h2 class="dash10-chart-title">روند فروش ۷ روز اخیر</h2>
+            <div class="dash10-chart-sub">
+                مجموع: <strong>@weekOrders.ToString("N0")</strong> سفارش ·
+                <strong>@weekSales.ToString("N0")</strong> تومان فروش
+            </div>
+        </div>
+        <div class="dash10-legend">
+            <span class="dash10-legend__item"><span class="dash10-legend__dot dash10-legend__dot--orders"></span>تعداد سفارش</span>
+            <span class="dash10-legend__item"><span class="dash10-legend__dot dash10-legend__dot--sales"></span>فروش (تومان)</span>
+        </div>
     </div>
 
-    <div class="admin-panel-box">
-        <div class="admin-panel-box__head">
-            <h2 class="admin-panel-box__title">موجودی کم</h2>
-            <a class="btn btn-sm btn-outline-primary" href="/Admin/Products">محصولات</a>
+    <div class="dash10-chart">
+        <svg viewBox="0 0 @CHART_W @CHART_H" preserveAspectRatio="none" role="img" aria-label="نمودار ۷ روز اخیر">
+            <!-- خطوط شبکهٔ افقی -->
+            @for (int i = 0; i <= 4; i++)
+            {
+                var y = PAD_T + (innerH * i / 4);
+                <line x1="@PAD_L" y1="@y" x2="@(CHART_W - PAD_R)" y2="@y"
+                      stroke="#e2e8f0" stroke-width="1" stroke-dasharray="@(i == 4 ? "" : "3 4")" />
+            }
+
+            <!-- محور Y چپ (تعداد سفارش) — برچسب‌ها -->
+            @for (int i = 0; i <= 4; i++)
+            {
+                var y = PAD_T + (innerH * (4 - i) / 4);
+                var val = (int)Math.Round(maxOrders * (i / 4.0));
+                <g>
+                    <text x="@(PAD_L - 6)" y="@(y + 4)" text-anchor="end" font-size="10" fill="#94a3b8" font-family="Vazirmatn, Tahoma, sans-serif">@val</text>
+                </g>
+            }
+
+            <!-- میله‌های تعداد سفارش -->
+            @for (int i = 0; i < days.Count; i++)
+            {
+                var d = days[i];
+                var cx = PAD_L + (slotW * i) + (slotW / 2);
+                var h = (int)Math.Round((double)d.OrderCount / maxOrders * innerH);
+                if (h < 1 && d.OrderCount > 0) h = 2;
+                var y = PAD_T + innerH - h;
+                var x = cx - (barW / 2);
+                var isToday = d.Date.Date == DateTime.UtcNow.Date;
+                <g>
+                    <rect x="@x" y="@y" width="@barW" height="@h" rx="5" ry="5"
+                          fill="@(isToday ? "#2563eb" : "#93c5fd")">
+                        <title>@d.Date.ToString("yyyy/MM/dd") · @d.OrderCount سفارش · @d.Sales.ToString("N0") تومان</title>
+                    </rect>
+                    @if (d.OrderCount > 0)
+                    {
+                        <g>
+                            <text x="@cx" y="@(y - 5)" text-anchor="middle" font-size="11" fill="#1e293b" font-weight="700" font-family="Vazirmatn, Tahoma, sans-serif">@d.OrderCount</text>
+                        </g>
+                    }
+                </g>
+            }
+
+            <!-- خط فروش (polyline) — مقیاس‌شده روی همان ارتفاع -->
+            @if (days.Count > 1 && weekSales > 0)
+            {
+                var pts = string.Join(" ", days.Select((d, i) =>
+                {
+                    var cx = PAD_L + (slotW * i) + (slotW / 2);
+                    var h = (int)Math.Round((double)d.Sales / maxSales * innerH);
+                    var y = PAD_T + innerH - h;
+                    return $"{cx},{y}";
+                }));
+                <polyline points="@pts" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                @foreach (var (d, i) in days.Select((d, i) => (d, i)))
+                {
+                    var cx = PAD_L + (slotW * i) + (slotW / 2);
+                    var h = (int)Math.Round((double)d.Sales / maxSales * innerH);
+                    var y = PAD_T + innerH - h;
+                    <circle cx="@cx" cy="@y" r="4" fill="#fff" stroke="#10b981" stroke-width="2">
+                        <title>@d.Date.ToString("yyyy/MM/dd") · @d.Sales.ToString("N0") تومان</title>
+                    </circle>
+                }
+            }
+
+            <!-- برچسب‌های روز پایین -->
+            @for (int i = 0; i < days.Count; i++)
+            {
+                var d = days[i];
+                var cx = PAD_L + (slotW * i) + (slotW / 2);
+                var isToday = d.Date.Date == DateTime.UtcNow.Date;
+                <g>
+                    <text x="@cx" y="@(CHART_H - PAD_B + 18)" text-anchor="middle" font-size="11"
+                          fill="@(isToday ? "#2563eb" : "#64748b")"
+                          font-weight="@(isToday ? "700" : "500")"
+                          font-family="Vazirmatn, Tahoma, sans-serif">
+                        @PersianDayName(d.Date.DayOfWeek)
+                    </text>
+                    <text x="@cx" y="@(CHART_H - PAD_B + 32)" text-anchor="middle" font-size="9"
+                          fill="#94a3b8" font-family="Vazirmatn, Tahoma, sans-serif">
+                        @d.Date.ToString("MM/dd")
+                    </text>
+                </g>
+            }
+        </svg>
+    </div>
+</div>
+
+<!-- ── F10: سفارش‌های اخیر + موجودی کم (دو ستونه) ── -->
+<div class="dash10-grid">
+    <div class="dash10-panel">
+        <div class="dash10-panel__head">
+            <h2 class="dash10-panel__title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                سفارش‌های اخیر
+            </h2>
+            <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-page="/Orders/Index">همه سفارش‌ها</a>
         </div>
-        <table class="table admin-table">
-            <thead>
-                <tr><th>محصول</th><th>گزینه</th><th>موجودی</th></tr>
-            </thead>
-            <tbody>
-            @foreach (var p in Model.Stats.LowStockProducts)
-            {
-                <tr>
-                    <td>@p.Title</td>
-                    <td>@(string.IsNullOrEmpty(p.VariantTitle) ? "—" : p.VariantTitle)</td>
-                    <td><span class="badge admin-status-badge is-danger">@p.Stock</span></td>
-                </tr>
-            }
-            @if (Model.Stats.LowStockProducts.Count == 0)
-            {
-                <tr><td colspan="3" class="admin-muted text-center">موردی برای نمایش نیست.</td></tr>
-            }
-            </tbody>
-        </table>
+        <div class="dash10-tablebox">
+            <table class="table dash10-table">
+                <thead>
+                    <tr>
+                        <th>کد سفارش</th>
+                        <th>مشتری</th>
+                        <th>تاریخ</th>
+                        <th>مبلغ</th>
+                        <th>وضعیت</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var o in Model.Stats.RecentOrders)
+                {
+                    <tr>
+                        <td><strong class="dash10-code">@o.OrderCode</strong></td>
+                        <td class="dash10-cust">@o.CustomerName</td>
+                        <td class="dash10-date">@o.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                        <td class="dash10-amount">@o.FinalAmount.ToString("N0")</td>
+                        <td><span class="badge admin-status-badge @OrderStatusView.Tone(o.Status)">@OrderStatusView.Label(o.Status)</span></td>
+                        <td class="admin-actions">
+                            <a asp-area="Admin" asp-page="/Orders/Detail" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">جزییات</a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Stats.RecentOrders.Count == 0)
+                {
+                    <tr><td colspan="6" class="dash10-empty">هنوز سفارشی ثبت نشده است.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dash10-panel">
+        <div class="dash10-panel__head">
+            <h2 class="dash10-panel__title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+                موجودی کم
+                @if (Model.Stats.LowStockCount > 0)
+                {
+                    <span class="dash10-count-pill">@Model.Stats.LowStockCount.ToString("N0")</span>
+                }
+            </h2>
+            <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-page="/Inventory/Index">مدیریت موجودی</a>
+        </div>
+        <div class="dash10-tablebox">
+            <table class="table dash10-table dash10-table--compact">
+                <thead>
+                    <tr>
+                        <th>محصول</th>
+                        <th>گزینه</th>
+                        <th>موجودی</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var p in Model.Stats.LowStockProducts)
+                {
+                    <tr>
+                        <td class="dash10-prod-name">@p.Title</td>
+                        <td class="dash10-variant">@(string.IsNullOrEmpty(p.VariantTitle) ? "—" : p.VariantTitle)</td>
+                        <td><span class="dash10-stock-badge @(p.Stock == 0 ? "is-zero" : "is-low")">@p.Stock</span></td>
+                    </tr>
+                }
+                @if (Model.Stats.LowStockProducts.Count == 0)
+                {
+                    <tr><td colspan="3" class="dash10-empty">همه‌چیز رو‌به‌راه است — هیچ محصولی موجودی کم ندارد.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
