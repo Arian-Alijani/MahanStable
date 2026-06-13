@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F2 (Domain نوع پست + snapshot Order + Migration) ✅ تمام. قدم بعد = F3 (تب کنترل ویژگی یکپارچه + CRUD نوع پست).**
+**فاز جاری: F3 (تب کنترل ویژگی یکپارچه + CRUD نوع پست) ✅ تمام. قدم بعد = F4 (چک‌اوت: انتخاب نوع پست + snapshot امن + فاکتور).**
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -20,7 +20,7 @@
 - [x] **F0** — برنامه‌ریزی: `ADMIN_REVAMP_ROADMAP.md` + این فایل ساخته شد. وضعیت فعلی پروژه بازرسی شد.
 - [x] **F1** — پوستهٔ ادمین: سایدبار ۶ تب + منوی فرعی + بازگشت به فروشگاه + hub کنترل‌ویژگی + ارتقای CSS shell.
 - [x] **F2** — Domain `ShippingMethod` + snapshot روی Order + Migration `Add_ShippingMethods` + seed.
-- [ ] **F3** — تب کنترل ویژگی یکپارچه (برند/مدل/ویژگی/تگ/دسته) + CRUD نوع پست.
+- [x] **F3** — تب کنترل ویژگی یکپارچه (برند/مدل/ویژگی/تگ/دسته) + CRUD نوع پست.
 - [ ] **F4** — چک‌اوت: انتخاب نوع پست + هزینهٔ سمت سرور + snapshot + فاکتور/سفارش نوع‌پست.
 - [ ] **F5** — فرم محصول ۱۱ بخش + چند‌مدلی + بدون‌برند.
 - [ ] **F6** — تب محصولات: باکس آماری + جست‌وجو/فیلتر.
@@ -77,7 +77,30 @@
 - **لمس فروشگاه عمومی:** هیچ کد رفتاری. فقط Domain/Infra.Data (entity/config/context/migration/seed). `Order.ShippingCost` هنوز در `PlaceOrderCommandHandler` هاردکد 0 است (تغییرش در F4).
 - **build:** ✅ `bash tools/build.sh` = **0 Error** (۵ warning همگی pre-existing، بی‌ربط به F2). Domestic-only audit: صفر URL خارجی در فایل‌های جدید. Snapshot شامل ShippingMethod تأیید شد.
 - **سؤال باز F2 (نرخ ثابت کافی است یا وزنی/منطقه‌ای؟):** پیش‌فرض روادمپ اعمال شد = **نرخ ثابت per-method** (ساده و امن). اگر کاربر بعداً نرخ وزنی خواست → فاز جدا.
-- **قدم بعد = F3** (تب «کنترل ویژگی» یکپارچه: برند/مدل/مشخصات‌فنی/تگ/دسته + **CRUD کامل نوع پست** در `Features/Admin/Shipping` + `Areas/Admin/Pages/Shipping`؛ کارت «نوع پست» در hub از `is-soon` به فعال + شمارش‌ها).
+- **قدم بعد = F3** (تب «کنترل ویژگی» یکپارچه: برند/مدل/مشخصات‌فنی/تگ/دسته + **CRUD کامل نوع پست** در `Features/Admin/Shipping` + `Areas/Admin/Pages/Shipping`؛ کارت «نوع پست» در hub از `is-soon` به فعال + شمارش‌ها). ← **انجام شد (F3)**
+
+### F3 — تب کنترل ویژگی یکپارچه + CRUD نوع پست ✅ (2026-06-13)
+- **چه شد:** تب «کنترل ویژگی» (hub `/Admin/Attributes`) تکمیل شد. شمارش واقعی هر زیربخش از DB + CRUD کامل نوع پست (روش ارسال) پیاده شد. کارت «نوع پست» از `is-soon` (غیرفعال) به لینک فعال تبدیل شد.
+- **فایل‌های جدید:**
+  - `src/MahanShop.Application/Features/Admin/Shipping/ShippingAdminDtos.cs` — `ShippingMethodListItemDto` + `ShippingMethodEditDto`.
+  - `src/MahanShop.Application/Features/Admin/Shipping/GetShippingMethodsQuery.cs` — لیست نوع‌های پست + جستجو.
+  - `src/MahanShop.Application/Features/Admin/Shipping/GetShippingMethodForEditQuery.cs` — واکشی یک نوع پست برای ویرایش.
+  - `src/MahanShop.Application/Features/Admin/Shipping/CreateShippingMethodCommand.cs` (+Validator) — ایجاد.
+  - `src/MahanShop.Application/Features/Admin/Shipping/UpdateShippingMethodCommand.cs` (+Validator) — ویرایش.
+  - `src/MahanShop.Application/Features/Admin/Shipping/ToggleShippingMethodActiveCommand.cs` — فعال/غیرفعال.
+  - `src/MahanShop.Application/Features/Admin/Shipping/DeleteShippingMethodCommand.cs` — حذف (FK SetNull از F2 مراقبت می‌کند).
+  - `src/MahanShop.Application/Features/Admin/Shipping/GetAttributeHubStatsQuery.cs` — شمارش ۶ زیربخش (دسته/برند/مدل/مشخصات‌فنی/تگ/پست) با یک کوئری.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Shipping/Index.cshtml(.cs)` — لیست + جستجو + toggle + حذف.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Shipping/Create.cshtml(.cs)` — ایجاد روش ارسال.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Shipping/Edit.cshtml(.cs)` — ویرایش روش ارسال.
+- **فایل‌های تغییر‌یافته:**
+  - `src/MahanShop.Web/Areas/Admin/Pages/Attributes/Index.cshtml.cs` — inject `IMediator`، واکشی `AttributeHubStatsDto` از DB در `OnGetAsync`.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Attributes/Index.cshtml` — شمارش واقعی (`hub-badge--count`) روی هر ۶ کارت + کارت «نوع پست» به لینک فعال (`/Admin/Shipping`) تبدیل شد.
+- **لمس فروشگاه عمومی:** هیچ. (فقط `Areas/Admin/Shipping`, `Areas/Admin/Attributes`, `Features/Admin/Shipping` — مرز فاز رعایت شد.)
+- **migration:** هیچ. (زیرساخت DB در F2 کامل شد.)
+- **build:** ✅ `bash tools/build.sh` = **0 Error** (۵ warning همگی pre-existing از فازهای قبل). Domestic-only audit: صفر URL خارجی در فایل‌های جدید.
+- **نکتهٔ امنیت:** نرخ ارسال فقط از صفحهٔ Shipping ادمین تنظیم می‌شود. یادآوری برای F4: هنگام PlaceOrder، `ShippingMethod.Cost` از DB خوانده شود (نه از فرم client).
+- **قدم بعد = F4** (چک‌اوت: انتخاب نوع پست توسط کاربر + هزینه سمت سرور + snapshot امن + نمایش در سفارش/فاکتور).
 
 ---
 

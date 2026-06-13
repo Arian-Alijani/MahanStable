@@ -13,13 +13,13 @@
 </div>
 
 <div class="hub-grid">
-    @* دسته‌بندی‌ها — منتقل‌شده از تب مستقل به اینجا *@
+    @* دسته‌بندی‌ها *@
     <a class="hub-card" href="/Admin/Categories">
         <span class="hub-card__icon hub-card__icon--cat">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         </span>
         <span class="hub-card__body">
-            <span class="hub-card__title">دسته‌بندی‌ها</span>
+            <span class="hub-card__title">دسته‌بندی‌ها <span class="hub-badge hub-badge--count">@Model.Stats.CategoryCount</span></span>
             <span class="hub-card__desc">ساختار درختی دسته‌بندی محصولات و نمایش در منو/صفحهٔ اصلی.</span>
         </span>
         <svg class="hub-card__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -31,7 +31,7 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
         </span>
         <span class="hub-card__body">
-            <span class="hub-card__title">برندها</span>
+            <span class="hub-card__title">برندها <span class="hub-badge hub-badge--count">@Model.Stats.BrandCount</span></span>
             <span class="hub-card__desc">مدیریت برندها، لوگو و ترتیب نمایش.</span>
         </span>
         <svg class="hub-card__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -40,10 +40,10 @@
     @* مدل‌ها / ویژگی‌های متغیر (Variants) *@
     <a class="hub-card" href="/Admin/Variants">
         <span class="hub-card__icon hub-card__icon--variant">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </span>
         <span class="hub-card__body">
-            <span class="hub-card__title">مدل‌ها و ویژگی‌های متغیر</span>
+            <span class="hub-card__title">مدل‌ها و ویژگی‌های متغیر <span class="hub-badge hub-badge--count">@Model.Stats.VariantAttributeCount</span></span>
             <span class="hub-card__desc">برند → مدل → زیرمدل/رنگ (سلسله‌مراتبی) برای محصولات چندمدلی.</span>
         </span>
         <svg class="hub-card__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -55,7 +55,7 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
         </span>
         <span class="hub-card__body">
-            <span class="hub-card__title">مشخصات فنی</span>
+            <span class="hub-card__title">مشخصات فنی <span class="hub-badge hub-badge--count">@Model.Stats.FeatureCount</span></span>
             <span class="hub-card__desc">تعریف کلیدهای مشخصات فنی (مثل حافظه، باتری) برای صفحهٔ محصول.</span>
         </span>
         <svg class="hub-card__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -67,20 +67,21 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
         </span>
         <span class="hub-card__body">
-            <span class="hub-card__title">برچسب‌ها</span>
+            <span class="hub-card__title">برچسب‌ها <span class="hub-badge hub-badge--count">@Model.Stats.TagCount</span></span>
             <span class="hub-card__desc">برچسب‌گذاری محصولات برای دسته‌بندی نرم و جست‌وجو.</span>
         </span>
         <svg class="hub-card__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
 
-    @* نوع پست — در فاز ۳ فعال می‌شود (هنوز ساخته نشده) *@
-    <span class="hub-card is-soon" aria-disabled="true" title="در فاز بعدی فعال می‌شود">
+    @* نوع پست — F3: فعال شد *@
+    <a class="hub-card" href="/Admin/Shipping">
         <span class="hub-card__icon hub-card__icon--post">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h13l5 5v5a1 1 0 0 1-1 1h-2"/><path d="M3 7v10a1 1 0 0 0 1 1h2"/><circle cx="8" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
         </span>
         <span class="hub-card__body">
-            <span class="hub-card__title">نوع پست <span class="hub-badge">به‌زودی</span></span>
-            <span class="hub-card__desc">مدیریت روش‌های ارسال و نرخ پست — در فاز بعدی افزوده می‌شود.</span>
+            <span class="hub-card__title">نوع پست <span class="hub-badge hub-badge--count">@Model.Stats.ShippingMethodCount</span></span>
+            <span class="hub-card__desc">مدیریت روش‌های ارسال، نرخ پست و نمایش در چک‌اوت.</span>
         </span>
-    </span>
+        <svg class="hub-card__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
 </div>
