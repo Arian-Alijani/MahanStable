@@ -111,3 +111,4 @@ git checkout main && git reset --hard baseline-before-admin-panel
 
 ## Changelog
 - 2026-06-12: رودمپ ۴ مرحله‌ای پنل ادمین (`ADMIN_ROADMAP.md`) + این فایل پیشرفت ساخته شد. tag `baseline-before-admin-panel` روی `f279aa6` ثبت شد (مقصد بازگشت). هنوز هیچ کد ادمینی نوشته نشده — مرحله ۰.
+- 2026-06-13: **پاسخ سؤالِ باز «کاربر ادمین اولیه چطور ساخته شود؟» → seed استاندارد.** ادمین اولیه (`09037882674`) به شکل کاملاً استاندارد در `DataSeeder` seed می‌شود: یک رکورد `User` معمولی (همان ساختار کاربرانِ ورود OTP) فقط با `IsAdmin=true`، شماره نرمال‌شده با `PhoneNumberHelper`. idempotent (موجود نبود→ساخت / موجود بود→ادمین/فعال‌سازی / ادمین بود→بدون تغییر). متد جدید `SeedAdminOnlyAsync` (migrate + فقط ادمین، بدون داده‌ی نمونه) در `Program.cs` برای محیط‌های غیر-Development فراخوانی می‌شود تا شماره‌ی ادمین روی Production هم دسترسی پنل بگیرد؛ در Development داخل `SeedAsync` انجام می‌گیرد. تغییر `Program.cs` فقط در بلوک bootstrap seed (نه منطق پنل) و idempotent/rollback-safe.

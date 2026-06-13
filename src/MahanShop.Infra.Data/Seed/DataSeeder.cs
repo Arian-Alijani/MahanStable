@@ -1,3 +1,4 @@
+using MahanShop.Application.Common;
 using MahanShop.Domain.Entities;
 using MahanShop.Domain.Enums;
 using MahanShop.Infra.Data.Context;
@@ -11,11 +12,59 @@ namespace MahanShop.Infra.Data.Seed;
 /// </summary>
 public static class DataSeeder
 {
+    /// <summary>شماره موبایل ادمین اولیه (کاربر استاندارد فقط با IsAdmin=true).</summary>
+    private const string InitialAdminPhone = "09037882674";
+
+    /// <summary>seed داده‌ی نمونه (فقط Development): migrate + کاتالوگ + محتوای صفحه اصلی + ادمین اولیه.</summary>
     public static async Task SeedAsync(MyDbContext db)
     {
         await db.Database.MigrateAsync();
         await SeedCatalogAsync(db);
         await SeedHomeAsync(db);
+        await SeedAdminAsync(db);
+    }
+
+    /// <summary>
+    /// فقط ادمین اولیه را تضمین می‌کند (بدون داده‌ی نمونه). در همه‌ی محیط‌ها (شامل Production)
+    /// قابل فراخوانی است تا شماره‌ی ادمین همیشه دسترسی پنل داشته باشد. migrate را خودش انجام می‌دهد.
+    /// </summary>
+    public static async Task SeedAdminOnlyAsync(MyDbContext db)
+    {
+        await db.Database.MigrateAsync();
+        await SeedAdminAsync(db);
+    }
+
+    /// <summary>
+    /// ادمین اولیه را به شکل استاندارد می‌سازد: یک رکورد User معمولی (همان ساختار کاربرانِ
+    /// ساخته‌شده با ورود OTP) که تنها تفاوتش <c>IsAdmin = true</c> است.
+    /// idempotent: اگر کاربر با این شماره موجود نباشد ساخته می‌شود؛ اگر موجود باشد و ادمین نباشد
+    /// نقش ادمین به او داده می‌شود؛ اگر از قبل ادمین باشد تغییری ایجاد نمی‌شود.
+    /// </summary>
+    private static async Task SeedAdminAsync(MyDbContext db)
+    {
+        var phone = PhoneNumberHelper.Normalize(InitialAdminPhone);
+        if (phone is null) return;
+
+        var user = await db.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phone);
+        if (user is null)
+        {
+            db.Users.Add(new User
+            {
+                PhoneNumber = phone,
+                FullName = string.Empty,
+                IsAdmin = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+            await db.SaveChangesAsync();
+        }
+        else if (!user.IsAdmin || !user.IsActive)
+        {
+            user.IsAdmin = true;
+            user.IsActive = true;
+            user.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+        }
     }
 
     private static async Task SeedCatalogAsync(MyDbContext db)
