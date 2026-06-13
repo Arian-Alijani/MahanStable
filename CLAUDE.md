@@ -39,6 +39,7 @@
 4. **بعد هر تسک کامل:** `docs/PROGRESS.md` آپدیت کن (چی شد، قدم بعد). اگر نقشهٔ پروژه عوض شد → `docs/AI_CONTEXT.md` هم fix کن.
 5. **هیچوقت** TargetFramework رو از net8.0 عوض نکن. هیچوقت Node/SPA اضافه نکن.
 6. تغییر تصمیم استک → اول از کاربر بپرس، بعد این فایل + STACK.md آپدیت.
+7. **تست/بیلد:** ادعای «build سبز» فقط بعد از `bash tools/build.sh` و دیدن «0 Error». فقط View/JS/CSS؟ → `bash tools/check-js.sh`. روش/اعداد کامل: `docs/ENV_TESTING.md`. (dotnet با `source tools/setup-dotnet.sh` در ~17s نصب می‌شه.)
 
 ## Pointers (فقط فایل‌های موجود)
 - `docs/AI_CONTEXT.md` — ⭐ نقشهٔ فشردهٔ کل پروژه (کجا چی) — اول اینو بخون
@@ -48,3 +49,4 @@
 - `docs/CONVENTIONS.md` — قواعد کدنویسی + Domestic-only + ترتیب middleware
 - `docs/VARIANTS.md` — طراحی سیستم تنوع (EAV) + موجودی per-variant (LOCKED)
 - `docs/DEPLOYMENT.md` — Plesk + web.config + env vars
+- `docs/ENV_TESTING.md` — ⚙️ تست/بیلد تو sandbox: نصب dotnet (~17s) + اسکریپت‌های `tools/` + چی جواب میده/نمیده (اعداد واقعی)

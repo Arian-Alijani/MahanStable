@@ -13,6 +13,7 @@ P0–P8 ✅ تمام. پنل ادمین (`Areas/Admin`، ۳۲ صفحهٔ Razor،
 - ادمین اولیه (`DataSeeder`) = `09037882674` — لاگین OTP با این شماره → دسترسی `/Admin`. نقش Admin هر درخواست از DB re-check می‌شود (`OnValidatePrincipal`).
 
 ## Prerequisites (نصب‌شده)
+> ⚠️ ردیف‌های زیر = **محیط dev ویندوزیِ کاربر**. در **sandbox لینوکسیِ AI هیچ‌کدام پیش‌فرض نیست**. برای sandbox: `source tools/setup-dotnet.sh` (dotnet ~17s) — کامل: **docs/ENV_TESTING.md**.
 - .NET 8 SDK = 8.0.422 ✅ (مسیر: `C:\Program Files\dotnet`؛ تو bash جدا `export PATH="/c/Program Files/dotnet:$PATH"`)
 - dotnet-ef tool = 10.0.9 ✅ (با net8 سازگار)
 - git 2.53 ✅

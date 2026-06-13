@@ -11,7 +11,7 @@
 - **استک:** ASP.NET Core 8 (net8.0) · Clean Arch · MediatR CQRS · EF Core 8 · SQL Server 2019 · Razor (MVC+Pages) · Bootstrap5 RTL + jQuery.
 - **هاست:** Plesk Windows shared · IIS in-process · web.config. **بدون Docker/Node/SPA.**
 - **قانون آهنین:** Domestic-only — صفر CDN/سرویس خارجی. همه asset self-host. (جزئیات: CLAUDE.md)
-- **محیط فعلی sandbox = Linux، dotnet نصب نیست** → build/test اینجا اجرا نمی‌شه. سینتکس JS با `node --check`.
+- **محیط فعلی sandbox = Linux، dotnet پیش‌فرض نیست ولی نصب‌شدنیه (~17s)** → build/publish اینجا **سبز می‌شه**. روش دقیق + اعداد: **docs/ENV_TESTING.md**. سریع: `source tools/setup-dotnet.sh && bash tools/build.sh`. تست سبک JS: `bash tools/check-js.sh`.
 
 ## 2. وضعیت (مرجع کامل: docs/PROGRESS.md)
 - P0–P8 ✅ (Scaffold, Domain+Data, Infra, Layout+Home, Catalog, Auth-OTP, Cart+Checkout, Payment-Zarinpal, UserPanel).
@@ -104,7 +104,7 @@ join: `ProductFeature`/`Feature` · `ProductTag`/`Tag` · `ProductImage` · `Pro
 4. کامیت روی `genspark_ai_developer` → PR به main → لینک PR بده.
 
 ## 8. تلهٔ سریع (gotchas)
-- dotnet در sandbox نیست → نگو «build سبز» مگه واقعاً جای دیگه ساختی؛ بگو «تغییر View/JS/CSS، build اجرا نشد».
+- dotnet پیش‌فرض نصب نیست **ولی نصب‌شدنیه** → برای ادعای «build سبز» واقعاً `bash tools/build.sh` بزن و «0 Error» ببین (مرجع کامل docs/ENV_TESTING.md). فقط View/JS/CSS؟ → `bash tools/check-js.sh` کافیه. ⚠️ اجرای واقعی برنامه (dotnet run) بدون SQL Server بالا نمیاد (seed در Program.cs:106 کرش می‌کنه).
 - `HomeCategoryStyle` در `HomeSection.Subtitle` (رشته) ذخیره می‌شه نه ستون جدا.
 - فونت PDF: family واقعی TTF = `Vazir` (نه `Vazirmatn`) وگرنه فارسی tofu.
 - `ProductComment` entity هست ولی feature امتیاز/کامنت **حذف** شده — استفاده نکن.
