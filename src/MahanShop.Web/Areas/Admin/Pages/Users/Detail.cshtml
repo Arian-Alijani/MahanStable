@@ -1,0 +1,111 @@
+@page "{id:int}"
+@using MahanShop.Web.Helpers
+@model MahanShop.Web.Areas.Admin.Pages.Users.DetailModel
+@{
+    var u = Model.Detail;
+    ViewData["Title"] = string.IsNullOrEmpty(u.FullName) ? u.PhoneNumber : u.FullName;
+    ViewData["AdminActive"] = "users";
+}
+
+@if (TempData["AdminOk"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+@if (TempData["AdminError"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<div class="admin-toolbar">
+    <h2 class="admin-page-title">
+        @(string.IsNullOrEmpty(u.FullName) ? "کاربر" : u.FullName)
+        @if (u.IsAdmin)
+        {
+            <span class="badge admin-status-badge is-info">مدیر</span>
+        }
+        @if (!u.IsActive)
+        {
+            <span class="badge admin-status-badge is-danger">غیرفعال</span>
+        }
+    </h2>
+    <a asp-page="Index" class="btn btn-outline-secondary">بازگشت</a>
+</div>
+
+<div class="admin-grid-2">
+    <div class="admin-panel-box">
+        <h3 class="admin-box-title">اطلاعات کاربر</h3>
+        <dl class="admin-dl">
+            <dt>موبایل</dt><dd>@u.PhoneNumber</dd>
+            <dt>ایمیل</dt><dd>@(string.IsNullOrEmpty(u.Email) ? "—" : u.Email)</dd>
+            <dt>عضویت</dt><dd>@u.CreatedAt.ToString("yyyy/MM/dd HH:mm")</dd>
+        </dl>
+    </div>
+
+    <div class="admin-panel-box">
+        <h3 class="admin-box-title">مدیریت دسترسی</h3>
+        <div class="admin-inline-form">
+            <form method="post" asp-page-handler="ToggleAdmin" asp-route-id="@u.Id">
+                <button type="submit" class="btn @(u.IsAdmin ? "btn-outline-danger" : "btn-outline-primary")">
+                    @(u.IsAdmin ? "حذف نقش مدیر" : "اعطای نقش مدیر")
+                </button>
+            </form>
+            <form method="post" asp-page-handler="ToggleActive" asp-route-id="@u.Id">
+                <button type="submit" class="btn @(u.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+                    @(u.IsActive ? "غیرفعال‌سازی حساب" : "فعال‌سازی حساب")
+                </button>
+            </form>
+        </div>
+        <p class="admin-muted" style="margin-top:8px">نمی‌توانید نقش یا وضعیت حساب خودتان را تغییر دهید.</p>
+    </div>
+</div>
+
+<div class="admin-panel-box">
+    <h3 class="admin-box-title">آدرس‌ها</h3>
+    <table class="table admin-table">
+        <thead><tr><th>گیرنده</th><th>استان/شهر</th><th>آدرس</th><th>کد پستی</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var a in u.Addresses)
+        {
+            <tr>
+                <td>@a.ReceiverName<br /><span class="admin-muted">@a.ReceiverPhone</span></td>
+                <td>@a.Province، @a.City</td>
+                <td>@a.FullAddress</td>
+                <td>@a.PostalCode</td>
+                <td class="admin-actions">
+                    <form method="post" asp-page-handler="DeleteAddress" asp-route-id="@u.Id" asp-route-addressId="@a.Id"
+                          onsubmit="return confirm('این آدرس حذف شود؟');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (u.Addresses.Count == 0)
+        {
+            <tr><td colspan="5" class="admin-muted text-center">آدرسی ثبت نشده.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="admin-panel-box">
+    <h3 class="admin-box-title">سفارش‌های اخیر</h3>
+    <table class="table admin-table">
+        <thead><tr><th>کد سفارش</th><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var o in u.RecentOrders)
+        {
+            <tr>
+                <td><strong>@o.OrderCode</strong></td>
+                <td>@o.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                <td>@o.FinalAmount.ToString("N0")</td>
+                <td><span class="badge admin-status-badge @OrderStatusView.Tone(o.Status)">@OrderStatusView.Label(o.Status)</span></td>
+                <td class="admin-actions"><a asp-page="/Orders/Detail" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">جزییات</a></td>
+            </tr>
+        }
+        @if (u.RecentOrders.Count == 0)
+        {
+            <tr><td colspan="5" class="admin-muted text-center">سفارشی ثبت نشده.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>
