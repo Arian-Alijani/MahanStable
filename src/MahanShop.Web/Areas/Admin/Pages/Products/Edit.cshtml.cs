@@ -177,6 +177,38 @@ public class EditModel : PageModel
         return RedirectToPage(new { id = Id });
     }
 
+    // خروجی CSV واریانت‌های محصول
+    public async Task<IActionResult> OnGetExportVariantsAsync(int id)
+    {
+        var bytes = await _mediator.Send(new ExportProductVariantsCsvQuery(id));
+        return File(bytes, "text/csv", $"variants_p{id}_{DateTime.Now:yyyy-MM-dd}.csv");
+    }
+
+    // بارگذاری CSV واریانت‌های محصول
+    public async Task<IActionResult> OnPostImportVariantsAsync(IFormFile? csvFile)
+    {
+        if (csvFile is null || csvFile.Length == 0)
+        {
+            TempData["AdminErr"] = "فایلی انتخاب نشده است.";
+            return RedirectToPage(new { id = Id });
+        }
+        if (csvFile.Length > 5 * 1024 * 1024)
+        {
+            TempData["AdminErr"] = "حجم فایل بیش از حد مجاز (۵ مگابایت) است.";
+            return RedirectToPage(new { id = Id });
+        }
+
+        string content;
+        using (var reader = new System.IO.StreamReader(csvFile.OpenReadStream(), System.Text.Encoding.UTF8))
+            content = await reader.ReadToEndAsync();
+
+        var result = await _mediator.Send(new ImportProductVariantsCsvCommand(Id, content));
+        var msg = $"ساخته‌شده: {result.Created} | به‌روزرسانی: {result.Updated} | رد‌شده: {result.Skipped}";
+        if (result.Errors.Count > 0) msg += " — " + string.Join("؛ ", result.Errors.Take(3));
+        TempData[(result.Created + result.Updated) > 0 ? "AdminOk" : "AdminErr"] = msg;
+        return RedirectToPage(new { id = Id });
+    }
+
     private async Task LoadVariantsAsync() =>
         VariantsView = await _mediator.Send(new GetProductVariantsQuery(Id));
 

@@ -7,6 +7,23 @@
 ---
 
 ## وضعیت فعلی
+**سیستم محصولات با تنوع — تکمیل صفحهٔ مرکزی «مدیریت موجودی» + CSV (این سشن).**
+
+### مدیریت موجودی (راهنما بخش ۳.۲) + CSV واریانت (بخش ۳.۱) — این سشن
+ادامهٔ کامیت `add new style for products` که فقط جریان مشتری (Detail device-flow + tray) و ادمینِ pool ویژگی را داشت. تسک‌های باقی‌مانده در این سشن تکمیل شد:
+- **Application `Features/Admin/Inventory`:** `GetInventoryOverviewQuery` (همهٔ واریانت‌ها + فیلتر محصول/برند(valueId)/مدل/وضعیت‌موجودی + مرتب‌سازی + صفحه‌بندی + شمارش موجودی‌کم + گزینه‌های برند)، `InventoryCommands` (`SetVariantStock` inline، `AdjustVariantStock` دلتا +/-، `BulkUpdateStock` با عملیات Set/Increase/Decrease/IncreasePercent)، `InventoryCsv` (`ExportInventoryCsvQuery` با BOM، `ImportInventoryCsvCommand` تطبیق با SKU، پارسر CSV با پشتیبانی گیومه).
+- **صفحهٔ ادمین `Areas/Admin/Pages/Inventory/Index`:** جدول یکپارچهٔ همه واریانت‌ها، نوار فیلتر (جستجو/برند/مدل/وضعیت)، نوار هشدار کمبود موجودی (لینک فیلتر سریع)، ویرایش inline موجودی (AJAX Enter/blur)، دکمه‌های سریع +/- (AJAX)، انتخاب چند ردیف + اعمال دسته‌ای، خروجی/ورودی CSV، مرتب‌سازی سرستون، صفحه‌بندی.
+- **`wwwroot/admin/inventory.js`:** AJAX با `__RequestVerificationToken`، toast، نقطهٔ رنگی وضعیت پویا، پرش دکمه، select-all + شمارندهٔ انتخاب.
+- **CSV per-product (بخش ۳.۱):** `ProductVariantCsv` (`ExportProductVariantsCsvQuery` ستون brand,model,color,stock,sku + `ImportProductVariantsCsvCommand` تطبیق SKU/ترکیب‌مقادیر + ساخت مقدارِ تازه در pool). در `Products/Edit` دکمه‌های دانلود/بارگذاری CSV + راهنمای ساختار افزوده شد.
+- **sidebar:** لینک «مدیریت موجودی» قبل از «ویژگی‌های متغیر» اضافه شد.
+- **CSS:** بخش inventory در `admin.css` (نوار هشدار، نوار دسته‌ای، نقطه‌های وضعیت با رنگ‌های استاندارد راهنما #2ecc71/#f39c12/#e74c3c، toast).
+- **بدون migration جدید** (روی schema موجود؛ enum `VariantAttributeKind` از کامیت قبلی).
+
+> توجه: بخش ۳.۱ (جدول واریانت per-product با ویرایش inline موجودی) از قبل در تب «گزینه‌ها/موجودی» صفحهٔ `Products/Edit` موجود بود؛ در این سشن فقط CSV به آن افزوده شد. بیلد/تست طبق درخواست کاربر اجرا نشد (dotnet در سندباکس نیست؛ سینتکس JS با `node --check` تأیید شد).
+
+---
+
+## وضعیت قبلی‌تر
 **مرحله: ۴ DONE — Phase 9 (پنل ادمین) کامل شد (کد نوشته شد؛ بیلد/تست طبق درخواست کاربر اجرا نشد).**
 
 ### مرحله ۴ (سفارش‌ها/کاربران/داشبورد آمار) — این سشن
