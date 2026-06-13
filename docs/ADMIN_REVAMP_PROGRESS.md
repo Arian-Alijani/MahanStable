@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F11 (نمایش محصول عمومی) ✅ تمام. قدم بعد = F12 (پولیش UI/UX کلی + تست یکپارچه + پاکسازی تب‌های مرده).**
+**فاز جاری: F12a (پاکسازی + Domestic-only audit + تست یکپارچه) ✅ تمام. قدم بعد = F12b (پولیش UI/UX کلی + داکیومنت نهایی).** F12 به دو زیرفاز شکست: **F12a** (مکانیکی: حذف/redirect/audit/build) سپس **F12b** (بصری: پولیش UI/UX + داکیومنت نهایی).
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -30,11 +30,52 @@
 - [x] **F9** — تب کاربران: جست‌وجو/جزئیات/حذف/ادمین‌کردن.
 - [x] **F10** — داشبورد گرافیکی: ۴ کارت آماری گرافیکی + نمودار SVG ۷روزه + سفارش‌های اخیر + موجودی کم.
 - [x] **F11** — نمایش محصول عمومی: تب ویژگی‌ها + انتخاب مدل/زیرمدل + تخفیف کارت.
-- [ ] **F12** — پولیش UI/UX + تست یکپارچه + پاکسازی تب‌های مرده.
+- [x] **F12a** — پاکسازی تب‌های مرده + Domestic-only audit + تست یکپارچه (build/JS/لینک‌ها).
+- [ ] **F12b** — پولیش UI/UX کلی پنل (یکدستی بصری) + آپدیت نهایی AI_CONTEXT/PROGRESS.
 
 ---
 
 ## دفتر ثبت (هر فاز: چه شد / فایل‌ها / لمس فروشگاه عمومی / migration / قدم بعد)
+
+### F12a — پاکسازی + Domestic-only audit + تست یکپارچه ✅ (2026-06-13)
+- **چه شد:** فاز F12 به دو زیرفاز شکست (F12a مکانیکی، F12b بصری). F12a کاملاً «بدون تغییر کد عملکردی» اجرا شد: فقط اسکن، audit، و تست. **نتیجه: پنل تمیز است؛ هیچ تب مرده، هیچ لینک شکسته، هیچ URL خارجی، build سبز.**
+- **اسکن سایدبار ↔ فایل‌های موجود (Step 1):**
+  - سایدبار ۶ تب اصلی + منوی «تنظیمات بیشتر» (Home) + بازگشت به فروشگاه (طبق F1). ✓
+  - فایل‌های `Areas/Admin/Pages/**` همه از سایدبار یا hub قابل دسترس‌اند:
+    - **مستقیم از سایدبار:** Index(داشبورد)، Products/{Index,Create,Edit}، Inventory/Index، Attributes/Index، Orders/{Index,Detail}، Users/{Index,Detail}، Home/* (از منوی فرعی).
+    - **از hub کنترل ویژگی:** Brands/*، Categories/*، Variants/*، Features/*، Tags/*، Shipping/*.
+  - **هیچ صفحهٔ یتیمی** (orphan) پیدا نشد. صفر مسیر مرده.
+- **هیچ حذف/redirect لازم نشد (Step 2):** تمام صفحات هنوز کاربرد دارند (یا از سایدبار یا از hub). تب مستقل «Categories» در سایدبار وجود ندارد (طبق F1 طراحی) ولی فایل‌های Categories/* در دسترس از hub باقی‌ماندن — این طبق روادمپ صحیح است.
+- **AdminActive keys (Step 3):** همهٔ ۳۵ صفحهٔ ادمین کلید صحیح دارند طبق نگاشت F1 (`dashboard|products|inventory|attributes|orders|users|home`). زیرصفحات Brands/Categories/Features/Tags/Variants/Shipping همگی `attributes`. هیچ ناهمخوانی.
+- **لینک‌های شکسته:** `grep -rEn 'href="/Admin/...'` و `asp-page=` کامل اسکن شد → همه به مسیر موجود اشاره می‌کنند. صفر لینک شکسته.
+- **Domestic-only audit (Step 4) — صفر URL خارجی:**
+  - `grep -REn 'https?://(cdn|cdnjs|jsdelivr|unpkg|fonts\.google|gstatic|googleapis|gravatar|fontawesome|bootstrap.*\.com|cloudflare)'` روی `Areas/Admin + wwwroot/admin + wwwroot/AdminPanel` = **خالی**.
+  - `<link href="https:` / `<script src="https:` / `integrity=` / `crossorigin=` / `preconnect` = **خالی**.
+  - تنها `https://` در ادمین: `xmlns="http://www.w3.org/2000/svg"` (namespace identifier استاندارد SVG، نه HTTP request — مجاز).
+  - فایل‌های فروشگاه عمومیِ لمس‌شده در F4/F11 (`Catalog/Detail.cshtml`, `product-detail.css`, `product-variant.js`, `Checkout/Index.cshtml`) همگی **پاک**.
+- **تست یکپارچه (Step 5) — DoD هر فاز ✓:**
+  - F1: سایدبار ۶ تب + منوی فرعی + بازگشت به فروشگاه ✓ (9 لینک در `_AdminSidebar`).
+  - F2: `ShippingMethod.cs` + Migration `20260613161644_Add_ShippingMethods` ✓.
+  - F3: `Attributes/Index.cshtml` (hub ۶ کارت) + `Shipping/{Index,Create,Edit}` ✓.
+  - F4: `PlaceOrderCommand.cs` در `Features/Cart/Commands/PlaceOrder/` ✓ (ShippingMethodId/Name در سفارش).
+  - F5a/F5b: `Products/{Create,Edit}` با تب‌بندی ۵تایی + wizard ✓.
+  - F6/F7/F8/F9/F10/F11: همه فایل‌های مرتبط موجود ✓.
+- **Build (Step 6):**
+  - `bash tools/build.sh` = **0 Error, 5 Warning** (همگی pre-existing از فاز‌های قبل: CS0108 روی 4 PageModel.Page() در Inventory/Orders/Users/Products + CS8321 محلی در Panel/Index). صفر warning جدید.
+  - `bash tools/check-js.sh` = **8 JS ok / 0 bad / 10 tests passed**.
+- **فایل‌های تغییریافته (فقط داکیومنت):**
+  - `docs/ADMIN_REVAMP_ROADMAP.md` — F12 به F12a + F12b شکست (جدول فازها + بخش‌های تفصیلی + ماتریس + فوتر).
+  - `docs/ADMIN_REVAMP_PROGRESS.md` — این رکورد + چک‌لیست.
+- **لمس فروشگاه عمومی:** هیچ. صفر تغییر کد.
+- **migration:** هیچ. صفر تغییر Domain/DB.
+- **بدهی منتقل‌شده به F12b** (همگی بصری/داکیومنتی، نه عملکردی):
+  1. زیرصفحات hub (Brands/Categories/Variants/Features/Tags/Shipping) فعلاً breadcrumb/«بازگشت به کنترل ویژگی» ندارند — برای UX بهتر در F12b اضافه شود.
+  2. مرور یکدستی بصری همهٔ ۶ تب (توکن رنگ، فاصله، badge، chip) در F12b.
+  3. آپدیت `docs/AI_CONTEXT.md` با نقشهٔ جدید پنل در F12b.
+  4. ورودی نهایی در `docs/PROGRESS.md` (changelog کلی پروژه) در F12b.
+- **قدم بعد = F12b** (پولیش UI/UX کلی + breadcrumb hub + داکیومنت نهایی).
+
+---
 
 ### F11 — نمایش محصول عمومی (تب ویژگی‌ها + بهبود UI صفحه محصول + تأیید تخفیف کارت) ✅ (2026-06-13)
 - **چه شد:** صفحهٔ محصول عمومی (`Catalog/Detail`) بازطراحی شد تا با ساختار جدید F5 هماهنگ باشد. تب «ویژگی‌ها» تکمیل شد، بخش اطلاعات محصول بهبود یافت، و موارد F11 که قبلاً پیاده شده بودند تأیید گردیدند.
@@ -50,7 +91,7 @@
 - **migration:** هیچ. صفر تغییر Domain/DB.
 - **build:** ✅ `bash tools/build.sh` = **0 Error** (5 warning همگی pre-existing). `bash tools/check-js.sh` = 8 ok / 10 tests passed. Domestic-only audit: صفر URL خارجی.
 - **PR:** https://github.com/Arian-Alijani/MahanStable/pull/30
-- **قدم بعد = F12** (پولیش UI/UX کلی + تست یکپارچه + پاکسازی تب‌های مرده + audit Domestic-only + آپدیت نهایی AI_CONTEXT).
+- **قدم بعد = F12a** (پاکسازی تب‌های مرده + Domestic-only audit + تست یکپارچه build/JS/لینک‌ها). سپس **F12b** (پولیش UI/UX کلی + آپدیت نهایی AI_CONTEXT).
 
 ---
 
