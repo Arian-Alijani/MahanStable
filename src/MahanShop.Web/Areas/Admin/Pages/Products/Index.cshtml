@@ -1,83 +1,267 @@
 @page
+@using MahanShop.Application.Features.Admin.Products
 @model MahanShop.Web.Areas.Admin.Pages.Products.IndexModel
 @{
     ViewData["Title"] = "محصولات";
     ViewData["AdminActive"] = "products";
+
+    // وضعیت موجودی → رنگ و برچسب ساده
+    string StockTone(int s) => s == 0 ? "is-out" : s <= 5 ? "is-low" : "is-in";
+    string StockLabel(int s) => s == 0 ? "ناموجود" : s <= 5 ? "موجودی کم" : "موجود";
+
+    // آیا فیلتری فعال است؟ (برای نمایش دکمهٔ پاک‌کردن)
+    bool HasFilter = !string.IsNullOrWhiteSpace(Model.Search)
+        || Model.CategoryId.HasValue || Model.BrandId.HasValue
+        || Model.Active != ProductActiveFilter.All || Model.Stock != ProductStockFilter.All
+        || Model.Featured.HasValue || Model.Sort != ProductSort.Newest;
+
+    string? BrandName(int id) => Model.Brands.FirstOrDefault(b => b.Id == id)?.Name;
+    string? CatName(int id) => Model.Categories.FirstOrDefault(c => c.Id == id)?.Name;
 }
 
-@if (TempData["AdminOk"] is string ok)
-{
-    <div class="alert alert-success">@ok</div>
-}
+@if (TempData["AdminOk"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["AdminErr"] is string err) { <div class="alert alert-danger">@err</div> }
 
-<div class="admin-toolbar">
-    <form method="get" class="admin-search admin-search--wide">
-        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="جستجو..." />
-        <select name="BrandId" class="form-select">
-            <option value="">همه برندها</option>
-            @foreach (var b in Model.Brands)
-            {
-                <option value="@b.Id" selected="@(Model.BrandId == b.Id)">@b.Name</option>
-            }
-        </select>
-        <select name="CategoryId" class="form-select">
-            <option value="">همه دسته‌ها</option>
+@* ===== سربرگ صفحه ===== *@
+<div class="prod-head">
+    <div>
+        <h1 class="admin-page-title">محصولات</h1>
+        <p class="admin-muted">همهٔ محصولات فروشگاه را اینجا ببینید، جست‌وجو و مدیریت کنید.</p>
+    </div>
+    <a asp-page="Create" class="btn btn-primary prod-add-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        افزودن محصول
+    </a>
+</div>
+
+@* ===== کارت‌های آمار (کلیک = فیلتر سریع) ===== *@
+<div class="prod-stats">
+    <a class="prod-stat @(Model.Active == ProductActiveFilter.All && Model.Stock == ProductStockFilter.All ? "is-active" : "")"
+       asp-route-Active="@ProductActiveFilter.All" asp-route-Stock="@ProductStockFilter.All">
+        <span class="prod-stat__label">همهٔ محصولات</span>
+        <span class="prod-stat__value">@Model.Result.Stats.Total</span>
+    </a>
+    <a class="prod-stat prod-stat--ok @(Model.Active == ProductActiveFilter.Active ? "is-active" : "")"
+       asp-route-Active="@ProductActiveFilter.Active">
+        <span class="prod-stat__label">فعال (در فروش)</span>
+        <span class="prod-stat__value">@Model.Result.Stats.Active</span>
+    </a>
+    <a class="prod-stat prod-stat--muted @(Model.Active == ProductActiveFilter.Inactive ? "is-active" : "")"
+       asp-route-Active="@ProductActiveFilter.Inactive">
+        <span class="prod-stat__label">غیرفعال (مخفی)</span>
+        <span class="prod-stat__value">@Model.Result.Stats.Inactive</span>
+    </a>
+    <a class="prod-stat prod-stat--warn @(Model.Stock == ProductStockFilter.Low ? "is-active" : "")"
+       asp-route-Stock="@ProductStockFilter.Low">
+        <span class="prod-stat__label">موجودی کم</span>
+        <span class="prod-stat__value">@Model.Result.Stats.LowStock</span>
+    </a>
+    <a class="prod-stat prod-stat--danger @(Model.Stock == ProductStockFilter.Out ? "is-active" : "")"
+       asp-route-Stock="@ProductStockFilter.Out">
+        <span class="prod-stat__label">ناموجود</span>
+        <span class="prod-stat__value">@Model.Result.Stats.OutOfStock</span>
+    </a>
+</div>
+
+@* ===== نوار فیلتر و جست‌وجو ===== *@
+<form method="get" class="prod-filterbar">
+    <div class="prod-search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="Search" value="@Model.Search" class="form-control"
+               placeholder="جست‌وجو بر اساس نام محصول، برند یا دسته..." autocomplete="off" />
+    </div>
+
+    <div class="prod-filters">
+        <select name="CategoryId" class="form-select" aria-label="دسته">
+            <option value="">همهٔ دسته‌ها</option>
             @foreach (var c in Model.Categories)
             {
                 <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@(new string('—', c.Depth)) @c.Name</option>
             }
         </select>
-        <button type="submit" class="btn btn-outline-secondary">فیلتر</button>
-    </form>
-    <a asp-page="Create" class="btn btn-primary">محصول جدید</a>
+        <select name="BrandId" class="form-select" aria-label="برند">
+            <option value="">همهٔ برندها</option>
+            @foreach (var b in Model.Brands)
+            {
+                <option value="@b.Id" selected="@(Model.BrandId == b.Id)">@b.Name</option>
+            }
+        </select>
+        <select name="Active" class="form-select" aria-label="وضعیت">
+            <option value="@ProductActiveFilter.All" selected="@(Model.Active == ProductActiveFilter.All)">هر وضعیتی</option>
+            <option value="@ProductActiveFilter.Active" selected="@(Model.Active == ProductActiveFilter.Active)">فقط فعال‌ها</option>
+            <option value="@ProductActiveFilter.Inactive" selected="@(Model.Active == ProductActiveFilter.Inactive)">فقط غیرفعال‌ها</option>
+        </select>
+        <select name="Stock" class="form-select" aria-label="موجودی">
+            <option value="@ProductStockFilter.All" selected="@(Model.Stock == ProductStockFilter.All)">هر موجودی</option>
+            <option value="@ProductStockFilter.InStock" selected="@(Model.Stock == ProductStockFilter.InStock)">موجود</option>
+            <option value="@ProductStockFilter.Low" selected="@(Model.Stock == ProductStockFilter.Low)">موجودی کم</option>
+            <option value="@ProductStockFilter.Out" selected="@(Model.Stock == ProductStockFilter.Out)">ناموجود</option>
+        </select>
+        <select name="Featured" class="form-select" aria-label="منتخب">
+            <option value="" selected="@(!Model.Featured.HasValue)">منتخب و عادی</option>
+            <option value="true" selected="@(Model.Featured == true)">فقط منتخب‌ها</option>
+            <option value="false" selected="@(Model.Featured == false)">فقط عادی‌ها</option>
+        </select>
+        <select name="Sort" class="form-select" aria-label="مرتب‌سازی">
+            <option value="@ProductSort.Newest" selected="@(Model.Sort == ProductSort.Newest)">جدیدترین</option>
+            <option value="@ProductSort.Oldest" selected="@(Model.Sort == ProductSort.Oldest)">قدیمی‌ترین</option>
+            <option value="@ProductSort.PriceDesc" selected="@(Model.Sort == ProductSort.PriceDesc)">گران‌ترین</option>
+            <option value="@ProductSort.PriceAsc" selected="@(Model.Sort == ProductSort.PriceAsc)">ارزان‌ترین</option>
+            <option value="@ProductSort.StockDesc" selected="@(Model.Sort == ProductSort.StockDesc)">موجودی بیشتر</option>
+            <option value="@ProductSort.StockAsc" selected="@(Model.Sort == ProductSort.StockAsc)">موجودی کمتر</option>
+            <option value="@ProductSort.TitleAsc" selected="@(Model.Sort == ProductSort.TitleAsc)">حروف الفبا</option>
+        </select>
+        <button type="submit" class="btn btn-primary">اعمال</button>
+        @if (HasFilter)
+        {
+            <a asp-page="Index" class="btn btn-outline-secondary">پاک‌کردن فیلترها</a>
+        }
+    </div>
+</form>
+
+@* ===== خلاصهٔ نتایج + چیپس‌های فیلتر فعال ===== *@
+<div class="prod-resultbar">
+    <span class="prod-count">@Model.Result.TotalCount محصول یافت شد</span>
+    <div class="prod-chips">
+        @if (!string.IsNullOrWhiteSpace(Model.Search))
+        {
+            <a class="prod-chip" asp-route-Search="" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">جست‌وجو: «@Model.Search» ✕</a>
+        }
+        @if (Model.CategoryId is int ci)
+        {
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">دسته: @CatName(ci) ✕</a>
+        }
+        @if (Model.BrandId is int bi)
+        {
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">برند: @BrandName(bi) ✕</a>
+        }
+        @if (Model.Active != ProductActiveFilter.All)
+        {
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@ProductActiveFilter.All" asp-route-Stock="@Model.Stock" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">@(Model.Active == ProductActiveFilter.Active ? "فعال" : "غیرفعال") ✕</a>
+        }
+        @if (Model.Stock != ProductStockFilter.All)
+        {
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@ProductStockFilter.All" asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">@(Model.Stock == ProductStockFilter.InStock ? "موجود" : Model.Stock == ProductStockFilter.Low ? "موجودی کم" : "ناموجود") ✕</a>
+        }
+        @if (Model.Featured.HasValue)
+        {
+            <a class="prod-chip" asp-route-Search="@Model.Search" asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId" asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock" asp-route-Featured="" asp-route-Sort="@Model.Sort">@(Model.Featured == true ? "منتخب" : "عادی") ✕</a>
+        }
+    </div>
 </div>
 
-<div class="admin-panel-box">
-    <table class="table admin-table">
+@* ===== جدول محصولات ===== *@
+<div class="admin-panel-box prod-tablebox">
+    <table class="table admin-table prod-table">
         <thead>
-            <tr><th>عکس</th><th>عنوان</th><th>برند</th><th>دسته</th><th>قیمت</th><th>موجودی</th><th>وضعیت</th><th></th></tr>
+            <tr>
+                <th>محصول</th>
+                <th>دسته / برند</th>
+                <th>قیمت (تومان)</th>
+                <th>موجودی</th>
+                <th>وضعیت</th>
+                <th class="prod-table__actions-h">مدیریت</th>
+            </tr>
         </thead>
         <tbody>
         @foreach (var p in Model.Result.Items)
         {
-            <tr>
+            <tr data-product="@p.Id">
+                @* محصول: عکس + عنوان + بج‌ها *@
                 <td>
-                    @if (!string.IsNullOrEmpty(p.PrimaryImageUrl))
-                    {
-                        <img src="@p.PrimaryImageUrl" alt="@p.Title" class="admin-thumb" />
-                    }
-                    else { <span class="admin-muted">—</span> }
+                    <div class="prod-cell">
+                        @if (!string.IsNullOrEmpty(p.PrimaryImageUrl))
+                        {
+                            <img src="@p.PrimaryImageUrl" alt="@p.Title" class="prod-thumb" />
+                        }
+                        else
+                        {
+                            <span class="prod-thumb prod-thumb--empty" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            </span>
+                        }
+                        <div class="prod-cell__main">
+                            <a asp-page="Edit" asp-route-id="@p.Id" class="prod-cell__title">@p.Title</a>
+                            <div class="prod-cell__badges">
+                                @if (p.IsFeatured) { <span class="prod-tag prod-tag--featured">منتخب</span> }
+                                @if (p.HasVariants) { <span class="prod-tag prod-tag--variant">@p.VariantCount گزینه</span> }
+                            </div>
+                        </div>
+                    </div>
                 </td>
+                @* دسته / برند *@
                 <td>
-                    @p.Title
-                    @if (p.IsFeatured) { <span class="badge bg-info">منتخب</span> }
-                    @if (p.HasVariants) { <span class="badge bg-light text-dark">واریانت</span> }
+                    <div class="prod-meta">
+                        <span>@p.CategoryName</span>
+                        <small class="admin-muted">@p.BrandName</small>
+                    </div>
                 </td>
-                <td>@p.BrandName</td>
-                <td>@p.CategoryName</td>
+                @* قیمت *@
                 <td>
                     @if (p.DiscountPrice is long d)
                     {
-                        <span class="admin-muted"><del>@p.Price.ToString("N0")</del></span><br /><strong>@d.ToString("N0")</strong>
+                        <div class="prod-price">
+                            <del class="prod-price__old">@p.Price.ToString("N0")</del>
+                            <strong class="prod-price__now">@d.ToString("N0")</strong>
+                        </div>
                     }
-                    else { @p.Price.ToString("N0") }
+                    else
+                    {
+                        <strong class="prod-price__now">@p.Price.ToString("N0")</strong>
+                    }
+                    @if (p.HasVariants) { <small class="admin-muted">از گزینه‌ها</small> }
                 </td>
-                <td>@p.Stock</td>
+                @* موجودی *@
                 <td>
-                    @if (p.IsActive) { <span class="badge bg-success">فعال</span> }
-                    else { <span class="badge bg-secondary">غیرفعال</span> }
+                    <span class="prod-stock @StockTone(p.EffectiveStock)">
+                        <span class="prod-stock__dot"></span>
+                        @p.EffectiveStock عدد
+                    </span>
+                    <small class="admin-muted prod-stock__label">@StockLabel(p.EffectiveStock)</small>
                 </td>
-                <td class="admin-actions">
-                    <a asp-page="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
-                    <form method="post" asp-page-handler="Toggle" asp-route-id="@p.Id" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-outline-warning">@(p.IsActive ? "غیرفعال" : "فعال")</button>
-                    </form>
+                @* وضعیت — سوییچ AJAX *@
+                <td>
+                    <label class="prod-switch" title="فعال/غیرفعال‌کردن محصول">
+                        <input type="checkbox" class="prod-toggle" data-product="@p.Id" @(p.IsActive ? "checked" : "") />
+                        <span class="prod-switch__slider"></span>
+                        <span class="prod-switch__text">@(p.IsActive ? "فعال" : "غیرفعال")</span>
+                    </label>
+                </td>
+                @* مدیریت *@
+                <td class="prod-table__actions">
+                    <a asp-page="Edit" asp-route-id="@p.Id" class="prod-action prod-action--edit" title="ویرایش کامل">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                        <span>ویرایش</span>
+                    </a>
+                    @if (p.HasVariants)
+                    {
+                        <a asp-page="/Inventory/Index" asp-route-Search="@p.Title" class="prod-action prod-action--stock" title="مدیریت موجودی گزینه‌ها">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                            <span>موجودی</span>
+                        </a>
+                    }
                 </td>
             </tr>
         }
         @if (Model.Result.Items.Count == 0)
         {
-            <tr><td colspan="8" class="admin-muted text-center">محصولی یافت نشد.</td></tr>
+            <tr>
+                <td colspan="6">
+                    <div class="prod-empty">
+                        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                        @if (HasFilter)
+                        {
+                            <p>با این فیلترها محصولی پیدا نشد.</p>
+                            <a asp-page="Index" class="btn btn-outline-secondary btn-sm">پاک‌کردن فیلترها</a>
+                        }
+                        else
+                        {
+                            <p>هنوز محصولی ثبت نشده است. اولین محصول خود را اضافه کنید.</p>
+                            <a asp-page="Create" class="btn btn-primary btn-sm">افزودن محصول</a>
+                        }
+                    </div>
+                </td>
+            </tr>
         }
         </tbody>
     </table>
@@ -89,8 +273,14 @@
             {
                 <a class="admin-pager__link @(i == Model.Result.Page ? "is-active" : "")"
                    asp-route-Page="@i" asp-route-Search="@Model.Search"
-                   asp-route-BrandId="@Model.BrandId" asp-route-CategoryId="@Model.CategoryId">@i</a>
+                   asp-route-CategoryId="@Model.CategoryId" asp-route-BrandId="@Model.BrandId"
+                   asp-route-Active="@Model.Active" asp-route-Stock="@Model.Stock"
+                   asp-route-Featured="@Model.Featured" asp-route-Sort="@Model.Sort">@i</a>
             }
         </nav>
     }
 </div>
+
+@section Scripts {
+    <script src="~/admin/products.js" asp-append-version="true"></script>
+}

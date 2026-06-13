@@ -1,6 +1,6 @@
 namespace MahanShop.Application.Features.Admin.Products;
 
-/// <summary>سطر لیست محصول در پنل ادمین.</summary>
+/// <summary>سطر لیست محصول در پنل ادمین (نمای جدید: موجودی واقعی + تعداد گزینه‌ها).</summary>
 public class ProductListItemDto
 {
     public int Id { get; set; }
@@ -15,9 +15,28 @@ public class ProductListItemDto
     public bool IsActive { get; set; }
     public bool IsFeatured { get; set; }
     public string? PrimaryImageUrl { get; set; }
+
+    /// <summary>تعداد گزینه‌های فروش (واریانت) محصول. برای محصول ساده = 0.</summary>
+    public int VariantCount { get; set; }
+
+    /// <summary>موجودی واقعی برای نمایش: محصول ساده = Stock خودش؛ محصول دارای گزینه = جمع موجودی گزینه‌ها.</summary>
+    public int EffectiveStock { get; set; }
+
+    /// <summary>کمترین قیمت قابل‌نمایش (با تخفیف) برای محصول. ساده = DiscountPrice ?? Price.</summary>
+    public long DisplayPrice { get; set; }
 }
 
-/// <summary>نتیجهٔ صفحه‌بندی‌شدهٔ لیست محصولات ادمین.</summary>
+/// <summary>کارت‌های خلاصهٔ بالای صفحهٔ محصولات.</summary>
+public class ProductStatsDto
+{
+    public int Total { get; set; }
+    public int Active { get; set; }
+    public int Inactive { get; set; }
+    public int LowStock { get; set; }   // 1..5
+    public int OutOfStock { get; set; } // 0
+}
+
+/// <summary>نتیجهٔ صفحه‌بندی‌شدهٔ لیست محصولات ادمین + آمار + گزینه‌های فیلتر.</summary>
 public class ProductListResult
 {
     public List<ProductListItemDto> Items { get; set; } = new();
@@ -25,6 +44,9 @@ public class ProductListResult
     public int Page { get; set; }
     public int PageSize { get; set; }
     public int TotalPages => PageSize > 0 ? (int)Math.Ceiling(TotalCount / (double)PageSize) : 0;
+
+    /// <summary>آمار کلی (مستقل از فیلتر صفحه) برای کارت‌های بالای صفحه.</summary>
+    public ProductStatsDto Stats { get; set; } = new();
 }
 
 /// <summary>یک تصویر گالری در فرم ویرایش.</summary>
