@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F4 (چک‌اوت: انتخاب نوع پست + snapshot امن + فاکتور) ✅ تمام. قدم بعد = F5 (بازطراحی فرم محصول ۱۱ بخش + چند‌مدلی + بدون‌برند).**
+**فاز جاری: F5a (بازطراحی فرم محصول: بخش‌های ۱-۹ + گالری + مشخصات‌فنی + بدون‌برند) ✅ تمام. قدم بعد = F5b (wizard چندمدلی — سشن بعدی).**
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -22,7 +22,8 @@
 - [x] **F2** — Domain `ShippingMethod` + snapshot روی Order + Migration `Add_ShippingMethods` + seed.
 - [x] **F3** — تب کنترل ویژگی یکپارچه (برند/مدل/ویژگی/تگ/دسته) + CRUD نوع پست.
 - [x] **F4** — چک‌اوت: انتخاب نوع پست + هزینهٔ سمت سرور + snapshot + فاکتور/سفارش نوع‌پست.
-- [ ] **F5** — فرم محصول ۱۱ بخش + چند‌مدلی + بدون‌برند.
+- [x] **F5a** — فرم محصول بخش‌های ۱-۹ + گالری: تب‌بندی ۵تایی + بدون‌برند + مشخصات‌فنی inline.
+- [ ] **F5b** — بخش ۱۰ «چند‌مدلی»: wizard واریانت کامل در تب «مدل‌ها». *(سشن بعدی)*
 - [ ] **F6** — تب محصولات: باکس آماری + جست‌وجو/فیلتر.
 - [ ] **F7** — تب موجودی: واریانت کامل، کنترل تفکیکی.
 - [ ] **F8** — تب سفارش‌ها: سورت/جست‌وجو/تغییر‌وضعیت/کدرهگیری/فاکتور.
@@ -34,6 +35,28 @@
 ---
 
 ## دفتر ثبت (هر فاز: چه شد / فایل‌ها / لمس فروشگاه عمومی / migration / قدم بعد)
+
+### F5a — فرم محصول بخش‌های ۱-۹ + گالری ✅ (2026-06-13)
+- **چه شد:** فرم افزودن/ویرایش محصول با تب‌بندی ۵تایی بازطراحی شد. بخش‌های ۱ تا ۹ (اطلاعات پایه / قیمت و موجودی / مشخصات فنی / مدل‌ها placeholder / تصاویر) پیاده شدند. گزینهٔ «بدون برند» به dropdown برند اضافه شد. مشخصات فنی با CRUD inline (افزودن Feature+مقدار / حذف) در تب Edit فعال است.
+- **تصمیم «بدون برند»:** Brand سیستمی با `Slug="no-brand"` و `IsActive=false` (seed idempotent) — `Product.BrandId` non-nullable باقی ماند، صفر migration لازم بود.
+- **تب‌بندی Edit:** اطلاعات پایه / قیمت و موجودی / مشخصات فنی / مدل‌ها و گزینه‌ها / تصاویر. پس از هر POST، `TempData["ReturnTab"]` تب مربوطه را نگه می‌دارد و JS آن را restore می‌کند.
+- **فایل‌های جدید:**
+  - `src/MahanShop.Application/Features/Admin/Products/ProductFeatureCommands.cs` — `AddProductFeatureCommand` (+ Validator: upsert — اگر همان Feature قبلاً ثبت شده مقدارش آپدیت می‌شود) + `DeleteProductFeatureCommand`.
+- **فایل‌های تغییر‌یافته:**
+  - `src/MahanShop.Infra.Data/Seed/DataSeeder.cs` — `SeedNoBrandAsync` idempotent (slug=no-brand، IsActive=false، DisplayOrder=9999). قبل از `SeedCatalogAsync` صدا می‌شود.
+  - `src/MahanShop.Application/Features/Admin/Products/ProductAdminDtos.cs` — `ProductFeatureItemDto` جدید + `List<ProductFeatureItemDto> Features` به `ProductEditDto`.
+  - `src/MahanShop.Application/Features/Admin/Products/GetProductForEditQuery.cs` — Include و projection مشخصات فنی (FeatureName + Value) به `ProductEditDto.Features`.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Products/Create.cshtml` — بازنویسی کامل: تب‌بندی ۵تایی (۲ تب فعال + ۳ تب disabled-until-save) + چیدمان بخش‌های ۱-۹ + dropdown برند با گزینهٔ «بدون برند» + فرم چندبرندی (wizard موجود حفظ).
+  - `src/MahanShop.Web/Areas/Admin/Pages/Products/Edit.cshtml` — بازنویسی کامل: تب‌بندی ۵تایی + تب «مشخصات فنی» با جدول inline و فرم افزودن + تب «تصاویر» + تب «مدل‌ها» (کد موجود واریانت/CSV منتقل شد) + JS hash-based tab restore.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Products/Edit.cshtml.cs` — بازنویسی: inject `GetFeaturesQuery` برای `AllFeatures` + `OnPostAddFeatureAsync` + `OnPostDeleteFeatureAsync` + `TempData["ReturnTab"]` روی همهٔ handlerها + `ProductFeatures`/`AllFeatures` properties.
+  - `src/MahanShop.Web/wwwroot/admin/admin.css` — افزودن: `.prod-form-tabs`, `.prod-form-tab`, `.prod-form-pane`, `.feature-table`, `.feature-add-row`.
+  - `docs/ADMIN_REVAMP_ROADMAP.md` — F5 به **F5a + F5b** تقسیم شد؛ جدول فازها، ماتریس خواسته‌ها، و شرح کامل هر دو فاز اضافه شد.
+- **لمس فروشگاه عمومی:** هیچ. فقط `Areas/Admin/Products`, `Features/Admin/Products`, `Infra.Data/Seed`.
+- **migration:** هیچ. Brand seed با `IsActive=false` — Domain/DB بدون تغییر ساختاری.
+- **build:** ✅ `dotnet build MahanShop.sln` = **0 Error** (۵ warning همگی pre-existing از فازهای قبل). Domestic-only audit: صفر URL خارجی.
+- **قدم بعد = F5b** (سشن بعدی) — تب «مدل‌ها» در فرم کامل شود: wizard انتخاب مدل→زیرمدل با `product-wizard.js` هماهنگ، `CreateMultiBrandProductCommand` بررسی، تب «مدل‌ها» در Edit (موجودی/افزودن گزینه) از placeholder به عملکرد کامل.
+
+
 
 ### F0 — برنامه‌ریزی ✅ (2026-06-13)
 - بازرسی کامل وضعیت فعلی انجام شد: ۱۱ تب سایدبار، ۲۱ entity، ۶ enum، Features/Admin (۱۴ زیرپوشه)، Areas/Admin (۳۲ صفحه).

@@ -19,6 +19,7 @@ public static class DataSeeder
     public static async Task SeedAsync(MyDbContext db)
     {
         await db.Database.MigrateAsync();
+        await SeedNoBrandAsync(db);
         await SeedCatalogAsync(db);
         await SeedHomeAsync(db);
         await SeedShippingMethodsAsync(db);
@@ -66,6 +67,23 @@ public static class DataSeeder
             user.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
         }
+    }
+
+    /// <summary>
+    /// Brand سیستمیِ «بدون برند» را تضمین می‌کند (slug=no-brand، IsActive=false تا در لیست برند عمومی نیاید).
+    /// idempotent: اگر قبلاً ساخته شده رد می‌شود.
+    /// </summary>
+    private static async Task SeedNoBrandAsync(MyDbContext db)
+    {
+        if (await db.Brands.AnyAsync(b => b.Slug == "no-brand")) return;
+        db.Brands.Add(new Brand
+        {
+            Name = "بدون برند",
+            Slug = "no-brand",
+            IsActive = false,   // در فیلتر کاتالوگ/لیست عمومی نمایش داده نمی‌شود
+            DisplayOrder = 9999
+        });
+        await db.SaveChangesAsync();
     }
 
     private static async Task SeedCatalogAsync(MyDbContext db)

@@ -1,6 +1,7 @@
 using FluentValidation;
 using MahanShop.Application.Features.Admin.Brands;
 using MahanShop.Application.Features.Admin.Categories;
+using MahanShop.Application.Features.Admin.Features;
 using MahanShop.Application.Features.Admin.Products;
 using MahanShop.Application.Features.Admin.ProductVariants;
 using MahanShop.Web.Services;
@@ -11,7 +12,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace MahanShop.Web.Areas.Admin.Pages.Products;
 
-/// <summary>ویرایش محصول + مدیریت گالری عکس (افزودن/حذف/تعیین اصلی).</summary>
+/// <summary>ویرایش محصول: اطلاعات پایه + قیمت/موجودی + مشخصات‌فنی + گزینه‌ها + گالری عکس.</summary>
 public class EditModel : PageModel
 {
     private readonly IMediator _mediator;
@@ -37,13 +38,22 @@ public class EditModel : PageModel
     [BindProperty] public int BrandId { get; set; }
     [BindProperty] public int CategoryId { get; set; }
 
+    // آپلود تصویر
     [BindProperty] public IFormFile? ImageFile { get; set; }
     [BindProperty] public string? ImageAlt { get; set; }
+
+    // افزودن مشخصهٔ فنی
+    [BindProperty] public int NewFeatureId { get; set; }
+    [BindProperty] public string? NewFeatureValue { get; set; }
 
     public List<ProductImageDto> Images { get; private set; } = new();
     public List<BrandListItemDto> Brands { get; private set; } = new();
     public List<CategoryOptionDto> Categories { get; private set; } = new();
     public ProductVariantsViewDto? VariantsView { get; private set; }
+    /// <summary>مشخصات فنی ثبت‌شده برای این محصول.</summary>
+    public List<ProductFeatureItemDto> ProductFeatures { get; private set; } = new();
+    /// <summary>همهٔ Feature موجود برای dropdown افزودن مشخصه.</summary>
+    public List<FeatureListItemDto> AllFeatures { get; private set; } = new();
 
     // فرم گزینه/موجودی
     [BindProperty] public int VariantId { get; set; }
@@ -66,7 +76,7 @@ public class EditModel : PageModel
         return Page();
     }
 
-    // ذخیرهٔ اطلاعات پایه
+    // ذخیرهٔ اطلاعات پایه / قیمت / وضعیت
     public async Task<IActionResult> OnPostSaveAsync()
     {
         try
@@ -85,6 +95,40 @@ public class EditModel : PageModel
         }
     }
 
+    // افزودن مشخصهٔ فنی
+    public async Task<IActionResult> OnPostAddFeatureAsync()
+    {
+        try
+        {
+            await _mediator.Send(new AddProductFeatureCommand(Id, NewFeatureId, NewFeatureValue ?? ""));
+            TempData["AdminOk"] = "مشخصه ثبت شد.";
+            TempData["ReturnTab"] = "ep-features";
+        }
+        catch (ValidationException ex)
+        {
+            TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا.";
+            TempData["ReturnTab"] = "ep-features";
+        }
+        return RedirectToPage(new { id = Id });
+    }
+
+    // حذف مشخصهٔ فنی
+    public async Task<IActionResult> OnPostDeleteFeatureAsync(int productFeatureId)
+    {
+        try
+        {
+            await _mediator.Send(new DeleteProductFeatureCommand(productFeatureId));
+            TempData["AdminOk"] = "مشخصه حذف شد.";
+            TempData["ReturnTab"] = "ep-features";
+        }
+        catch (ValidationException ex)
+        {
+            TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا.";
+            TempData["ReturnTab"] = "ep-features";
+        }
+        return RedirectToPage(new { id = Id });
+    }
+
     // افزودن عکس به گالری
     public async Task<IActionResult> OnPostAddImageAsync()
     {
@@ -92,24 +136,28 @@ public class EditModel : PageModel
         if (!r.Success)
         {
             TempData["AdminErr"] = r.Error;
+            TempData["ReturnTab"] = "ep-images";
             return RedirectToPage(new { id = Id });
         }
         await _mediator.Send(new AddProductImageCommand(Id, r.WebPath!, ImageAlt));
-        TempData["AdminOk"] = "عکس اضافه شد.";
+        TempData["AdminOk"] = "تصویر اضافه شد.";
+        TempData["ReturnTab"] = "ep-images";
         return RedirectToPage(new { id = Id });
     }
 
     public async Task<IActionResult> OnPostDeleteImageAsync(int imageId)
     {
         await _mediator.Send(new DeleteProductImageCommand(imageId));
-        TempData["AdminOk"] = "عکس حذف شد.";
+        TempData["AdminOk"] = "تصویر حذف شد.";
+        TempData["ReturnTab"] = "ep-images";
         return RedirectToPage(new { id = Id });
     }
 
     public async Task<IActionResult> OnPostSetMainImageAsync(int imageId)
     {
         await _mediator.Send(new SetMainProductImageCommand(imageId));
-        TempData["AdminOk"] = "عکس اصلی تعیین شد.";
+        TempData["AdminOk"] = "تصویر اصلی تعیین شد.";
+        TempData["ReturnTab"] = "ep-images";
         return RedirectToPage(new { id = Id });
     }
 
@@ -128,6 +176,7 @@ public class EditModel : PageModel
         {
             TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا.";
         }
+        TempData["ReturnTab"] = "ep-variants";
         return RedirectToPage(new { id = Id });
     }
 
@@ -145,6 +194,7 @@ public class EditModel : PageModel
         {
             TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا.";
         }
+        TempData["ReturnTab"] = "ep-variants";
         return RedirectToPage(new { id = Id });
     }
 
@@ -160,6 +210,7 @@ public class EditModel : PageModel
         {
             TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? "خطا.";
         }
+        TempData["ReturnTab"] = "ep-variants";
         return RedirectToPage(new { id = Id });
     }
 
@@ -167,6 +218,7 @@ public class EditModel : PageModel
     {
         await _mediator.Send(new ToggleVariantActiveCommand(variantId));
         TempData["AdminOk"] = "وضعیت گزینه تغییر کرد.";
+        TempData["ReturnTab"] = "ep-variants";
         return RedirectToPage(new { id = Id });
     }
 
@@ -174,6 +226,7 @@ public class EditModel : PageModel
     {
         await _mediator.Send(new DeleteProductVariantCommand(variantId));
         TempData["AdminOk"] = "گزینه حذف شد.";
+        TempData["ReturnTab"] = "ep-variants";
         return RedirectToPage(new { id = Id });
     }
 
@@ -190,11 +243,13 @@ public class EditModel : PageModel
         if (csvFile is null || csvFile.Length == 0)
         {
             TempData["AdminErr"] = "فایلی انتخاب نشده است.";
+            TempData["ReturnTab"] = "ep-variants";
             return RedirectToPage(new { id = Id });
         }
         if (csvFile.Length > 5 * 1024 * 1024)
         {
             TempData["AdminErr"] = "حجم فایل بیش از حد مجاز (۵ مگابایت) است.";
+            TempData["ReturnTab"] = "ep-variants";
             return RedirectToPage(new { id = Id });
         }
 
@@ -206,6 +261,7 @@ public class EditModel : PageModel
         var msg = $"ساخته‌شده: {result.Created} | به‌روزرسانی: {result.Updated} | رد‌شده: {result.Skipped}";
         if (result.Errors.Count > 0) msg += " — " + string.Join("؛ ", result.Errors.Take(3));
         TempData[(result.Created + result.Updated) > 0 ? "AdminOk" : "AdminErr"] = msg;
+        TempData["ReturnTab"] = "ep-variants";
         return RedirectToPage(new { id = Id });
     }
 
@@ -218,13 +274,15 @@ public class EditModel : PageModel
         Description = p.Description; Price = p.Price; DiscountPrice = p.DiscountPrice; Stock = p.Stock;
         HasVariants = p.HasVariants; IsActive = p.IsActive; IsFeatured = p.IsFeatured;
         MetaTitle = p.MetaTitle; MetaDescription = p.MetaDescription;
-        BrandId = p.BrandId; CategoryId = p.CategoryId; Images = p.Images;
+        BrandId = p.BrandId; CategoryId = p.CategoryId;
+        Images = p.Images;
+        ProductFeatures = p.Features;
     }
 
     private async Task ReloadAsync()
     {
         var p = await _mediator.Send(new GetProductForEditQuery(Id));
-        if (p is not null) Images = p.Images;
+        if (p is not null) { Images = p.Images; ProductFeatures = p.Features; }
         await LoadOptionsAsync();
         await LoadVariantsAsync();
     }
@@ -233,5 +291,6 @@ public class EditModel : PageModel
     {
         Brands = await _mediator.Send(new GetBrandsQuery());
         Categories = await _mediator.Send(new GetCategoryOptionsQuery());
+        AllFeatures = await _mediator.Send(new GetFeaturesQuery());
     }
 }

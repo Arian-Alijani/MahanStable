@@ -59,6 +59,15 @@ public class ProductImageDto
     public int DisplayOrder { get; set; }
 }
 
+/// <summary>یک ردیف مشخصهٔ فنی روی محصول (برای نمایش در فرم ویرایش).</summary>
+public class ProductFeatureItemDto
+{
+    public int Id { get; set; }           // ProductFeature.Id (برای حذف)
+    public int FeatureId { get; set; }
+    public string FeatureName { get; set; } = null!;
+    public string Value { get; set; } = null!;
+}
+
 /// <summary>داده محصول برای فرم ویرایش/ایجاد.</summary>
 public class ProductEditDto
 {
@@ -78,4 +87,6 @@ public class ProductEditDto
     public int BrandId { get; set; }
     public int CategoryId { get; set; }
     public List<ProductImageDto> Images { get; set; } = new();
+    /// <summary>مشخصات فنی ثبت‌شده برای این محصول.</summary>
+    public List<ProductFeatureItemDto> Features { get; set; } = new();
 }

@@ -559,3 +559,46 @@
     vertical-align: middle;
 }
 .wizard-brand-list { max-height: 320px; overflow-y: auto; }
+
+/* ════════════════════════════════════════════════════════
+   تب‌بندی فرم محصول (F5a)
+   ════════════════════════════════════════════════════════ */
+.prod-form-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+.prod-form-tab {
+    padding: 8px 18px;
+    border: none;
+    background: none;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    border-radius: 4px 4px 0 0;
+    transition: color .15s, border-color .15s, background .15s;
+    font-family: inherit;
+}
+.prod-form-tab:hover { background: #f8fafc; color: #0f172a; }
+.prod-form-tab.active {
+    color: var(--admin-primary, #6366f1);
+    border-bottom-color: var(--admin-primary, #6366f1);
+    background: #fff;
+}
+.prod-form-tab.disabled { color: #cbd5e1; cursor: not-allowed; }
+.prod-form-pane { display: none; }
+.prod-form-pane.active { display: block; }
+
+/* جدول مشخصات فنی inline */
+.feature-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+.feature-table th { font-size: 13px; color: #64748b; font-weight: 600; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
+.feature-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 14px; }
+.feature-table tr:last-child td { border-bottom: none; }
+.feature-add-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.feature-add-row .form-select, .feature-add-row .form-control { flex: 1 1 160px; }
+.feature-add-row .btn { flex: 0 0 auto; }

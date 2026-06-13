@@ -5,245 +5,398 @@
     ViewData["AdminActive"] = "products";
 }
 
-@if (TempData["AdminOk"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["AdminOk"] is string ok)   { <div class="alert alert-success">@ok</div> }
 @if (TempData["AdminErr"] is string err) { <div class="alert alert-danger">@err</div> }
 
 <div class="admin-panel-box admin-form">
-    <div asp-validation-summary="All" class="text-danger"></div>
-    <form method="post" asp-page-handler="Save">
-        <input type="hidden" asp-for="Id" />
-        <div class="mb-3">
-            <label class="form-label">عنوان</label>
-            <input asp-for="Title" class="form-control" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">نامک</label>
-            <input asp-for="Slug" class="form-control" />
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">برند</label>
-                <select asp-for="BrandId" class="form-select">
-                    <option value="">— انتخاب برند —</option>
-                    @foreach (var b in Model.Brands)
-                    {
-                        <option value="@b.Id" selected="@(Model.BrandId == b.Id)">@b.Name</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">دسته</label>
-                <select asp-for="CategoryId" class="form-select">
-                    <option value="">— انتخاب دسته —</option>
-                    @foreach (var c in Model.Categories)
-                    {
-                        <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@(new string('—', c.Depth)) @c.Name</option>
-                    }
-                </select>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label class="form-label">قیمت (تومان)</label>
-                <input asp-for="Price" type="number" class="form-control" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">قیمت با تخفیف</label>
-                <input asp-for="DiscountPrice" type="number" class="form-control" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">موجودی</label>
-                <input asp-for="Stock" type="number" class="form-control" />
-            </div>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">توضیح کوتاه</label>
-            <input asp-for="ShortDescription" class="form-control" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">توضیحات</label>
-            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">عنوان متا</label>
-                <input asp-for="MetaTitle" class="form-control" />
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">توضیح متا</label>
-                <input asp-for="MetaDescription" class="form-control" />
-            </div>
-        </div>
-        <div class="form-check mb-2">
-            <input asp-for="IsActive" class="form-check-input" />
-            <label class="form-check-label">فعال</label>
-        </div>
-        <div class="form-check mb-2">
-            <input asp-for="IsFeatured" class="form-check-input" />
-            <label class="form-check-label">محصول منتخب</label>
-        </div>
-        <div class="form-check mb-3">
-            <input asp-for="HasVariants" class="form-check-input" />
-            <label class="form-check-label">دارای واریانت</label>
-        </div>
-        <div class="admin-form__actions">
-            <button type="submit" class="btn btn-primary">ذخیره</button>
-            <a asp-page="Index" class="btn btn-outline-secondary">بازگشت</a>
-        </div>
-    </form>
-</div>
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-<div class="admin-panel-box admin-form">
-    <h3 class="admin-section-title">گالری عکس</h3>
-    <div class="admin-gallery">
-        @foreach (var img in Model.Images)
-        {
-            <div class="admin-gallery__item">
-                <img src="@img.Url" alt="@img.Alt" />
-                @if (img.IsMain) { <span class="badge bg-primary admin-gallery__main">اصلی</span> }
-                <div class="admin-gallery__actions">
-                    @if (!img.IsMain)
-                    {
-                        <form method="post" asp-page-handler="SetMainImage" asp-route-imageId="@img.Id">
-                            <input type="hidden" asp-for="Id" />
-                            <button type="submit" class="btn btn-sm btn-outline-primary">اصلی</button>
-                        </form>
-                    }
-                    <form method="post" asp-page-handler="DeleteImage" asp-route-imageId="@img.Id">
-                        <input type="hidden" asp-for="Id" />
-                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
-                    </form>
-                </div>
-            </div>
-        }
-        @if (Model.Images.Count == 0)
-        {
-            <p class="admin-muted">هنوز عکسی اضافه نشده است.</p>
-        }
+    <!-- ════ تب‌ها ════ -->
+    <div class="prod-form-tabs" id="edit-tabs">
+        <button type="button" class="prod-form-tab active" data-pane="ep-basic">اطلاعات پایه</button>
+        <button type="button" class="prod-form-tab" data-pane="ep-price">قیمت و موجودی</button>
+        <button type="button" class="prod-form-tab" data-pane="ep-features">مشخصات فنی</button>
+        <button type="button" class="prod-form-tab" data-pane="ep-variants">مدل‌ها و گزینه‌ها</button>
+        <button type="button" class="prod-form-tab" data-pane="ep-images">تصاویر</button>
     </div>
 
-    <form method="post" asp-page-handler="AddImage" enctype="multipart/form-data" class="admin-gallery__upload">
-        <input type="hidden" asp-for="Id" />
-        <input type="file" asp-for="ImageFile" accept="image/*" class="form-control" />
-        <input type="text" asp-for="ImageAlt" class="form-control" placeholder="متن جایگزین (اختیاری)" />
-        <button type="submit" class="btn btn-success">افزودن عکس</button>
-    </form>
-</div>
-
-@if (Model.VariantsView is not null)
-{
-    <div class="admin-panel-box admin-form">
-        <div class="admin-panel-box__head">
-            <h3 class="admin-section-title">گزینه‌ها و موجودی</h3>
-            <div class="admin-toolbar__actions">
-                <a class="btn btn-sm btn-outline-secondary" asp-page-handler="ExportVariants" asp-route-id="@Model.Id">دانلود CSV</a>
-                <form method="post" asp-page-handler="ImportVariants" enctype="multipart/form-data" class="admin-inline-form">
-                    <input type="hidden" asp-for="Id" />
-                    <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" required />
-                    <button type="submit" class="btn btn-sm btn-outline-success">بارگذاری CSV</button>
-                </form>
+    <!-- ════ تب: اطلاعات پایه ════ -->
+    <div class="prod-form-pane active" id="ep-basic">
+        <form method="post" asp-page-handler="Save">
+            <input type="hidden" asp-for="Id" />
+            <div class="mb-3">
+                <label class="form-label">عنوان محصول <span class="text-danger">*</span></label>
+                <input asp-for="Title" class="form-control" />
             </div>
-        </div>
-        <p class="admin-muted" style="font-size:13px;">ساختار CSV: <code>brand,model,color,stock,sku</code> — تطبیق با SKU یا ترکیب برند/مدل/رنگ؛ مقادیر تازه ساخته می‌شوند.</p>
-        @if (!Model.VariantsView.HasVariants)
-        {
-            <p class="admin-muted">این محصول «ساده» است (تیک «دارای واریانت» را بزنید و ذخیره کنید تا گزینه‌ها فعال شوند). در حالت ساده موجودی از خود محصول خوانده می‌شود.</p>
-        }
+            <div class="mb-3">
+                <label class="form-label">نامک (Slug)</label>
+                <input asp-for="Slug" class="form-control" dir="ltr" />
+                <div class="form-text admin-muted">خالی بگذارید تا از عنوان ساخته شود.</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">دسته‌بندی <span class="text-danger">*</span></label>
+                    <select asp-for="CategoryId" class="form-select">
+                        <option value="">— انتخاب دسته —</option>
+                        @foreach (var c in Model.Categories)
+                        {
+                            <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@(new string('—', c.Depth)) @c.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">برند</label>
+                    <select asp-for="BrandId" class="form-select">
+                        <option value="">— انتخاب برند —</option>
+                        @foreach (var b in Model.Brands)
+                        {
+                            <option value="@b.Id" selected="@(Model.BrandId == b.Id)">@b.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">توضیح کوتاه</label>
+                <input asp-for="ShortDescription" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">توضیحات کامل</label>
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">عنوان متا (SEO)</label>
+                    <input asp-for="MetaTitle" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">توضیح متا (SEO)</label>
+                    <input asp-for="MetaDescription" class="form-control" />
+                </div>
+            </div>
+            <div class="d-flex gap-4 mb-3">
+                <div class="form-check">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label class="form-check-label">فعال</label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="IsFeatured" class="form-check-input" />
+                    <label class="form-check-label">محصول منتخب</label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="HasVariants" class="form-check-input" />
+                    <label class="form-check-label">دارای واریانت (چندمدلی)</label>
+                </div>
+            </div>
+            <div class="admin-form__actions">
+                <button type="submit" class="btn btn-primary">ذخیره</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">بازگشت</a>
+            </div>
+        </form>
+    </div>
 
-        <table class="table admin-table">
-            <thead>
-                <tr><th>گزینه</th><th>کد (Sku)</th><th>قیمت</th><th>تخفیف</th><th>موجودی</th><th>وضعیت</th><th></th></tr>
-            </thead>
-            <tbody>
-            @foreach (var v in Model.VariantsView.Variants)
-            {
-                <tr>
-                    <td>@(string.IsNullOrEmpty(v.Title) ? "—" : v.Title)</td>
-                    <td>@(v.Sku ?? "—")</td>
-                    <td>@v.Price.ToString("N0")</td>
-                    <td>@(v.DiscountPrice?.ToString("N0") ?? "—")</td>
-                    <td>
-                        <form method="post" asp-page-handler="QuickStock" asp-route-variantId="@v.Id" class="admin-inline-form">
-                            <input type="hidden" asp-for="Id" />
-                            <input type="number" name="QuickStock" value="@v.Stock" class="form-control form-control-sm admin-stock-input" min="0" />
-                            <button type="submit" class="btn btn-sm btn-outline-primary">ثبت</button>
-                        </form>
-                    </td>
-                    <td>
-                        @if (v.IsActive) { <span class="badge bg-success">فعال</span> }
-                        else { <span class="badge bg-secondary">غیرفعال</span> }
-                    </td>
-                    <td class="admin-actions">
-                        <form method="post" asp-page-handler="ToggleVariant" asp-route-variantId="@v.Id" class="d-inline">
-                            <input type="hidden" asp-for="Id" />
-                            <button type="submit" class="btn btn-sm btn-outline-warning">@(v.IsActive ? "غیرفعال" : "فعال")</button>
-                        </form>
-                        <form method="post" asp-page-handler="DeleteVariant" asp-route-variantId="@v.Id" class="d-inline">
-                            <input type="hidden" asp-for="Id" />
-                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف شود؟')">حذف</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-            @if (Model.VariantsView.Variants.Count == 0)
-            {
-                <tr><td colspan="7" class="admin-muted text-center">هنوز گزینه‌ای ثبت نشده است.</td></tr>
-            }
-            </tbody>
-        </table>
+    <!-- ════ تب: قیمت و موجودی ════ -->
+    <div class="prod-form-pane" id="ep-price">
+        <form method="post" asp-page-handler="Save">
+            <input type="hidden" asp-for="Id" />
+            <!-- hidden fields برای فیلدهای لازم validator -->
+            <input type="hidden" asp-for="Title" />
+            <input type="hidden" asp-for="Slug" />
+            <input type="hidden" asp-for="BrandId" />
+            <input type="hidden" asp-for="CategoryId" />
+            <input type="hidden" asp-for="IsActive" />
+            <input type="hidden" asp-for="IsFeatured" />
+            <input type="hidden" asp-for="HasVariants" />
+            <input type="hidden" asp-for="MetaTitle" />
+            <input type="hidden" asp-for="MetaDescription" />
+            <input type="hidden" asp-for="ShortDescription" />
+            <input type="hidden" asp-for="Description" />
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">قیمت (تومان) <span class="text-danger">*</span></label>
+                    <input asp-for="Price" type="number" min="0" class="form-control" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">قیمت با تخفیف (اختیاری)</label>
+                    <input asp-for="DiscountPrice" type="number" min="0" class="form-control" />
+                    <div class="form-text admin-muted">باید کمتر از قیمت اصلی باشد.</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">موجودی</label>
+                    <input asp-for="Stock" type="number" min="0" class="form-control" />
+                    @if (Model.HasVariants)
+                    {
+                        <div class="form-text admin-muted">محصول چندمدلی — موجودی از گزینه‌ها خوانده می‌شود.</div>
+                    }
+                </div>
+            </div>
+            <div class="admin-form__actions">
+                <button type="submit" class="btn btn-primary">ذخیره</button>
+            </div>
+        </form>
+    </div>
 
-        <h4 class="admin-section-title">افزودن گزینه جدید</h4>
-        @if (Model.VariantsView.Attributes.Count == 0)
+    <!-- ════ تب: مشخصات فنی ════ -->
+    <div class="prod-form-pane" id="ep-features">
+        <h4 class="admin-section-title mb-3">مشخصات فنی محصول</h4>
+        <p class="admin-muted" style="font-size:13px;">
+            مشخصات فنی (مثل RAM، حافظه، باتری) که در تب «ویژگی‌ها» صفحهٔ محصول نمایش داده می‌شوند.
+            کلیدها از بخش «کنترل ویژگی → مشخصات فنی» مدیریت می‌شوند.
+        </p>
+
+        @if (Model.ProductFeatures.Count > 0)
         {
-            <p class="admin-muted">ابتدا از بخش «ویژگی‌های متغیر» ویژگی و مقادیر بسازید.</p>
+            <table class="feature-table mb-3">
+                <thead>
+                    <tr>
+                        <th>مشخصه</th>
+                        <th>مقدار</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in Model.ProductFeatures)
+                    {
+                        <tr>
+                            <td>@f.FeatureName</td>
+                            <td>@f.Value</td>
+                            <td>
+                                <form method="post" asp-page-handler="DeleteFeature" asp-route-productFeatureId="@f.Id" class="d-inline">
+                                    <input type="hidden" asp-for="Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('این مشخصه حذف شود؟')">حذف</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         }
         else
         {
-            <form method="post" asp-page-handler="AddVariant">
+            <p class="admin-muted">هنوز مشخصه‌ای ثبت نشده است.</p>
+        }
+
+        <h5 class="mb-2" style="font-size:14px; font-weight:600;">افزودن مشخصه</h5>
+        @if (Model.AllFeatures.Count == 0)
+        {
+            <p class="admin-muted">
+                ابتدا از بخش
+                <a asp-area="Admin" asp-page="/Attributes/Index">کنترل ویژگی → مشخصات فنی</a>
+                کلیدهای مشخصه را تعریف کنید.
+            </p>
+        }
+        else
+        {
+            <form method="post" asp-page-handler="AddFeature">
                 <input type="hidden" asp-for="Id" />
-                <div class="row">
-                    @foreach (var attr in Model.VariantsView.Attributes)
-                    {
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">@attr.Name</label>
-                            <select name="VariantValueIds" class="form-select">
-                                <option value="">—</option>
-                                @foreach (var val in attr.Values)
-                                {
-                                    <option value="@val.Id">@val.Value</option>
-                                }
-                            </select>
-                        </div>
-                    }
+                <div class="feature-add-row">
+                    <select name="NewFeatureId" class="form-select" required>
+                        <option value="">— انتخاب مشخصه —</option>
+                        @foreach (var f in Model.AllFeatures)
+                        {
+                            <option value="@f.Id">@f.Name</option>
+                        }
+                    </select>
+                    <input type="text" name="NewFeatureValue" class="form-control"
+                           placeholder="مقدار (مثلاً: ۸ گیگابایت)" required maxlength="500" />
+                    <button type="submit" class="btn btn-success">افزودن</button>
                 </div>
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">کد (Sku)</label>
-                        <input asp-for="VariantSku" class="form-control" />
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">قیمت (تومان)</label>
-                        <input asp-for="VariantPrice" type="number" class="form-control" />
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label">تخفیف</label>
-                        <input asp-for="VariantDiscountPrice" type="number" class="form-control" />
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label">موجودی</label>
-                        <input asp-for="VariantStock" type="number" class="form-control" />
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label">ترتیب</label>
-                        <input asp-for="VariantDisplayOrder" type="number" class="form-control" />
-                    </div>
-                </div>
-                <div class="form-check mb-3">
-                    <input asp-for="VariantIsActive" class="form-check-input" />
-                    <label class="form-check-label">فعال</label>
-                </div>
-                <button type="submit" class="btn btn-success">افزودن گزینه</button>
             </form>
         }
     </div>
+
+    <!-- ════ تب: مدل‌ها و گزینه‌ها ════ -->
+    <div class="prod-form-pane" id="ep-variants">
+        @if (Model.VariantsView is not null)
+        {
+            <div class="admin-panel-box__head mb-3">
+                <h3 class="admin-section-title">گزینه‌ها و موجودی</h3>
+                <div class="admin-toolbar__actions">
+                    <a class="btn btn-sm btn-outline-secondary" asp-page-handler="ExportVariants" asp-route-id="@Model.Id">دانلود CSV</a>
+                    <form method="post" asp-page-handler="ImportVariants" enctype="multipart/form-data" class="admin-inline-form">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="file" name="csvFile" accept=".csv,text/csv" class="form-control form-control-sm" required />
+                        <button type="submit" class="btn btn-sm btn-outline-success">بارگذاری CSV</button>
+                    </form>
+                </div>
+            </div>
+            <p class="admin-muted" style="font-size:13px;">ساختار CSV: <code>brand,model,color,stock,sku</code></p>
+
+            @if (!Model.VariantsView.HasVariants)
+            {
+                <div class="alert alert-info">
+                    این محصول «ساده» است. تیک «دارای واریانت» را در تب «اطلاعات پایه» بزنید و ذخیره کنید تا گزینه‌ها فعال شوند.
+                </div>
+            }
+
+            <table class="table admin-table">
+                <thead>
+                    <tr><th>گزینه</th><th>کد (Sku)</th><th>قیمت</th><th>تخفیف</th><th>موجودی</th><th>وضعیت</th><th></th></tr>
+                </thead>
+                <tbody>
+                @foreach (var v in Model.VariantsView.Variants)
+                {
+                    <tr>
+                        <td>@(string.IsNullOrEmpty(v.Title) ? "—" : v.Title)</td>
+                        <td>@(v.Sku ?? "—")</td>
+                        <td>@v.Price.ToString("N0")</td>
+                        <td>@(v.DiscountPrice?.ToString("N0") ?? "—")</td>
+                        <td>
+                            <form method="post" asp-page-handler="QuickStock" asp-route-variantId="@v.Id" class="admin-inline-form">
+                                <input type="hidden" asp-for="Id" />
+                                <input type="number" name="QuickStock" value="@v.Stock" class="form-control form-control-sm admin-stock-input" min="0" />
+                                <button type="submit" class="btn btn-sm btn-outline-primary">ثبت</button>
+                            </form>
+                        </td>
+                        <td>
+                            @if (v.IsActive) { <span class="badge bg-success">فعال</span> }
+                            else { <span class="badge bg-secondary">غیرفعال</span> }
+                        </td>
+                        <td class="admin-actions">
+                            <form method="post" asp-page-handler="ToggleVariant" asp-route-variantId="@v.Id" class="d-inline">
+                                <input type="hidden" asp-for="Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-warning">@(v.IsActive ? "غیرفعال" : "فعال")</button>
+                            </form>
+                            <form method="post" asp-page-handler="DeleteVariant" asp-route-variantId="@v.Id" class="d-inline">
+                                <input type="hidden" asp-for="Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف شود؟')">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (Model.VariantsView.Variants.Count == 0)
+                {
+                    <tr><td colspan="7" class="admin-muted text-center py-3">هنوز گزینه‌ای ثبت نشده است.</td></tr>
+                }
+                </tbody>
+            </table>
+
+            <h4 class="admin-section-title mt-3">افزودن گزینه جدید</h4>
+            @if (Model.VariantsView.Attributes.Count == 0)
+            {
+                <p class="admin-muted">ابتدا از بخش «ویژگی‌های متغیر» ویژگی و مقادیر بسازید.</p>
+            }
+            else
+            {
+                <form method="post" asp-page-handler="AddVariant">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="row">
+                        @foreach (var attr in Model.VariantsView.Attributes)
+                        {
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">@attr.Name</label>
+                                <select name="VariantValueIds" class="form-select">
+                                    <option value="">—</option>
+                                    @foreach (var val in attr.Values)
+                                    {
+                                        <option value="@val.Id">@val.Value</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">کد (Sku)</label>
+                            <input asp-for="VariantSku" class="form-control" dir="ltr" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">قیمت (تومان)</label>
+                            <input asp-for="VariantPrice" type="number" class="form-control" />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">تخفیف</label>
+                            <input asp-for="VariantDiscountPrice" type="number" class="form-control" />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">موجودی</label>
+                            <input asp-for="VariantStock" type="number" class="form-control" />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">ترتیب</label>
+                            <input asp-for="VariantDisplayOrder" type="number" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="VariantIsActive" class="form-check-input" />
+                        <label class="form-check-label">فعال</label>
+                    </div>
+                    <button type="submit" class="btn btn-success">افزودن گزینه</button>
+                </form>
+            }
+        }
+        else
+        {
+            <p class="admin-muted">اطلاعات گزینه‌ها قابل بارگذاری نیست.</p>
+        }
+    </div>
+
+    <!-- ════ تب: تصاویر ════ -->
+    <div class="prod-form-pane" id="ep-images">
+        <h3 class="admin-section-title mb-3">گالری تصاویر</h3>
+        <div class="admin-gallery">
+            @foreach (var img in Model.Images)
+            {
+                <div class="admin-gallery__item">
+                    <img src="@img.Url" alt="@img.Alt" />
+                    @if (img.IsMain) { <span class="badge bg-primary admin-gallery__main">اصلی</span> }
+                    <div class="admin-gallery__actions">
+                        @if (!img.IsMain)
+                        {
+                            <form method="post" asp-page-handler="SetMainImage" asp-route-imageId="@img.Id">
+                                <input type="hidden" asp-for="Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-primary">اصلی</button>
+                            </form>
+                        }
+                        <form method="post" asp-page-handler="DeleteImage" asp-route-imageId="@img.Id">
+                            <input type="hidden" asp-for="Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                        </form>
+                    </div>
+                </div>
+            }
+            @if (Model.Images.Count == 0)
+            {
+                <p class="admin-muted">هنوز تصویری اضافه نشده است.</p>
+            }
+        </div>
+
+        <form method="post" asp-page-handler="AddImage" enctype="multipart/form-data" class="admin-gallery__upload mt-3">
+            <input type="hidden" asp-for="Id" />
+            <input type="file" asp-for="ImageFile" accept="image/*" class="form-control" />
+            <input type="text" asp-for="ImageAlt" class="form-control" placeholder="متن جایگزین (اختیاری)" />
+            <button type="submit" class="btn btn-success">افزودن تصویر</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var tabs = document.querySelectorAll('#edit-tabs .prod-form-tab');
+            var panes = document.querySelectorAll('.admin-panel-box .prod-form-pane');
+
+            function activateTab(paneId) {
+                tabs.forEach(function (t) { t.classList.remove('active'); });
+                panes.forEach(function (p) { p.classList.remove('active'); });
+                var matchTab = document.querySelector('[data-pane="' + paneId + '"]');
+                if (matchTab) matchTab.classList.add('active');
+                var pane = document.getElementById(paneId);
+                if (pane) pane.classList.add('active');
+            }
+
+            tabs.forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    activateTab(this.dataset.pane);
+                    history.replaceState(null, '', '#' + this.dataset.pane);
+                });
+            });
+
+            // بازگشت به تب: اولویت ۱ = TempData از سرور، ۲ = hash URL
+            var returnTab = '@(TempData["ReturnTab"] as string ?? "")';
+            var hash = location.hash.replace('#', '');
+            var target = returnTab || hash;
+            if (target) activateTab(target);
+        })();
+    </script>
 }
