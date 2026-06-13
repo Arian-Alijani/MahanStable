@@ -127,7 +127,7 @@ public class GetInventoryOverviewQueryHandler : IRequestHandler<GetInventoryOver
         var brandOptions = await _db.VariantAttributeValues.AsNoTracking()
             .Where(x => x.Attribute.Kind == VariantAttributeKind.Brand)
             .OrderBy(x => x.DisplayOrder).ThenBy(x => x.Value)
-            .Select(x => new InventoryBrandOptionDto { ValueId = x.Id, Name = x.Value })
+            .Select(x => new InventoryBrandOptionDto { BrandId = x.Id, Name = x.Value })
             .ToListAsync(ct);
 
         return new InventoryOverviewDto

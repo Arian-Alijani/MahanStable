@@ -5,6 +5,96 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MahanShop.Application.Features.Admin.Inventory;
 
+// ─── دستورات ویرایش inline محصول ساده (F7) ──────────────────────────────────
+
+/// <summary>تنظیم قیمت اصلی + تخفیف یک محصول ساده (inline). نتیجه = true.</summary>
+public record SetSimpleProductPriceCommand(int ProductId, long Price, long? DiscountPrice) : IRequest<bool>;
+
+public class SetSimpleProductPriceCommandValidator : AbstractValidator<SetSimpleProductPriceCommand>
+{
+    public SetSimpleProductPriceCommandValidator()
+    {
+        RuleFor(x => x.ProductId).GreaterThan(0);
+        RuleFor(x => x.Price).GreaterThanOrEqualTo(0).WithMessage("قیمت نمی‌تواند منفی باشد.");
+        RuleFor(x => x).Must(x => x.DiscountPrice is null || x.DiscountPrice < x.Price)
+            .WithMessage("قیمت با تخفیف باید کمتر از قیمت اصلی باشد.");
+    }
+}
+
+public class SetSimpleProductPriceCommandHandler : IRequestHandler<SetSimpleProductPriceCommand, bool>
+{
+    private readonly IApplicationDbContext _db;
+    public SetSimpleProductPriceCommandHandler(IApplicationDbContext db) => _db = db;
+
+    public async Task<bool> Handle(SetSimpleProductPriceCommand request, CancellationToken ct)
+    {
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == request.ProductId, ct)
+            ?? throw new ValidationException("محصول یافت نشد.");
+        if (product.HasVariants) throw new ValidationException("این محصول واریانتی است؛ قیمت را از واریانت‌هایش ویرایش کنید.");
+        product.Price = request.Price;
+        product.DiscountPrice = request.DiscountPrice;
+        product.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+}
+
+/// <summary>تنظیم موجودی یک محصول ساده (inline). نتیجه = موجودی جدید.</summary>
+public record SetSimpleProductStockCommand(int ProductId, int Stock) : IRequest<int>;
+
+public class SetSimpleProductStockCommandHandler : IRequestHandler<SetSimpleProductStockCommand, int>
+{
+    private readonly IApplicationDbContext _db;
+    public SetSimpleProductStockCommandHandler(IApplicationDbContext db) => _db = db;
+
+    public async Task<int> Handle(SetSimpleProductStockCommand request, CancellationToken ct)
+    {
+        if (request.Stock < 0) throw new ValidationException("موجودی نمی‌تواند منفی باشد.");
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == request.ProductId, ct)
+            ?? throw new ValidationException("محصول یافت نشد.");
+        if (product.HasVariants) throw new ValidationException("این محصول واریانتی است؛ موجودی را از واریانت‌هایش ویرایش کنید.");
+        product.Stock = request.Stock;
+        product.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+        return product.Stock;
+    }
+}
+
+/// <summary>تنظیم قیمت اصلی + تخفیف + موجودی یک واریانت به‌صورت یکجا (ویرایش inline در موجودی). نتیجه = true.</summary>
+public record SetVariantPriceAndStockCommand(int VariantId, long Price, long? DiscountPrice, int Stock) : IRequest<bool>;
+
+public class SetVariantPriceAndStockCommandValidator : AbstractValidator<SetVariantPriceAndStockCommand>
+{
+    public SetVariantPriceAndStockCommandValidator()
+    {
+        RuleFor(x => x.VariantId).GreaterThan(0);
+        RuleFor(x => x.Price).GreaterThanOrEqualTo(0).WithMessage("قیمت نمی‌تواند منفی باشد.");
+        RuleFor(x => x.Stock).GreaterThanOrEqualTo(0).WithMessage("موجودی نمی‌تواند منفی باشد.");
+        RuleFor(x => x).Must(x => x.DiscountPrice is null || x.DiscountPrice < x.Price)
+            .WithMessage("قیمت با تخفیف باید کمتر از قیمت اصلی باشد.");
+    }
+}
+
+public class SetVariantPriceAndStockCommandHandler : IRequestHandler<SetVariantPriceAndStockCommand, bool>
+{
+    private readonly IApplicationDbContext _db;
+    public SetVariantPriceAndStockCommandHandler(IApplicationDbContext db) => _db = db;
+
+    public async Task<bool> Handle(SetVariantPriceAndStockCommand request, CancellationToken ct)
+    {
+        var variant = await _db.ProductVariants.FirstOrDefaultAsync(v => v.Id == request.VariantId, ct)
+            ?? throw new ValidationException("واریانت یافت نشد.");
+        variant.Price = request.Price;
+        variant.DiscountPrice = request.DiscountPrice;
+        variant.Stock = request.Stock;
+        variant.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+}
+
+// ─── دستورات موجودی واریانت (موجود — حفظ سازگاری) ────────────────────────────
+
 /// <summary>تغییر سریع موجودی یک واریانت با مقدار دلتا (+۱/−۱/−۲ …). نتیجه = موجودی جدید.</summary>
 public record AdjustVariantStockCommand(int VariantId, int Delta) : IRequest<int>;
 

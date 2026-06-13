@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F6 (تب «محصولات»: باکس‌های آماری گرافیکی + پنل جست‌وجو/فیلتر) ✅ تمام. قدم بعد = F7 (تب «مدیریت موجودی»: پشتیبانی کامل واریانت‌ها).**
+**فاز جاری: F7 (تب «مدیریت موجودی»: پشتیبانی کامل واریانت‌ها، کنترل تفکیکی) ✅ تمام. قدم بعد = F8 (تب «سفارش‌ها»: سورت پیشرفته + جست‌وجو + تغییر وضعیت + کد رهگیری + فاکتور).**
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -25,7 +25,7 @@
 - [x] **F5a** — فرم محصول بخش‌های ۱-۹ + گالری: تب‌بندی ۵تایی + بدون‌برند + مشخصات‌فنی inline.
 - [x] **F5b** — بخش ۱۰ «چند‌مدلی»: wizard واریانت کامل در تب «مدل‌ها».
 - [x] **F6** — تب محصولات: باکس آماری + جست‌وجو/فیلتر.
-- [ ] **F7** — تب موجودی: واریانت کامل، کنترل تفکیکی.
+- [x] **F7** — تب موجودی: product-group view، واریانت کامل، کنترل تفکیکی.
 - [ ] **F8** — تب سفارش‌ها: سورت/جست‌وجو/تغییر‌وضعیت/کدرهگیری/فاکتور.
 - [ ] **F9** — تب کاربران: جست‌وجو/جزئیات/حذف/ادمین‌کردن.
 - [ ] **F10** — داشبورد گرافیکی.
@@ -35,6 +35,31 @@
 ---
 
 ## دفتر ثبت (هر فاز: چه شد / فایل‌ها / لمس فروشگاه عمومی / migration / قدم بعد)
+
+### F7 — تب «مدیریت موجودی» (product-group view + کنترل تفکیکی) ✅ (2026-06-13)
+- **چه شد:** تب «مدیریت موجودی» از نمای واریانت‌محور قدیمی به نمای **product-group** بازطراحی شد. هر ردیف یک محصول است. محصول ساده با ویرایش inline قیمت/تخفیف/موجودی، محصول واریانتی با expand قابل کلیک که جدول همهٔ واریانت‌هایش را با کنترل تفکیکی نشان می‌دهد.
+- **تصمیم‌های طراحی:**
+  - **product-group view:** جدول اصلی نشان‌دهندهٔ محصولات است نه واریانت‌ها. expand/collapse هر ردیف واریانتی با انیمیشن SVG.
+  - **دو مسیر ویرایش inline:**
+    - محصول ساده: `SetSimpleProductPriceCommand` (قیمت+تخفیف) + `SetSimpleProductStockCommand` (موجودی) — هر دو AJAX.
+    - واریانت: `SetVariantPriceAndStockCommand` (قیمت+تخفیف+موجودی یکجا) + `AdjustVariantStockCommand` (دکمه‌های +/-).
+  - **برند dropdown:** از جدول `Brands` (نه `VariantAttributeValues` مثل قبل) — چون موجودی از دیدگاه محصول است.
+  - **نوع فیلتر:** `InventoryProductTypeFilter.Simple/Variant` اضافه شد.
+  - **CSV export/import حفظ شد** (`ExportInventoryCsvQuery`/`ImportInventoryCsvCommand` دست‌نخورده).
+- **فایل‌های جدید:**
+  - `src/MahanShop.Application/Features/Admin/Inventory/GetInventoryProductsQuery.cs` — query اصلی product-group با فیلترهای جدید.
+- **فایل‌های تغییریافته:**
+  - `src/MahanShop.Application/Features/Admin/Inventory/InventoryDtos.cs` — `InventoryProductRowDto` + `InventoryVariantRowDto` + `InventoryProductsDto` + `InventoryProductTypeFilter` enum جدید؛ `InventoryBrandOptionDto.ValueId` → `BrandId`؛ DTOهای قدیمی (`InventoryRowDto`/`InventoryOverviewDto`) حفظ‌شده برای CSV.
+  - `src/MahanShop.Application/Features/Admin/Inventory/InventoryCommands.cs` — سه command جدید: `SetSimpleProductPriceCommand` (+ Validator)، `SetSimpleProductStockCommand`، `SetVariantPriceAndStockCommand` (+ Validator).
+  - `src/MahanShop.Application/Features/Admin/Inventory/GetInventoryOverviewQuery.cs` — `ValueId` → `BrandId` در projection `InventoryBrandOptionDto`.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Inventory/Index.cshtml.cs` — بازنویسی کامل: `GetInventoryProductsQuery` + handler‌های AJAX: `SetSimplePrice`, `SetSimpleStock`, `SetVariant`, `AdjustVariantStock`, `SetVariantStock` + CSV حفظ‌شده.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Inventory/Index.cshtml` — بازنویسی کامل: product-group view با فیلتر نوع/برند/موجودی؛ ردیف ساده inline؛ ردیف واریانتی expand → جدول داخلی واریانت‌ها؛ صفحه‌بندی/نوار هشدار.
+  - `src/MahanShop.Web/wwwroot/admin/inventory.js` — بازنویسی کامل: expand/collapse با SVG arrow؛ ویرایش inline محصول ساده (قیمت/تخفیف/موجودی)؛ ویرایش inline واریانت؛ دکمه‌های +/-؛ blur/Enter حمایت؛ toast.
+  - `src/MahanShop.Web/wwwroot/admin/admin.css` — افزودن CSS بلوک F7: `.inv7-*` کلاس‌ها (toolbar/filters/table/simple-row/variant-head/expand-btn/variants-row/variants-inner/variants-table/badge/active-dot/adj/…) + ریسپانسیو.
+- **لمس فروشگاه عمومی:** هیچ. فقط `Areas/Admin/Inventory`, `Features/Admin/Inventory`, `wwwroot/admin`.
+- **migration:** هیچ. صفر تغییر Domain/DB.
+- **build:** ✅ `dotnet build MahanShop.sln` = **0 Error** (5 warning همگی pre-existing). `node --check inventory.js` سبز. Domestic-only audit: صفر URL خارجی.
+- **قدم بعد = F8** (تب «سفارش‌ها»: سورت پیش‌فرض جدیدترین + سورت‌های دیگر + پنل جست‌وجو + تغییر وضعیت → انعکاس در سمت کاربر + ورود کد رهگیری + فاکتور دقیق).
 
 ### F6 — تب «محصولات» (باکس‌های آماری گرافیکی + پنل جست‌وجو/فیلتر) ✅ (2026-06-13)
 - **چه شد:** تب «محصولات» از فازهای قبل پایهٔ قوی داشت (جدول/فیلتر/آمار). در این فاز موارد جامانده برای تکمیل DoD اضافه شد:
