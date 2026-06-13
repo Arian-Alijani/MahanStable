@@ -32,4 +32,16 @@ public class VariantAttributeValueDto
     public string? ColorHex { get; set; }
     public string? LogoUrl { get; set; }
     public int DisplayOrder { get; set; }
+
+    /// <summary>برای مقادیرِ «مدل» = id مقدارِ برندِ والد (در ویژگیِ برند). null برای سایر.</summary>
+    public int? ParentValueId { get; set; }
+    /// <summary>نام برندِ والد (برای نمایش).</summary>
+    public string? ParentValueName { get; set; }
+}
+
+/// <summary>یک مقدارِ برند برای انتخاب به‌عنوان والدِ مدل (در صفحهٔ مقادیرِ مدل).</summary>
+public class BrandValueOptionDto
+{
+    public int Id { get; set; }
+    public string Value { get; set; } = null!;
 }

@@ -51,6 +51,13 @@ public class VariantAttributeValueConfiguration : IEntityTypeConfiguration<Varia
             .WithMany(x => x.Values)
             .HasForeignKey(x => x.AttributeId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // لینک مدل→برند (سلسله‌مراتب در همان pool). NoAction تا چرخهٔ cascade ایجاد نشود.
+        b.HasOne(x => x.Parent)
+            .WithMany(x => x.Children)
+            .HasForeignKey(x => x.ParentValueId)
+            .OnDelete(DeleteBehavior.NoAction);
+        b.HasIndex(x => x.ParentValueId);
     }
 }
 

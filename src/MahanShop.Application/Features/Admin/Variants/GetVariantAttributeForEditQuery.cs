@@ -45,7 +45,25 @@ public class GetVariantAttributeValuesQueryHandler : IRequestHandler<GetVariantA
                 Value = v.Value,
                 ColorHex = v.ColorHex,
                 LogoUrl = v.LogoUrl,
-                DisplayOrder = v.DisplayOrder
+                DisplayOrder = v.DisplayOrder,
+                ParentValueId = v.ParentValueId,
+                ParentValueName = v.Parent != null ? v.Parent.Value : null
             })
+            .ToListAsync(ct);
+}
+
+/// <summary>مقادیرِ ویژگیِ برند (Kind=Brand) برای انتخاب والد در صفحهٔ مقادیرِ مدل.</summary>
+public record GetBrandValueOptionsQuery() : IRequest<List<BrandValueOptionDto>>;
+
+public class GetBrandValueOptionsQueryHandler : IRequestHandler<GetBrandValueOptionsQuery, List<BrandValueOptionDto>>
+{
+    private readonly IApplicationDbContext _db;
+    public GetBrandValueOptionsQueryHandler(IApplicationDbContext db) => _db = db;
+
+    public async Task<List<BrandValueOptionDto>> Handle(GetBrandValueOptionsQuery request, CancellationToken ct) =>
+        await _db.VariantAttributeValues.AsNoTracking()
+            .Where(v => v.Attribute.Kind == MahanShop.Domain.Enums.VariantAttributeKind.Brand)
+            .OrderBy(v => v.DisplayOrder).ThenBy(v => v.Value)
+            .Select(v => new BrandValueOptionDto { Id = v.Id, Value = v.Value })
             .ToListAsync(ct);
 }

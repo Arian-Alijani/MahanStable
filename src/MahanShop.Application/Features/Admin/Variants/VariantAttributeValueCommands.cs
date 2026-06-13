@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MahanShop.Application.Features.Admin.Variants;
 
 /// <summary>افزودن یک مقدار به pool یک ویژگی (مثلا سامسونگ به ویژگی برند).</summary>
-public record CreateVariantAttributeValueCommand(int AttributeId, string Value, string? ColorHex, string? LogoUrl, int DisplayOrder) : IRequest<int>;
+public record CreateVariantAttributeValueCommand(int AttributeId, string Value, string? ColorHex, string? LogoUrl, int DisplayOrder, int? ParentValueId = null) : IRequest<int>;
 
 public class CreateVariantAttributeValueCommandValidator : AbstractValidator<CreateVariantAttributeValueCommand>
 {
@@ -34,22 +34,43 @@ public class CreateVariantAttributeValueCommandHandler : IRequestHandler<CreateV
         if (await _db.VariantAttributeValues.AnyAsync(v => v.AttributeId == request.AttributeId && v.Value == value, ct))
             throw new ValidationException("این مقدار قبلاً ثبت شده است.");
 
+        var parentId = await ResolveParentAsync(_db, request.ParentValueId, request.AttributeId, ct);
+
         var entity = new VariantAttributeValue
         {
             AttributeId = request.AttributeId,
             Value = value,
             ColorHex = string.IsNullOrWhiteSpace(request.ColorHex) ? null : request.ColorHex.Trim(),
             LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl) ? null : request.LogoUrl.Trim(),
-            DisplayOrder = request.DisplayOrder
+            DisplayOrder = request.DisplayOrder,
+            ParentValueId = parentId
         };
         _db.VariantAttributeValues.Add(entity);
         await _db.SaveChangesAsync(ct);
         return entity.Id;
     }
+
+    /// <summary>اعتبارسنجی والد: باید یک مقدارِ برند باشد (Kind=Brand) و خودِ این مقدار «مدل» باشد.</summary>
+    internal static async Task<int?> ResolveParentAsync(IApplicationDbContext db, int? parentValueId, int attributeId, CancellationToken ct)
+    {
+        if (parentValueId is not int pid || pid <= 0) return null;
+
+        var thisAttrIsModel = await db.VariantAttributes
+            .AnyAsync(a => a.Id == attributeId && a.Kind == MahanShop.Domain.Enums.VariantAttributeKind.Model, ct);
+        if (!thisAttrIsModel)
+            throw new ValidationException("تعیین برندِ والد فقط برای مقادیرِ «مدل» مجاز است.");
+
+        var parentIsBrand = await db.VariantAttributeValues
+            .AnyAsync(v => v.Id == pid && v.Attribute.Kind == MahanShop.Domain.Enums.VariantAttributeKind.Brand, ct);
+        if (!parentIsBrand)
+            throw new ValidationException("برندِ والد نامعتبر است.");
+
+        return pid;
+    }
 }
 
 /// <summary>ویرایش یک مقدار در pool.</summary>
-public record UpdateVariantAttributeValueCommand(int Id, string Value, string? ColorHex, string? LogoUrl, int DisplayOrder) : IRequest<bool>;
+public record UpdateVariantAttributeValueCommand(int Id, string Value, string? ColorHex, string? LogoUrl, int DisplayOrder, int? ParentValueId = null) : IRequest<bool>;
 
 public class UpdateVariantAttributeValueCommandValidator : AbstractValidator<UpdateVariantAttributeValueCommand>
 {
@@ -80,6 +101,8 @@ public class UpdateVariantAttributeValueCommandHandler : IRequestHandler<UpdateV
         entity.ColorHex = string.IsNullOrWhiteSpace(request.ColorHex) ? null : request.ColorHex.Trim();
         entity.LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl) ? null : request.LogoUrl.Trim();
         entity.DisplayOrder = request.DisplayOrder;
+        entity.ParentValueId = await CreateVariantAttributeValueCommandHandler
+            .ResolveParentAsync(_db, request.ParentValueId, entity.AttributeId, ct);
         entity.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
         return true;

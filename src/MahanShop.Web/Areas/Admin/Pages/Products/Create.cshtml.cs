@@ -8,20 +8,21 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace MahanShop.Web.Areas.Admin.Pages.Products;
 
-/// <summary>ایجاد محصول جدید (اطلاعات پایه). گالری عکس بعد از ساخت در صفحهٔ ویرایش.</summary>
+/// <summary>
+/// ویزارد افزودن محصول. دو مسیر:
+///  • ساده  → یک محصول با قیمت/موجودیِ خودش.
+///  • چندبرندی → انتخاب برندها → گوشی‌های زیرمجموعه → یک قیمت اولیه → تولید خودکار گزینه‌ها.
+/// </summary>
 public class CreateModel : PageModel
 {
     private readonly IMediator _mediator;
     public CreateModel(IMediator mediator) => _mediator = mediator;
 
+    // ---- مشترک ----
     [BindProperty] public string Title { get; set; } = "";
     [BindProperty] public string? Slug { get; set; }
     [BindProperty] public string? ShortDescription { get; set; }
     [BindProperty] public string? Description { get; set; }
-    [BindProperty] public long Price { get; set; }
-    [BindProperty] public long? DiscountPrice { get; set; }
-    [BindProperty] public int Stock { get; set; }
-    [BindProperty] public bool HasVariants { get; set; }
     [BindProperty] public bool IsActive { get; set; } = true;
     [BindProperty] public bool IsFeatured { get; set; }
     [BindProperty] public string? MetaTitle { get; set; }
@@ -29,25 +30,61 @@ public class CreateModel : PageModel
     [BindProperty] public int BrandId { get; set; }
     [BindProperty] public int CategoryId { get; set; }
 
+    // ---- ساده ----
+    [BindProperty] public long Price { get; set; }
+    [BindProperty] public long? DiscountPrice { get; set; }
+    [BindProperty] public int Stock { get; set; }
+
+    // ---- چندبرندی ----
+    [BindProperty] public List<int> ModelValueIds { get; set; } = new();
+    [BindProperty] public List<int> ColorValueIds { get; set; } = new();
+    [BindProperty] public long BasePrice { get; set; }
+    [BindProperty] public long? BaseDiscountPrice { get; set; }
+    [BindProperty] public int BaseStock { get; set; }
+
     public List<BrandListItemDto> Brands { get; private set; } = new();
     public List<CategoryOptionDto> Categories { get; private set; } = new();
+    public ProductWizardDataDto Wizard { get; private set; } = new();
 
     public async Task OnGetAsync() => await LoadOptionsAsync();
 
-    public async Task<IActionResult> OnPostAsync()
+    // مسیر «ساده»
+    public async Task<IActionResult> OnPostSimpleAsync()
     {
         try
         {
             var id = await _mediator.Send(new CreateProductCommand(
                 Title, Slug, ShortDescription, Description, Price, DiscountPrice, Stock,
-                HasVariants, IsActive, IsFeatured, MetaTitle, MetaDescription, BrandId, CategoryId));
-            TempData["AdminOk"] = "محصول ساخته شد. اکنون عکس‌ها را اضافه کنید.";
+                false, IsActive, IsFeatured, MetaTitle, MetaDescription, BrandId, CategoryId));
+            TempData["AdminOk"] = "محصول ساده ساخته شد. اکنون عکس‌ها را اضافه کنید.";
             return RedirectToPage("Edit", new { id });
         }
         catch (ValidationException ex)
         {
             foreach (var e in ex.Errors) ModelState.AddModelError(string.Empty, e.ErrorMessage);
             await LoadOptionsAsync();
+            ViewData["WizardMode"] = "simple";
+            return Page();
+        }
+    }
+
+    // مسیر «چندبرندی»
+    public async Task<IActionResult> OnPostMultiAsync()
+    {
+        try
+        {
+            var id = await _mediator.Send(new CreateMultiBrandProductCommand(
+                Title, Slug, ShortDescription, Description, IsActive, IsFeatured,
+                MetaTitle, MetaDescription, BrandId, CategoryId,
+                ModelValueIds, ColorValueIds, BasePrice, BaseDiscountPrice, BaseStock));
+            TempData["AdminOk"] = "محصول چندبرندی و همهٔ گزینه‌هایش ساخته شد. اکنون قیمت/موجودی هر گوشی را در «مدیریت موجودی محصول» تنظیم کنید.";
+            return RedirectToPage("Inventory", new { id });
+        }
+        catch (ValidationException ex)
+        {
+            foreach (var e in ex.Errors) ModelState.AddModelError(string.Empty, e.ErrorMessage);
+            await LoadOptionsAsync();
+            ViewData["WizardMode"] = "multi";
             return Page();
         }
     }
@@ -56,5 +93,6 @@ public class CreateModel : PageModel
     {
         Brands = await _mediator.Send(new GetBrandsQuery());
         Categories = await _mediator.Send(new GetCategoryOptionsQuery());
+        Wizard = await _mediator.Send(new GetProductWizardDataQuery());
     }
 }
