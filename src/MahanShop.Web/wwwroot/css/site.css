@@ -216,6 +216,40 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .prow__all svg { transition: transform .15s; }
 .prow__all:hover svg { transform: translateX(-3px); }
 .prow { position: relative; }
+/* viewport میزبانِ اسکرولر + دکمه‌های ناوبری؛ لبه‌های محو نشانهٔ ادامهٔ محتوا */
+.prow__viewport { position: relative; }
+.prow__viewport::before,
+.prow__viewport::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 24px; z-index: 2;
+    pointer-events: none; opacity: 0; transition: opacity .2s;
+}
+@media (min-width: 640px) { .prow__viewport::before, .prow__viewport::after { width: 40px; } }
+.prow__viewport::before { inset-inline-start: 0; background: linear-gradient(to right, var(--bg), transparent); }
+.prow__viewport::after  { inset-inline-end: 0;  background: linear-gradient(to left,  var(--bg), transparent); }
+html[dir="rtl"] .prow__viewport::before { background: linear-gradient(to left, var(--bg), transparent); }
+html[dir="rtl"] .prow__viewport::after  { background: linear-gradient(to right, var(--bg), transparent); }
+.prow__viewport.can-prev::before { opacity: 1; }
+.prow__viewport.can-next::after  { opacity: 1; }
+
+/* دکمه‌های ناوبری — فقط روی دستگاه‌های point-دار (دسکتاپ) ظاهر می‌شوند */
+.prow__nav {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+    width: 40px; height: 40px; border: 1px solid #D1D5DB; border-radius: 999px;
+    background: var(--surface); color: var(--ink); cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-lift); transition: background .15s, color .15s, transform .12s, opacity .2s;
+}
+.prow__nav--prev { inset-inline-start: -6px; }
+.prow__nav--next { inset-inline-end: -6px; }
+.prow__nav:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.prow__nav:active { transform: translateY(-50%) scale(.92); }
+.prow__nav[hidden] { display: none !important; }
+@media (hover: hover) and (pointer: fine) {
+    .prow__viewport:hover .prow__nav:not([hidden]),
+    .prow__viewport:focus-within .prow__nav:not([hidden]) { display: inline-flex; }
+}
+.prow__nav:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
 .prow__scroller {
     display: flex; gap: 14px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity;
     padding: 4px 2px; scrollbar-width: none; -ms-overflow-style: none;
@@ -270,13 +304,11 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 /* بنر تک‌خطی (full width) */
 .promo > picture > img,
 .promo img { height: clamp(120px, 18vw, 230px); }
-/* ردیفِ چند بنر هم‌ترتیب — تقسیم مساویِ فضا (var --cols = تعداد بنرها) */
-.promo-row { display: grid; grid-template-columns: 1fr; gap: 16px; margin-block: 16px; }
+/* ردیفِ چند بنر هم‌ترتیب — همیشه در یک ردیف، تقسیم مساویِ فضا (var --cols = تعداد بنرها) */
+.promo-row { display: grid; grid-template-columns: repeat(var(--cols, 2), 1fr); gap: 10px; margin-block: 16px; }
 .promo-row .promo { margin-block: 0; }
-.promo-row .promo img { height: clamp(140px, 22vw, 230px); }
-@media (min-width: 640px) {
-    .promo-row { grid-template-columns: repeat(var(--cols, 2), 1fr); }
-}
+.promo-row .promo img { height: clamp(96px, 20vw, 230px); }
+@media (min-width: 640px) { .promo-row { gap: 16px; } }
 
 /* ===== Footer ===== */
 .site-footer { background: #0F172A; color: #CBD5E1; margin-top: 32px; padding-block: 44px 22px; }
