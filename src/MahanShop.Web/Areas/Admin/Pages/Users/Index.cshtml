@@ -3,6 +3,18 @@
 @{
     ViewData["Title"] = "کاربران";
     ViewData["AdminActive"] = "users";
+    var st = Model.Result.Stats;
+
+    string BuildQuery(bool? onlyAdmins, bool? onlyInactive, bool? onlyWithOrders, string? search = null, int page = 1)
+    {
+        var parts = new System.Collections.Generic.List<string>();
+        if (!string.IsNullOrWhiteSpace(search ?? Model.Search)) parts.Add($"Search={Uri.EscapeDataString(search ?? Model.Search ?? "")}");
+        if (onlyAdmins == true) parts.Add("OnlyAdmins=true");
+        if (onlyInactive == true) parts.Add("OnlyInactive=true");
+        if (onlyWithOrders == true) parts.Add("OnlyWithOrders=true");
+        if (page > 1) parts.Add($"Page={page}");
+        return string.Join("&", parts);
+    }
 }
 
 @if (TempData["AdminOk"] is string ok)
@@ -14,35 +26,174 @@
     <div class="alert alert-danger">@err</div>
 }
 
-<div class="admin-toolbar">
-    <form method="get" class="admin-search admin-search--wide">
-        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="نام / موبایل / ایمیل..." />
-        <select name="OnlyAdmins" class="form-select">
-            <option value="">همه کاربران</option>
-            <option value="true" selected="@(Model.OnlyAdmins == true)">فقط مدیران</option>
-        </select>
-        <select name="OnlyInactive" class="form-select">
-            <option value="">فعال و غیرفعال</option>
-            <option value="true" selected="@(Model.OnlyInactive == true)">فقط غیرفعال‌ها</option>
-        </select>
-        <button type="submit" class="btn btn-outline-secondary">فیلتر</button>
-    </form>
+@* ── سربرگ ── *@
+<div class="u9-head">
+    <div>
+        <h2 class="admin-page-title">کاربران</h2>
+        <p class="admin-muted" style="margin-top:4px">مدیریت، جستجو و کنترل دسترسی کاربران فروشگاه</p>
+    </div>
 </div>
 
-<div class="admin-panel-box">
-    <table class="table admin-table">
+@* ── کارت‌های آمار ── *@
+<div class="u9-stats">
+    <a href="?@(BuildQuery(null, null, null))" class="u9-stat u9-stat--total @(!Model.HasFilter ? "is-active" : "")">
+        <span class="u9-stat__value">@st.Total</span>
+        <span class="u9-stat__label">همه کاربران</span>
+    </a>
+    <a href="?@(BuildQuery(null, null, null, Model.Search))" class="u9-stat u9-stat--active @(Model.OnlyAdmins is null && Model.OnlyInactive is null && Model.OnlyWithOrders is null && Model.HasFilter == false ? "" : "")">
+        <span class="u9-stat__value">@st.Active</span>
+        <span class="u9-stat__label">فعال</span>
+    </a>
+    <a href="?@(BuildQuery(null, true, null))" class="u9-stat u9-stat--inactive @(Model.OnlyInactive == true ? "is-active" : "")">
+        <span class="u9-stat__value">@st.Inactive</span>
+        <span class="u9-stat__label">غیرفعال</span>
+    </a>
+    <a href="?@(BuildQuery(true, null, null))" class="u9-stat u9-stat--admin @(Model.OnlyAdmins == true ? "is-active" : "")">
+        <span class="u9-stat__value">@st.Admins</span>
+        <span class="u9-stat__label">مدیران</span>
+    </a>
+    <a href="?@(BuildQuery(null, null, true))" class="u9-stat u9-stat--orders @(Model.OnlyWithOrders == true ? "is-active" : "")">
+        <span class="u9-stat__value">@st.WithOrders</span>
+        <span class="u9-stat__label">دارای سفارش</span>
+    </a>
+</div>
+
+@* ── نوار فیلتر ── *@
+<div class="u9-filterbar">
+    <form method="get" class="u9-filterform" id="userFilterForm">
+        <div class="u9-search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="نام، موبایل یا ایمیل..." />
+        </div>
+        <div class="u9-filters">
+            <select name="OnlyAdmins" class="form-select" onchange="this.form.submit()">
+                <option value="">همه نقش‌ها</option>
+                @if (Model.OnlyAdmins == true)
+                {
+                    <option value="true" selected="selected">فقط مدیران</option>
+                }
+                else
+                {
+                    <option value="true">فقط مدیران</option>
+                }
+            </select>
+            <select name="OnlyInactive" class="form-select" onchange="this.form.submit()">
+                <option value="">همه وضعیت‌ها</option>
+                @if (Model.OnlyInactive == true)
+                {
+                    <option value="true" selected="selected">فقط غیرفعال‌ها</option>
+                }
+                else
+                {
+                    <option value="true">فقط غیرفعال‌ها</option>
+                }
+            </select>
+            <select name="OnlyWithOrders" class="form-select" onchange="this.form.submit()">
+                <option value="">با/بدون سفارش</option>
+                @if (Model.OnlyWithOrders == true)
+                {
+                    <option value="true" selected="selected">فقط دارای سفارش</option>
+                }
+                else
+                {
+                    <option value="true">فقط دارای سفارش</option>
+                }
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                جستجو
+            </button>
+            @if (Model.HasFilter)
+            {
+                <a href="?" class="btn btn-outline-secondary">پاک‌کردن</a>
+            }
+        </div>
+    </form>
+
+    @* چیپس‌های فیلتر فعال *@
+    @if (Model.HasFilter)
+    {
+        <div class="u9-chips">
+            @if (!string.IsNullOrWhiteSpace(Model.Search))
+            {
+                <span class="u9-chip">
+                    جستجو: @Model.Search
+                    <a href="?@(BuildQuery(Model.OnlyAdmins, Model.OnlyInactive, Model.OnlyWithOrders))" class="u9-chip__remove">×</a>
+                </span>
+            }
+            @if (Model.OnlyAdmins == true)
+            {
+                <span class="u9-chip">
+                    فقط مدیران
+                    <a href="?@(BuildQuery(null, Model.OnlyInactive, Model.OnlyWithOrders, Model.Search))" class="u9-chip__remove">×</a>
+                </span>
+            }
+            @if (Model.OnlyInactive == true)
+            {
+                <span class="u9-chip">
+                    فقط غیرفعال‌ها
+                    <a href="?@(BuildQuery(Model.OnlyAdmins, null, Model.OnlyWithOrders, Model.Search))" class="u9-chip__remove">×</a>
+                </span>
+            }
+            @if (Model.OnlyWithOrders == true)
+            {
+                <span class="u9-chip">
+                    دارای سفارش
+                    <a href="?@(BuildQuery(Model.OnlyAdmins, Model.OnlyInactive, null, Model.Search))" class="u9-chip__remove">×</a>
+                </span>
+            }
+        </div>
+    }
+</div>
+
+@* ── جدول کاربران ── *@
+<div class="u9-tablebox">
+    <table class="table u9-table">
         <thead>
-            <tr><th>نام</th><th>موبایل</th><th>ایمیل</th><th>سفارش‌ها</th><th>عضویت</th><th>نقش</th><th>وضعیت</th><th></th></tr>
+            <tr>
+                <th>کاربر</th>
+                <th>موبایل</th>
+                <th>سفارش‌ها</th>
+                <th>عضویت</th>
+                <th>نقش</th>
+                <th>وضعیت</th>
+                <th></th>
+            </tr>
         </thead>
         <tbody>
         @foreach (var u in Model.Result.Items)
         {
             <tr>
-                <td><strong>@(string.IsNullOrEmpty(u.FullName) ? "—" : u.FullName)</strong></td>
-                <td>@u.PhoneNumber</td>
-                <td>@(string.IsNullOrEmpty(u.Email) ? "—" : u.Email)</td>
-                <td>@u.OrderCount</td>
-                <td>@u.CreatedAt.ToString("yyyy/MM/dd")</td>
+                <td>
+                    <div class="u9-user-cell">
+                        <div class="u9-avatar">@(string.IsNullOrEmpty(u.FullName) ? u.PhoneNumber[..2] : (u.FullName.Length > 1 ? u.FullName[..2] : u.FullName))</div>
+                        <div>
+                            <div class="u9-user-name">@(string.IsNullOrEmpty(u.FullName) ? "—" : u.FullName)</div>
+                            @if (!string.IsNullOrEmpty(u.Email))
+                            {
+                                <div class="u9-user-email">@u.Email</div>
+                            }
+                        </div>
+                    </div>
+                </td>
+                <td class="u9-phone">@u.PhoneNumber</td>
+                <td>
+                    @if (u.OrderCount > 0)
+                    {
+                        <span class="u9-order-badge">@u.OrderCount</span>
+                    }
+                    else
+                    {
+                        <span class="admin-muted">—</span>
+                    }
+                </td>
+                <td class="u9-date">@u.CreatedAt.ToString("yyyy/MM/dd")</td>
                 <td>
                     @if (u.IsAdmin)
                     {
@@ -65,25 +216,37 @@
                 </td>
                 <td class="admin-actions">
                     <a asp-page="Detail" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary">جزییات</a>
+                    @if (u.OrderCount == 0)
+                    {
+                        <form method="post" asp-page-handler="Delete" asp-route-userId="@u.Id" style="display:inline"
+                              onsubmit="return confirm('کاربر «@(string.IsNullOrEmpty(u.FullName) ? u.PhoneNumber : u.FullName)» حذف شود؟ این عمل برگشت‌پذیر نیست.');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                        </form>
+                    }
                 </td>
             </tr>
         }
         @if (Model.Result.Items.Count == 0)
         {
-            <tr><td colspan="8" class="admin-muted text-center">کاربری یافت نشد.</td></tr>
+            <tr><td colspan="7" class="admin-muted text-center" style="padding:32px">کاربری یافت نشد.</td></tr>
         }
         </tbody>
     </table>
-
-    @if (Model.Result.TotalPages > 1)
-    {
-        <nav class="admin-pager">
-            @for (int i = 1; i <= Model.Result.TotalPages; i++)
-            {
-                <a class="admin-pager__link @(i == Model.Result.Page ? "is-active" : "")"
-                   asp-route-Page="@i" asp-route-Search="@Model.Search"
-                   asp-route-OnlyAdmins="@Model.OnlyAdmins" asp-route-OnlyInactive="@Model.OnlyInactive">@i</a>
-            }
-        </nav>
-    }
 </div>
+
+@* ── صفحه‌بندی ── *@
+@if (Model.Result.TotalPages > 1)
+{
+    <nav class="admin-pager">
+        @for (int i = 1; i <= Model.Result.TotalPages; i++)
+        {
+            <a class="admin-pager__link @(i == Model.Result.Page ? "is-active" : "")"
+               href="?@(BuildQuery(Model.OnlyAdmins, Model.OnlyInactive, Model.OnlyWithOrders, Model.Search, i))">@i</a>
+        }
+    </nav>
+}
+
+@* نمایش شمارش *@
+<p class="admin-muted" style="text-align:center;margin-top:12px;font-size:13px">
+    نمایش @Model.Result.Items.Count از @Model.Result.TotalCount کاربر
+</p>

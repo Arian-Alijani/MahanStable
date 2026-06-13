@@ -35,9 +35,10 @@ public class GetUserDetailQueryHandler : IRequestHandler<GetUserDetailQuery, Adm
                     ReceiverName = a.ReceiverName,
                     ReceiverPhone = a.ReceiverPhone
                 }).ToList(),
+                TotalOrderCount = u.Orders.Count,
                 RecentOrders = u.Orders
                     .OrderByDescending(o => o.CreatedAt)
-                    .Take(10)
+                    .Take(20)
                     .Select(o => new AdminUserOrderDto
                     {
                         Id = o.Id,

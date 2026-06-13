@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace MahanShop.Web.Areas.Admin.Pages.Users;
 
-/// <summary>جزییات کاربر + toggle نقش ادمین/فعال + حذف آدرس. شناسهٔ ادمین جاری از claim (نه فرم).</summary>
+/// <summary>جزییات کاربر + toggle نقش ادمین/فعال + حذف کاربر + حذف آدرس. شناسهٔ ادمین جاری از claim (نه فرم).</summary>
 public class DetailModel : PageModel
 {
     private readonly IMediator _mediator;
@@ -45,6 +45,21 @@ public class DetailModel : PageModel
         }
         catch (ValidationException ex) { TempData["AdminError"] = ex.Message; }
         return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostDeleteUserAsync(int id)
+    {
+        try
+        {
+            await _mediator.Send(new DeleteUserCommand(id, CurrentAdminId));
+            TempData["AdminOk"] = "کاربر با موفقیت حذف شد.";
+            return RedirectToPage("Index");
+        }
+        catch (ValidationException ex)
+        {
+            TempData["AdminError"] = ex.Message;
+            return RedirectToPage(new { id });
+        }
     }
 
     public async Task<IActionResult> OnPostDeleteAddressAsync(int id, int addressId)

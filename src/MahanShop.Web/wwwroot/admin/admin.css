@@ -868,3 +868,127 @@
     .orders8-stats { grid-template-columns: repeat(2, 1fr); }
     .orders8-filters .form-select { min-width: 0; flex: 1 1 45%; }
 }
+
+/* ════════════════════════════════════════════════════════
+   F9 — تب «کاربران» (Users)
+   ════════════════════════════════════════════════════════ */
+
+/* سربرگ */
+.u9-head {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+}
+
+/* کارت‌های آمار */
+.u9-stats {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 11px; margin-bottom: 18px;
+}
+.u9-stat {
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 14px 16px; border-radius: 13px;
+    background: var(--admin-card); border: 1.5px solid var(--admin-border);
+    box-shadow: var(--admin-shadow); cursor: pointer; text-decoration: none;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.u9-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -12px rgba(15,23,42,.35); border-color: #cbd5e1; }
+.u9-stat.is-active { border-color: var(--admin-accent); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.u9-stat__value { font-size: 22px; font-weight: 800; line-height: 1; }
+.u9-stat__label { font-size: 11.5px; color: #64748b; font-weight: 600; white-space: nowrap; }
+.u9-stat--total    .u9-stat__value { color: #334155; }
+.u9-stat--active   .u9-stat__value { color: #16a34a; }
+.u9-stat--inactive .u9-stat__value { color: #dc2626; }
+.u9-stat--admin    .u9-stat__value { color: #1d4ed8; }
+.u9-stat--orders   .u9-stat__value { color: #7c3aed; }
+
+/* نوار فیلتر */
+.u9-filterbar {
+    background: var(--admin-card); border: 1px solid var(--admin-border);
+    border-radius: 13px; padding: 14px 16px; margin-bottom: 16px;
+    box-shadow: var(--admin-shadow);
+}
+.u9-filterform { display: flex; flex-direction: column; gap: 10px; }
+.u9-search { position: relative; display: flex; align-items: center; }
+.u9-search svg { position: absolute; inset-inline-start: 14px; color: #94a3b8; pointer-events: none; }
+.u9-search .form-control { padding-inline-start: 42px; height: 44px; font-size: 14.5px; border-radius: 11px; }
+.u9-filters { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+.u9-filters .form-select { height: 40px; border-radius: 9px; font-size: 13.5px; min-width: 140px; }
+.u9-filters .btn { height: 40px; border-radius: 9px; font-size: 13.5px; display: flex; align-items: center; gap: 6px; }
+
+/* چیپس فیلتر */
+.u9-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.u9-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 999px;
+    background: #eff6ff; color: #1d4ed8;
+    border: 1px solid #bfdbfe; font-size: 12.5px; font-weight: 600;
+}
+.u9-chip__remove {
+    color: #3b82f6; text-decoration: none; font-size: 14px; font-weight: 700;
+    line-height: 1; transition: color .15s;
+}
+.u9-chip__remove:hover { color: #dc2626; }
+
+/* جدول */
+.u9-tablebox { overflow-x: auto; }
+.u9-table { min-width: 680px; }
+.u9-user-cell { display: flex; align-items: center; gap: 10px; }
+.u9-avatar {
+    width: 36px; height: 36px; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: #e0e7ff; color: #4338ca; font-weight: 700; font-size: 13px;
+    border: 2px solid #c7d2fe;
+}
+.u9-user-name { font-weight: 600; font-size: 14px; color: #1e293b; }
+.u9-user-email { font-size: 12px; color: #64748b; }
+.u9-phone { font-size: 13.5px; color: #334155; letter-spacing: .02em; }
+.u9-date { font-size: 13px; color: #64748b; white-space: nowrap; }
+.u9-order-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;
+    font-weight: 700; font-size: 12.5px;
+}
+
+/* صفحه جزییات */
+.u9-detail-head {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 14px; margin-bottom: 20px;
+}
+.u9-detail-avatar-group { display: flex; align-items: center; gap: 14px; }
+.u9-detail-avatar {
+    width: 56px; height: 56px; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: #e0e7ff; color: #4338ca; font-weight: 800; font-size: 20px;
+    border: 2.5px solid #c7d2fe;
+}
+
+/* دکمه‌های دسترسی */
+.u9-access-actions { display: flex; flex-direction: column; gap: 8px; }
+.u9-access-btn { display: flex; align-items: center; gap: 8px; justify-content: center; font-size: 13.5px; }
+
+/* ناحیه خطر */
+.u9-danger-zone { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.u9-danger-title {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: #b91c1c; margin: 0;
+}
+
+/* بج شمارش */
+.u9-count-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: #f1f5f9; color: #475569; font-size: 12px; font-weight: 700;
+    margin-inline-start: 6px; vertical-align: middle;
+}
+
+/* ── ریسپانسیو ── */
+@media (max-width: 1100px) {
+    .u9-stats { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+    .u9-stats { grid-template-columns: repeat(2, 1fr); }
+    .u9-table { min-width: 560px; }
+    .u9-detail-head { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 500px) {
+    .u9-stats { grid-template-columns: repeat(2, 1fr); }
+    .u9-filters .form-select { min-width: 0; flex: 1 1 45%; }
+}

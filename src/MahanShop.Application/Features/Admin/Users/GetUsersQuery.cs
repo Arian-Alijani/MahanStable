@@ -4,10 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MahanShop.Application.Features.Admin.Users;
 
-/// <summary>لیست کاربران برای ادمین: جستجو (نام/موبایل/ایمیل) + فیلتر ادمین/فعال + صفحه‌بندی.</summary>
+/// <summary>لیست کاربران برای ادمین: جستجو (نام/موبایل/ایمیل) + فیلتر ادمین/فعال/دارای‌سفارش + صفحه‌بندی + آمار کلی.</summary>
 public record GetUsersQuery(
-    string? Search = null, bool? OnlyAdmins = null, bool? OnlyInactive = null,
-    int Page = 1, int PageSize = 20) : IRequest<AdminUserListResult>;
+    string? Search = null,
+    bool? OnlyAdmins = null,
+    bool? OnlyInactive = null,
+    bool? OnlyWithOrders = null,
+    int Page = 1,
+    int PageSize = 20) : IRequest<AdminUserListResult>;
 
 public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, AdminUserListResult>
 {
@@ -18,6 +22,9 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, AdminUserList
     {
         var page = request.Page < 1 ? 1 : request.Page;
         var size = request.PageSize is < 1 or > 100 ? 20 : request.PageSize;
+
+        // آمار کلی — همیشه روی همه کاربران (بدون فیلتر) محاسبه می‌شود
+        var stats = await BuildStatsAsync(ct);
 
         var q = _db.Users.AsNoTracking();
 
@@ -30,6 +37,7 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, AdminUserList
         }
         if (request.OnlyAdmins == true) q = q.Where(u => u.IsAdmin);
         if (request.OnlyInactive == true) q = q.Where(u => !u.IsActive);
+        if (request.OnlyWithOrders == true) q = q.Where(u => u.Orders.Any());
 
         var total = await q.CountAsync(ct);
 
@@ -49,6 +57,30 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, AdminUserList
             })
             .ToListAsync(ct);
 
-        return new AdminUserListResult { Items = items, TotalCount = total, Page = page, PageSize = size };
+        return new AdminUserListResult
+        {
+            Items = items,
+            Stats = stats,
+            TotalCount = total,
+            Page = page,
+            PageSize = size
+        };
+    }
+
+    private async Task<AdminUserStatsDto> BuildStatsAsync(CancellationToken ct)
+    {
+        var total     = await _db.Users.CountAsync(ct);
+        var active    = await _db.Users.CountAsync(u => u.IsActive, ct);
+        var admins    = await _db.Users.CountAsync(u => u.IsAdmin, ct);
+        var withOrders = await _db.Users.CountAsync(u => u.Orders.Any(), ct);
+
+        return new AdminUserStatsDto
+        {
+            Total      = total,
+            Active     = active,
+            Inactive   = total - active,
+            Admins     = admins,
+            WithOrders = withOrders
+        };
     }
 }
