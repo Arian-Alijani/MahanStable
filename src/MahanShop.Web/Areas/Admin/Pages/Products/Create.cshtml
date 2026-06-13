@@ -15,36 +15,15 @@
         <button type="button" class="prod-form-tab active" data-tab="tab-basic">اطلاعات پایه</button>
         <button type="button" class="prod-form-tab" data-tab="tab-price">قیمت و موجودی</button>
         <button type="button" class="prod-form-tab disabled" title="پس از ذخیره در دسترس است" disabled>مشخصات فنی</button>
-        <button type="button" class="prod-form-tab disabled" title="پس از ذخیره در دسترس است" disabled>مدل‌ها</button>
+        <button type="button" class="prod-form-tab" data-tab="tab-models">مدل‌ها</button>
         <button type="button" class="prod-form-tab disabled" title="پس از ذخیره در دسترس است" disabled>تصاویر</button>
-    </div>
-
-    <!-- ════ انتخاب نوع محصول (بالای فرم) ════ -->
-    <div class="mb-4">
-        <label class="form-label fw-bold">نوع محصول</label>
-        <div class="btn-group" role="group" id="wizard-mode-toggle">
-            <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-simple" value="simple"
-                   autocomplete="off" checked />
-            <label class="btn btn-outline-primary" for="mode-simple">ساده (یک محصول)</label>
-
-            <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-multi" value="multi"
-                   autocomplete="off"
-                   @(wizard.HasBrandModelAttributes ? "" : "disabled") />
-            <label class="btn btn-outline-primary" for="mode-multi">چندبرندی (تولید خودکار گزینه‌ها)</label>
-        </div>
-        @if (!wizard.HasBrandModelAttributes)
-        {
-            <p class="admin-muted mt-2 mb-0">
-                برای استفاده از حالت چندبرندی، ابتدا در «ویژگی‌های متغیر» یک ویژگی از نوع «برند» و یک ویژگی از نوع «مدل» تعریف کنید.
-            </p>
-        }
     </div>
 
     <!-- ════════════════ مسیر ساده ════════════════ -->
     <form method="post" asp-page-handler="Simple" id="form-simple" class="wizard-pane" data-mode="simple">
 
         <!-- تب: اطلاعات پایه -->
-        <div class="prod-form-pane active" id="tab-basic">
+        <div class="prod-form-pane active" data-tab="tab-basic">
             <div class="mb-3">
                 <label class="form-label">عنوان محصول <span class="text-danger">*</span></label>
                 <input asp-for="Title" class="form-control" placeholder="مثال: گوشی سامسونگ Galaxy S24" />
@@ -101,12 +80,12 @@
                 </div>
             </div>
             <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-primary" onclick="switchCreateTab('tab-price')">بعدی: قیمت و موجودی ←</button>
+                <button type="button" class="btn btn-outline-primary" data-goto-tab="tab-price">بعدی: قیمت و موجودی ←</button>
             </div>
         </div>
 
         <!-- تب: قیمت و موجودی -->
-        <div class="prod-form-pane" id="tab-price">
+        <div class="prod-form-pane" data-tab="tab-price">
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">قیمت (تومان) <span class="text-danger">*</span></label>
@@ -120,26 +99,53 @@
                 <div class="col-md-4 mb-3">
                     <label class="form-label">موجودی</label>
                     <input asp-for="Stock" type="number" min="0" class="form-control" />
-                    <div class="form-text admin-muted">برای محصول چندمدلی، بعد از ذخیره در تب «مدل‌ها» تنظیم می‌شود.</div>
+                    <div class="form-text admin-muted">برای محصول چندمدلی، در تب «مدل‌ها» موجودیِ هر گزینه تنظیم می‌شود.</div>
                 </div>
             </div>
             <div class="d-flex gap-2 mt-2">
-                <button type="button" class="btn btn-outline-secondary" onclick="switchCreateTab('tab-basic')">← قبلی</button>
+                <button type="button" class="btn btn-outline-secondary" data-goto-tab="tab-basic">← قبلی</button>
                 <button type="submit" class="btn btn-primary">ذخیره و ادامه</button>
                 <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
             </div>
         </div>
 
+        <!-- تب: مدل‌ها (ساده — فقط سوییچ نوع محصول؛ برای محصول ساده گزینه‌ای ساخته نمی‌شود) -->
+        <div class="prod-form-pane" data-tab="tab-models">
+            <div class="mb-4">
+                <label class="form-label fw-bold">نوع محصول</label>
+                <div class="btn-group" role="group" id="wizard-mode-toggle">
+                    <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-simple" value="simple"
+                           autocomplete="off" checked />
+                    <label class="btn btn-outline-primary" for="mode-simple">ساده (یک محصول)</label>
+
+                    <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-multi" value="multi"
+                           autocomplete="off"
+                           @(wizard.HasBrandModelAttributes ? "" : "disabled") />
+                    <label class="btn btn-outline-primary" for="mode-multi">چندمدلی (تولید خودکار گزینه‌ها)</label>
+                </div>
+                @if (!wizard.HasBrandModelAttributes)
+                {
+                    <p class="admin-muted mt-2 mb-0">
+                        برای استفاده از حالت چندمدلی، ابتدا در «کنترل ویژگی → ویژگی‌های متغیر» یک ویژگی از نوع «برند» و یک ویژگی از نوع «مدل» تعریف کنید.
+                    </p>
+                }
+            </div>
+            <div class="alert alert-info py-2 mb-0">
+                این محصول «ساده» است و فقط یک قیمت/موجودی دارد (تب «قیمت و موجودی»).
+                برای داشتن چند مدل/گزینه با موجودی مستقل، حالت «چندمدلی» را انتخاب کنید.
+            </div>
+        </div>
+
     </form>
 
-    <!-- ════════════════ مسیر چندبرندی ════════════════ -->
+    <!-- ════════════════ مسیر چندمدلی ════════════════ -->
     @if (wizard.HasBrandModelAttributes)
     {
         <form method="post" asp-page-handler="Multi" id="form-multi" class="wizard-pane d-none" data-mode="multi"
               data-wizard='@System.Text.Json.JsonSerializer.Serialize(wizard)'>
 
-            <!-- تب: اطلاعات پایه (چندبرندی) -->
-            <div class="prod-form-pane active" id="tab-basic-multi">
+            <!-- تب: اطلاعات پایه (چندمدلی) -->
+            <div class="prod-form-pane active" data-tab="tab-basic">
                 <div class="mb-3">
                     <label class="form-label">عنوان محصول <span class="text-danger">*</span></label>
                     <input asp-for="Title" class="form-control" placeholder="عنوان کلی محصول" />
@@ -164,6 +170,7 @@
                                 <option value="@b.Id">@b.Name</option>
                             }
                         </select>
+                        <div class="form-text admin-muted">در صورت نداشتن برند، «بدون برند» را انتخاب کنید.</div>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -194,89 +201,118 @@
                         <label class="form-check-label">محصول منتخب</label>
                     </div>
                 </div>
-            </div>
-
-            <!-- انتخاب مدل‌ها + رنگ‌ها -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">مدل‌ها (گروه‌بندی‌شده بر اساس برند)</label>
-                @if (wizard.UnlinkedModelCount > 0)
-                {
-                    <p class="admin-muted">@wizard.UnlinkedModelCount مدل هنوز به هیچ برندی وصل نشده‌اند.</p>
-                }
-                <div class="wizard-brand-list border rounded p-2">
-                    @foreach (var b in wizard.Brands)
-                    {
-                        <div class="wizard-brand mb-2" data-brand-id="@b.ValueId">
-                            <div class="form-check">
-                                <input class="form-check-input wizard-brand-check" type="checkbox" id="brand-@b.ValueId" />
-                                <label class="form-check-label fw-bold" for="brand-@b.ValueId">@b.Name</label>
-                                <span class="admin-muted">(@b.Models.Count مدل)</span>
-                            </div>
-                            <div class="wizard-models ps-4 d-none">
-                                @if (b.Models.Count == 0)
-                                {
-                                    <span class="admin-muted">— مدلی برای این برند تعریف نشده —</span>
-                                }
-                                @foreach (var m in b.Models)
-                                {
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input wizard-model-check" type="checkbox"
-                                               name="ModelValueIds" value="@m.ValueId" id="model-@m.ValueId" />
-                                        <label class="form-check-label" for="model-@m.ValueId">@m.Name</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary" data-goto-tab="tab-price">بعدی: قیمت اولیه ←</button>
                 </div>
             </div>
 
-            @if (wizard.Colors.Count > 0)
-            {
+            <!-- تب: قیمت و موجودی (چندمدلی — قیمت/موجودیِ اولیهٔ همهٔ گزینه‌ها) -->
+            <div class="prod-form-pane" data-tab="tab-price">
+                <p class="admin-muted">این مقادیر به‌عنوان قیمت/موجودیِ اولیهٔ هر گزینه‌ای که ساخته می‌شود اعمال می‌گردند و بعداً در «مدیریت موجودی» قابل تغییرِ تفکیکی هستند.</p>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">قیمت اولیهٔ همهٔ گزینه‌ها (تومان)</label>
+                        <input asp-for="BasePrice" type="number" min="0" class="form-control" />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">قیمت با تخفیف اولیه (اختیاری)</label>
+                        <input asp-for="BaseDiscountPrice" type="number" min="0" class="form-control" />
+                        <div class="form-text admin-muted">باید کمتر از قیمت اصلی باشد.</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">موجودی اولیهٔ هر گزینه</label>
+                        <input asp-for="BaseStock" type="number" min="0" class="form-control" />
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                    <button type="button" class="btn btn-outline-secondary" data-goto-tab="tab-basic">← قبلی</button>
+                    <button type="button" class="btn btn-outline-primary" data-goto-tab="tab-models">بعدی: انتخاب مدل‌ها ←</button>
+                </div>
+            </div>
+
+            <!-- تب: مدل‌ها (چندمدلی — انتخاب برند/مدل/رنگ + تولید گزینه‌ها) -->
+            <div class="prod-form-pane" data-tab="tab-models">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">نوع محصول</label>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-simple-2" value="simple"
+                               autocomplete="off" />
+                        <label class="btn btn-outline-primary" for="mode-simple-2">ساده (یک محصول)</label>
+
+                        <input type="radio" class="btn-check" name="wizardModeToggle" id="mode-multi-2" value="multi"
+                               autocomplete="off" checked />
+                        <label class="btn btn-outline-primary" for="mode-multi-2">چندمدلی (تولید خودکار گزینه‌ها)</label>
+                    </div>
+                </div>
+
                 <div class="mb-3">
-                    <label class="form-label fw-bold">رنگ‌ها (اختیاری)</label>
-                    <div class="border rounded p-2">
-                        @foreach (var c in wizard.Colors)
+                    <label class="form-label fw-bold">مدل‌ها (گروه‌بندی‌شده بر اساس برند)</label>
+                    @if (wizard.UnlinkedModelCount > 0)
+                    {
+                        <p class="admin-muted">@wizard.UnlinkedModelCount مدل هنوز به هیچ برندی وصل نشده‌اند.</p>
+                    }
+                    <div class="wizard-brand-list border rounded p-2">
+                        @foreach (var b in wizard.Brands)
                         {
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox"
-                                       name="ColorValueIds" value="@c.ValueId" id="color-@c.ValueId" />
-                                <label class="form-check-label" for="color-@c.ValueId">
-                                    @if (!string.IsNullOrEmpty(c.ColorHex))
+                            <div class="wizard-brand mb-2" data-brand-id="@b.ValueId">
+                                <div class="form-check">
+                                    <input class="form-check-input wizard-brand-check" type="checkbox" id="brand-@b.ValueId" />
+                                    <label class="form-check-label fw-bold" for="brand-@b.ValueId">@b.Name</label>
+                                    <span class="admin-muted">(@b.Models.Count مدل)</span>
+                                </div>
+                                <div class="wizard-models ps-4 d-none">
+                                    @if (b.Models.Count == 0)
                                     {
-                                        <span class="wizard-color-dot" style="background:@c.ColorHex"></span>
+                                        <span class="admin-muted">— مدلی برای این برند تعریف نشده —</span>
                                     }
-                                    @c.Name
-                                </label>
+                                    @foreach (var m in b.Models)
+                                    {
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input wizard-model-check" type="checkbox"
+                                                   name="ModelValueIds" value="@m.ValueId" id="model-@m.ValueId" />
+                                            <label class="form-check-label" for="model-@m.ValueId">@m.Name</label>
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         }
                     </div>
                 </div>
-            }
 
-            <div class="alert alert-info py-2" id="wizard-variant-summary">
-                با انتخاب مدل‌ها، تعداد گزینه‌هایی که ساخته می‌شود اینجا نمایش داده می‌شود.
+                @if (wizard.Colors.Count > 0)
+                {
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">رنگ‌ها (اختیاری)</label>
+                        <div class="border rounded p-2">
+                            @foreach (var c in wizard.Colors)
+                            {
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="ColorValueIds" value="@c.ValueId" id="color-@c.ValueId" />
+                                    <label class="form-check-label" for="color-@c.ValueId">
+                                        @if (!string.IsNullOrEmpty(c.ColorHex))
+                                        {
+                                            <span class="wizard-color-dot" style="background:@c.ColorHex"></span>
+                                        }
+                                        @c.Name
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="alert alert-info py-2" id="wizard-variant-summary">
+                    با انتخاب مدل‌ها، تعداد گزینه‌هایی که ساخته می‌شود اینجا نمایش داده می‌شود.
+                </div>
+
+                <div class="admin-form__actions">
+                    <button type="button" class="btn btn-outline-secondary" data-goto-tab="tab-price">← قبلی</button>
+                    <button type="submit" class="btn btn-primary">ساخت محصول و تولید گزینه‌ها</button>
+                    <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
+                </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">قیمت اولیهٔ همهٔ گزینه‌ها (تومان)</label>
-                    <input asp-for="BasePrice" type="number" min="0" class="form-control" />
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">قیمت با تخفیف اولیه (اختیاری)</label>
-                    <input asp-for="BaseDiscountPrice" type="number" min="0" class="form-control" />
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">موجودی اولیهٔ هر گزینه</label>
-                    <input asp-for="BaseStock" type="number" min="0" class="form-control" />
-                </div>
-            </div>
-
-            <div class="admin-form__actions">
-                <button type="submit" class="btn btn-primary">ساخت محصول و تولید گزینه‌ها</button>
-                <a asp-page="Index" class="btn btn-outline-secondary">انصراف</a>
-            </div>
         </form>
     }
 </div>
@@ -284,18 +320,39 @@
 @section Scripts {
     <script src="~/admin/product-wizard.js" asp-append-version="true"></script>
     <script>
-        // تب‌بندی فرم ساده
-        function switchCreateTab(tabId) {
-            document.querySelectorAll('#form-simple .prod-form-pane').forEach(p => p.classList.remove('active'));
-            var pane = document.getElementById(tabId);
-            if (pane) pane.classList.add('active');
-            // آپدیت دکمه‌های تب
-            document.querySelectorAll('#create-tabs .prod-form-tab:not(.disabled)').forEach(t => {
-                t.classList.toggle('active', t.dataset.tab === tabId);
+        (function () {
+            var box = document.getElementById('product-create-form');
+            if (!box) return;
+            var tabButtons = box.querySelectorAll('#create-tabs .prod-form-tab');
+            var activeTab = 'tab-basic';
+
+            function applyTab(tabId) {
+                activeTab = tabId;
+                box.querySelectorAll('.wizard-pane .prod-form-pane').forEach(function (p) {
+                    p.classList.toggle('active', p.dataset.tab === tabId);
+                });
+                tabButtons.forEach(function (t) {
+                    if (!t.classList.contains('disabled')) {
+                        t.classList.toggle('active', t.dataset.tab === tabId);
+                    }
+                });
+            }
+
+            // کلیک روی تب‌های فعال
+            tabButtons.forEach(function (btn) {
+                if (btn.classList.contains('disabled')) return;
+                btn.addEventListener('click', function () { applyTab(this.dataset.tab); });
             });
-        }
-        document.querySelectorAll('#create-tabs .prod-form-tab:not(.disabled)').forEach(function(btn) {
-            btn.addEventListener('click', function() { switchCreateTab(this.dataset.tab); });
-        });
+
+            // دکمه‌های پیمایش داخل پنل‌ها (بعدی/قبلی)
+            box.querySelectorAll('[data-goto-tab]').forEach(function (btn) {
+                btn.addEventListener('click', function () { applyTab(this.dataset.gotoTab); });
+            });
+
+            // وقتی حالت (ساده/چندمدلی) عوض شد، همان تب فعلی را در فرمِ جدید نشان بده.
+            box.addEventListener('wizard:modechange', function () { applyTab(activeTab); });
+
+            applyTab('tab-basic');
+        })();
     </script>
 }

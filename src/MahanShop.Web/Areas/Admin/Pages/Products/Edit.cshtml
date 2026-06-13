@@ -209,6 +209,19 @@
     <div class="prod-form-pane" id="ep-variants">
         @if (Model.VariantsView is not null)
         {
+        @if (!Model.VariantsView.HasVariants)
+        {
+            <div class="alert alert-info">
+                <p class="mb-2"><strong>این محصول «ساده» است.</strong> برای داشتن چند مدل/گزینه با قیمت و موجودیِ مستقل، آن را به «چندمدلی» تبدیل کنید.</p>
+                <form method="post" asp-page-handler="EnableVariants" class="d-inline">
+                    <input type="hidden" asp-for="Id" />
+                    <button type="submit" class="btn btn-sm btn-primary">تبدیل به محصول چندمدلی</button>
+                </form>
+                <span class="admin-muted ms-2" style="font-size:13px;">یا تیک «دارای واریانت» را در تب «اطلاعات پایه» بزنید و ذخیره کنید.</span>
+            </div>
+        }
+        else
+        {
             <div class="admin-panel-box__head mb-3">
                 <h3 class="admin-section-title">گزینه‌ها و موجودی</h3>
                 <div class="admin-toolbar__actions">
@@ -221,13 +234,6 @@
                 </div>
             </div>
             <p class="admin-muted" style="font-size:13px;">ساختار CSV: <code>brand,model,color,stock,sku</code></p>
-
-            @if (!Model.VariantsView.HasVariants)
-            {
-                <div class="alert alert-info">
-                    این محصول «ساده» است. تیک «دارای واریانت» را در تب «اطلاعات پایه» بزنید و ذخیره کنید تا گزینه‌ها فعال شوند.
-                </div>
-            }
 
             <table class="table admin-table">
                 <thead>
@@ -324,6 +330,7 @@
                     <button type="submit" class="btn btn-success">افزودن گزینه</button>
                 </form>
             }
+        }
         }
         else
         {

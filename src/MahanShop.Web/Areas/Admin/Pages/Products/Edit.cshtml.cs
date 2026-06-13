@@ -129,6 +129,27 @@ public class EditModel : PageModel
         return RedirectToPage(new { id = Id });
     }
 
+    // تبدیل محصول ساده به چندمدلی (فعال‌کردن HasVariants) — از تب «مدل‌ها».
+    public async Task<IActionResult> OnPostEnableVariantsAsync()
+    {
+        try
+        {
+            var p = await _mediator.Send(new GetProductForEditQuery(Id))
+                ?? throw new ValidationException("محصول یافت نشد.");
+            await _mediator.Send(new UpdateProductCommand(
+                p.Id, p.Title, p.Slug, p.ShortDescription, p.Description,
+                p.Price, p.DiscountPrice, p.Stock, true, p.IsActive, p.IsFeatured,
+                p.MetaTitle, p.MetaDescription, p.BrandId, p.CategoryId));
+            TempData["AdminOk"] = "محصول به چندمدلی تبدیل شد. اکنون گزینه‌ها را اضافه کنید.";
+        }
+        catch (ValidationException ex)
+        {
+            TempData["AdminErr"] = ex.Errors.FirstOrDefault()?.ErrorMessage ?? ex.Message;
+        }
+        TempData["ReturnTab"] = "ep-variants";
+        return RedirectToPage(new { id = Id });
+    }
+
     // افزودن عکس به گالری
     public async Task<IActionResult> OnPostAddImageAsync()
     {
