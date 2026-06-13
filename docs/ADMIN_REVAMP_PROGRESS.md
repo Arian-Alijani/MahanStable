@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F5a (بازطراحی فرم محصول: بخش‌های ۱-۹ + گالری + مشخصات‌فنی + بدون‌برند) ✅ تمام. قدم بعد = F5b (wizard چندمدلی — سشن بعدی).**
+**فاز جاری: F5b (بخش ۱۰ «چندمدلی» — wizard واریانت کامل در تب «مدل‌ها») ✅ تمام. قدم بعد = F6 (تب محصولات: باکس آماری + جست‌وجو/فیلتر).**
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -23,7 +23,7 @@
 - [x] **F3** — تب کنترل ویژگی یکپارچه (برند/مدل/ویژگی/تگ/دسته) + CRUD نوع پست.
 - [x] **F4** — چک‌اوت: انتخاب نوع پست + هزینهٔ سمت سرور + snapshot + فاکتور/سفارش نوع‌پست.
 - [x] **F5a** — فرم محصول بخش‌های ۱-۹ + گالری: تب‌بندی ۵تایی + بدون‌برند + مشخصات‌فنی inline.
-- [ ] **F5b** — بخش ۱۰ «چند‌مدلی»: wizard واریانت کامل در تب «مدل‌ها». *(سشن بعدی)*
+- [x] **F5b** — بخش ۱۰ «چند‌مدلی»: wizard واریانت کامل در تب «مدل‌ها».
 - [ ] **F6** — تب محصولات: باکس آماری + جست‌وجو/فیلتر.
 - [ ] **F7** — تب موجودی: واریانت کامل، کنترل تفکیکی.
 - [ ] **F8** — تب سفارش‌ها: سورت/جست‌وجو/تغییر‌وضعیت/کدرهگیری/فاکتور.
@@ -35,6 +35,20 @@
 ---
 
 ## دفتر ثبت (هر فاز: چه شد / فایل‌ها / لمس فروشگاه عمومی / migration / قدم بعد)
+
+### F5b — بخش ۱۰ «چندمدلی» + wizard واریانت کامل ✅ (2026-06-13)
+- **چه شد:** تب «مدل‌ها» در فرم افزودن محصول (Create) از placeholder به wizardِ کاملِ چندمدلی تبدیل شد و با تب‌بندیِ ۵تاییِ F5a کاملاً هماهنگ گردید. تب «مدل‌ها» در ویرایش (Edit) با افزودن اکشن «تبدیل به چندمدلی» و گِیت‌کردنِ گرید/فرمِ افزودن گزینه بهبود یافت.
+- **🔴 باگِ بحرانیِ کشف‌شده و رفع‌شده:** `product-wizard.js` با `getElementById("product-wizard")` دنبال ریشه می‌گشت، اما `Create.cshtml` ریشه‌اش `id="product-create-form"` بود → **کل JS ویزارد بی‌اثر بود** (سوییچِ ساده/چندبرندی، باز/بستِ مدل‌های هر برند، و شمارندهٔ زندهٔ گزینه‌ها هیچ‌کدام کار نمی‌کرد). JS اصلاح شد تا هر دو شناسه را بپذیرد.
+- **فایل‌های تغییر‌یافته:**
+  - `src/MahanShop.Web/wwwroot/admin/product-wizard.js` — بازنویسی: (۱) ریشه = `product-wizard || product-create-form`؛ (۲) گوش‌دادن به **همهٔ** رادیوهای `wizardModeToggle` (نه فقط toggleِ فرمِ ساده) + هم‌گام‌سازیِ همهٔ گروه‌ها هنگام تغییر حالت؛ (۳) رویدادِ سفارشیِ `wizard:modechange` که به لایهٔ تب‌بندی خبر می‌دهد تا تبِ فعال را در فرمِ جدید نشان دهد؛ (۴) `setPaneDisabled` فیلدهای فرمِ غیرفعال را disable می‌کند (ضدّ ارسالِ ناخواسته).
+  - `src/MahanShop.Web/Areas/Admin/Pages/Products/Create.cshtml` — بازنویسی: تب «مدل‌ها» حالا فعال است؛ سوییچِ «ساده/چندمدلی» داخل همین تب در **هر دو** فرم؛ فرمِ چندمدلی پنل‌های `tab-basic`/`tab-price`/`tab-models` خودش را دارد؛ انتخاب برند→مدل→رنگ + شمارندهٔ زنده داخل تب «مدل‌ها»؛ دکمه‌های پیمایش `data-goto-tab`؛ JS تب‌بندیِ صفحه روی فرمِ فعال (نه d-none) کار می‌کند و با `wizard:modechange` همگام می‌شود. متن‌ها از «چندبرندی» به «چندمدلی» یکدست شد. dropdown برند راهنمای «بدون برند» گرفت.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Products/Edit.cshtml` — تب «مدل‌ها»: اگر `HasVariants=false` فقط کارتِ راهنما + دکمهٔ «تبدیل به محصول چندمدلی» نشان داده می‌شود (گرید/فرمِ افزودن گزینه پنهان تا سردرگمی نشود)؛ اگر `true` همان گرید/افزودن/CSV/QuickStock/Toggle/Delete موجود.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Products/Edit.cshtml.cs` — handler جدید `OnPostEnableVariantsAsync` (محصول را با همان مقادیر فعلی + `HasVariants=true` از طریق `UpdateProductCommand` ذخیره می‌کند) + `TempData["ReturnTab"]="ep-variants"`.
+- **بررسی Application (طبق روادمپ):** `CreateMultiBrandProductCommand`/`GetProductWizardDataQuery`/`ProductWizardDtos` بازبینی شدند و **بدون تغییر** هماهنگ با تب‌بندیِ جدیدند (همان نام‌های فیلدِ فرم: `ModelValueIds`/`ColorValueIds`/`BasePrice`/`BaseDiscountPrice`/`BaseStock`). Validatorها: `CreateProductCommand` و `CreateMultiBrandProductCommand` هر دو `Price/BasePrice` و `Stock/BaseStock` را `>= 0` می‌گیرند → برای `HasVariants=true` قیمت/موجودیِ سطحِ محصول اجباریِ مثبت نیست (مسیرِ چندمدلی اصلاً Price/Stock محصول را نمی‌فرستد و handler آن را `Stock=0` می‌گذارد). پس تغییرِ validator لازم نشد.
+- **لمس فروشگاه عمومی:** هیچ. فقط `Areas/Admin/Products` + `wwwroot/admin/product-wizard.js` — مرز فاز رعایت شد.
+- **migration:** هیچ. صفر تغییر Domain/DB.
+- **build:** ✅ `bash tools/build.sh` = **0 Error** (۵ warning همگی pre-existing از فازهای قبل). JS: `bash tools/check-js.sh` = 10 passed, 0 failed + `node --check product-wizard.js` سبز. Domestic-only audit: صفر URL خارجی در فایل‌های تغییریافته.
+- **قدم بعد = F6** (تب «محصولات»: باکس‌های آماری گرافیکی همه/موجود/ناموجود/موجودی‌کم + پنل جست‌وجو/فیلتر/سورت سمت سرور).
 
 ### F5a — فرم محصول بخش‌های ۱-۹ + گالری ✅ (2026-06-13)
 - **چه شد:** فرم افزودن/ویرایش محصول با تب‌بندی ۵تایی بازطراحی شد. بخش‌های ۱ تا ۹ (اطلاعات پایه / قیمت و موجودی / مشخصات فنی / مدل‌ها placeholder / تصاویر) پیاده شدند. گزینهٔ «بدون برند» به dropdown برند اضافه شد. مشخصات فنی با CRUD inline (افزودن Feature+مقدار / حذف) در تب Edit فعال است.
