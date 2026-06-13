@@ -63,6 +63,25 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .WithMany()
             .HasForeignKey(x => x.AddressId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // snapshot نام نوع پست (مثل ProductTitle). نرخ در ShippingCost ذخیره می‌شود.
+        b.Property(x => x.ShippingMethodName).HasMaxLength(150);
+
+        // FK نوع پست با SetNull: حذف یک روش ارسال نباید سفارش‌های قدیمی را بشکند (snapshot نام/نرخ داریم).
+        b.HasOne(x => x.ShippingMethod)
+            .WithMany()
+            .HasForeignKey(x => x.ShippingMethodId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
+public class ShippingMethodConfiguration : IEntityTypeConfiguration<ShippingMethod>
+{
+    public void Configure(EntityTypeBuilder<ShippingMethod> b)
+    {
+        b.Property(x => x.Name).HasMaxLength(150).IsRequired();
+        b.Property(x => x.Description).HasMaxLength(500);
+        b.HasIndex(x => x.DisplayOrder);
     }
 }
 

@@ -41,6 +41,7 @@ P0–P8 ✅ تمام. پنل ادمین (`Areas/Admin`، ۳۲ صفحهٔ Razor،
 - مدل داده نهایی — همون نمونه یا تغییر؟
 
 ## Changelog
+- 2026-06-13: **ADMIN REVAMP F2 تمام** (Domain نوع پست + snapshot سفارش + Migration). entity جدید `ShippingMethod` (Name/Cost long تومان/IsActive/DisplayOrder/Description؛ نرخ ثابت per-method). `Order` snapshot نوع پست گرفت (`ShippingMethodId?`+`ShippingMethodName?`؛ `ShippingCost` = snapshot نرخ). `ShippingMethodConfiguration` + FK `Order.ShippingMethodId` با **SetNull**. `DbSet<ShippingMethod>` در IApplicationDbContext+MyDbContext. migration `Add_ShippingMethods` (با `dotnet ef` در sandbox؛ snapshot به‌روز). seed ۳ نمونه (idempotent، dev-only). build = 0 Error. **هیچ UI/فروشگاه عمومی لمس نشد** (`Order.ShippingCost` هنوز در PlaceOrder هاردکد 0 — در F4 از DB پر می‌شود). جزئیات: `docs/ADMIN_REVAMP_PROGRESS.md`.
 - 2026-06-11: استک قفل شد، docs ساخته شد.
 - 2026-06-11: پیش‌نیاز نصب (.NET8 SDK + dotnet-ef). **P0 Scaffold تمام**: sln + 5 پروژه net8.0، refها، پکیج‌ها (MediatR12/EFCore8/FluentValidation11/QuestPDF)، web.config in-process، .gitignore، appsettings.sample. build سبز، Home HTTP 200.
 - 2026-06-11: **P1 Domain+Data تمام**: 17 entity + BaseEntity + 2 enum (بازطراحی تمیز)، IApplicationDbContext، MyDbContext، 4 فایل Fluent config (DeleteBehavior دقیق برای جلوگیری از multiple-cascade-path)، DependencyContainer، Program.cs بازنویسی. migration `InitialCreate` ساخته و رو LocalDB اعمال شد → 18 جدول (17 + __EFMigrationsHistory). build سبز.

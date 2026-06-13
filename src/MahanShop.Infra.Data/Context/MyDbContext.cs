@@ -29,6 +29,7 @@ public class MyDbContext : DbContext, IApplicationDbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<ShippingMethod> ShippingMethods => Set<ShippingMethod>();
     public DbSet<Banner> Banners => Set<Banner>();
     public DbSet<HomeSection> HomeSections => Set<HomeSection>();
 

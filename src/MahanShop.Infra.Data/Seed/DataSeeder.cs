@@ -21,6 +21,7 @@ public static class DataSeeder
         await db.Database.MigrateAsync();
         await SeedCatalogAsync(db);
         await SeedHomeAsync(db);
+        await SeedShippingMethodsAsync(db);
         await SeedAdminAsync(db);
     }
 
@@ -181,6 +182,22 @@ public static class DataSeeder
                 new HomeSection { Title = "", SectionType = HomeSectionType.PromoBanner, ImageUrl = "/img/banners/promo-airpod.svg", LinkUrl = "/airpod", Subtitle = "هندزفری بی‌سیم", IsHalfWidth = true, DisplayOrder = 6 }
             );
         }
+
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// نوع‌های پست نمونه (idempotent — فقط اگر هیچ روشی وجود نداشته باشد). نرخ ثابت per-method.
+    /// </summary>
+    private static async Task SeedShippingMethodsAsync(MyDbContext db)
+    {
+        if (await db.ShippingMethods.AnyAsync()) return;
+
+        db.ShippingMethods.AddRange(
+            new ShippingMethod { Name = "پست پیشتاز", Cost = 60_000, DisplayOrder = 1, IsActive = true, Description = "تحویل ۲ تا ۳ روز کاری" },
+            new ShippingMethod { Name = "پست سفارشی", Cost = 35_000, DisplayOrder = 2, IsActive = true, Description = "تحویل ۴ تا ۷ روز کاری" },
+            new ShippingMethod { Name = "تیپاکس", Cost = 90_000, DisplayOrder = 3, IsActive = true, Description = "تحویل سریع درب منزل" }
+        );
 
         await db.SaveChangesAsync();
     }
