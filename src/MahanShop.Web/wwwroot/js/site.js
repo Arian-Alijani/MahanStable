@@ -50,24 +50,36 @@
 
     /* ---------- Drag-to-scroll carousels (pointer) ---------- */
     document.querySelectorAll('[data-carousel]').forEach(el => {
-        let down = false, startX = 0, startScroll = 0, moved = false;
+        let down = false, startX = 0, startScroll = 0, moved = false, pid = null;
+
+        // جلوگیری از درگ native تصاویر/لینک‌ها (که باعث بهم‌ریختگی می‌شد)
+        el.querySelectorAll('img, a').forEach(n => { n.setAttribute('draggable', 'false'); });
+        el.addEventListener('dragstart', e => e.preventDefault());
+
         el.addEventListener('pointerdown', e => {
             if (e.pointerType === 'mouse' && e.button !== 0) return;
-            down = true; moved = false; startX = e.clientX; startScroll = el.scrollLeft;
+            down = true; moved = false; startX = e.clientX; startScroll = el.scrollLeft; pid = e.pointerId;
             el.classList.add('dragging');
+            try { el.setPointerCapture(pid); } catch (_) {}
         });
         el.addEventListener('pointermove', e => {
             if (!down) return;
             const dx = e.clientX - startX;
             if (Math.abs(dx) > 4) moved = true;
-            el.scrollLeft = startScroll - dx;
+            if (moved) {
+                el.scrollLeft = startScroll - dx;
+                e.preventDefault();
+            }
         });
-        function up() { down = false; el.classList.remove('dragging'); }
+        function up() {
+            if (!down) return;
+            down = false; el.classList.remove('dragging');
+            if (pid != null) { try { el.releasePointerCapture(pid); } catch (_) {} pid = null; }
+        }
         el.addEventListener('pointerup', up);
         el.addEventListener('pointercancel', up);
-        el.addEventListener('pointerleave', up);
-        // جلوگیری از کلیک ناخواسته بعد از درگ
-        el.addEventListener('click', e => { if (moved) { e.preventDefault(); e.stopPropagation(); } }, true);
+        // جلوگیری از کلیک ناخواسته بعد از درگ (روی هر فرزندی)
+        el.addEventListener('click', e => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
     });
 
     /* ---------- Add to cart (P6): ajax → /cart/add. قیمت سمت سرور. ---------- */
