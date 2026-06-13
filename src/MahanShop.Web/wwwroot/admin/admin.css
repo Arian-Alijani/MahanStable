@@ -698,3 +698,173 @@
 .feature-add-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
 .feature-add-row .form-select, .feature-add-row .form-control { flex: 1 1 160px; }
 .feature-add-row .btn { flex: 0 0 auto; }
+
+/* ════════════════════════════════════════════════════════
+   تب «سفارش‌ها» F8 — لیست + جزییات
+   ════════════════════════════════════════════════════════ */
+
+/* ── سربرگ صفحه ── */
+.orders8-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
+}
+
+/* ── کارت‌های آمار ── */
+.orders8-stats {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 10px; margin-bottom: 18px;
+}
+.orders8-stat {
+    display: flex; flex-direction: column; gap: 5px; align-items: center;
+    padding: 13px 10px; border-radius: 13px; text-decoration: none;
+    background: var(--admin-card); border: 1.5px solid var(--admin-border);
+    transition: border-color .15s, box-shadow .15s, transform .12s;
+    text-align: center;
+}
+.orders8-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -12px rgba(15,23,42,.35); border-color: #cbd5e1; }
+.orders8-stat.is-active { border-color: var(--admin-accent); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.orders8-stat__value { font-size: 22px; font-weight: 800; line-height: 1; }
+.orders8-stat__label { font-size: 11.5px; color: #64748b; font-weight: 600; white-space: nowrap; }
+
+.orders8-stat--total   .orders8-stat__value { color: #334155; }
+.orders8-stat--pending  .orders8-stat__value { color: #b45309; }
+.orders8-stat--paid     .orders8-stat__value { color: #0369a1; }
+.orders8-stat--processing .orders8-stat__value { color: #7c3aed; }
+.orders8-stat--shipped  .orders8-stat__value { color: #0891b2; }
+.orders8-stat--delivered .orders8-stat__value { color: #16a34a; }
+.orders8-stat--canceled  .orders8-stat__value { color: #dc2626; }
+
+/* ── نوار فیلتر ── */
+.orders8-filterbar {
+    background: var(--admin-card); border: 1px solid var(--admin-border);
+    border-radius: 14px; padding: 14px; margin-bottom: 14px;
+}
+.orders8-filterform { display: flex; flex-direction: column; gap: 10px; }
+.orders8-search { position: relative; display: flex; align-items: center; }
+.orders8-search svg { position: absolute; inset-inline-start: 14px; color: #94a3b8; pointer-events: none; }
+.orders8-search .form-control { padding-inline-start: 42px; height: 44px; font-size: 14.5px; border-radius: 11px; }
+.orders8-filters { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+.orders8-filters .form-select,
+.orders8-filters .form-control { min-width: 130px; flex: 0 1 auto; border-radius: 10px; }
+.orders8-sort-select { min-width: 160px; }
+.orders8-filters .btn { border-radius: 10px; }
+
+/* ── خلاصه نتایج و چیپس‌ها ── */
+.orders8-resultbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.orders8-count { font-weight: 700; font-size: 14px; color: #334155; }
+.orders8-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.orders8-chip {
+    display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px;
+    border-radius: 999px; background: #eff6ff; color: var(--admin-accent);
+    border: 1px solid #bfdbfe; font-size: 12.5px; font-weight: 600;
+    text-decoration: none; transition: background .15s;
+}
+.orders8-chip:hover { background: #dbeafe; }
+
+/* ── جدول ── */
+.orders8-tablebox { padding: 0; overflow: hidden; }
+.orders8-table { margin: 0; }
+.orders8-table thead th { background: #f8fafc; padding: 12px 16px; border-bottom: 1px solid var(--admin-border); white-space: nowrap; }
+.orders8-table tbody td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.orders8-table tbody tr:last-child td { border-bottom: none; }
+.orders8-table tbody tr:hover { background: #f8fafc; }
+.orders8-sort-link { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.orders8-sort-link:hover { color: var(--admin-accent); text-decoration: underline; }
+.orders8-sort-link.is-active { color: var(--admin-accent); }
+
+.orders8-date { display: flex; flex-direction: column; gap: 2px; }
+.orders8-date small { font-size: 12px; }
+.orders8-code { font-size: 14px; color: #1e293b; letter-spacing: .02em; }
+.orders8-customer { font-weight: 600; font-size: 14px; }
+.orders8-amount { font-weight: 700; font-size: 14.5px; color: #0f172a; }
+.orders8-tracking { font-weight: 600; color: #0369a1; font-size: 13px; }
+
+/* ════ صفحه جزییات سفارش ════ */
+
+/* سربرگ */
+.orders8-detail-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.orders8-detail-title { display: flex; align-items: center; gap: 12px; }
+.orders8-detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.orders8-back-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--admin-border); background: var(--admin-card);
+    color: #475569; text-decoration: none; transition: background .15s, color .15s;
+    flex: none;
+}
+.orders8-back-btn:hover { background: #f1f5f9; color: #0f172a; }
+
+/* نوار پیشرفت */
+.orders8-steps {
+    display: flex; align-items: center; gap: 0;
+    justify-content: flex-start; flex-wrap: wrap; gap: 0;
+    padding: 8px 0 4px;
+}
+.orders8-step {
+    display: flex; align-items: center; gap: 8px;
+    flex: 1; min-width: 0;
+}
+.orders8-step__dot {
+    width: 32px; height: 32px; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: #e2e8f0; color: #94a3b8; font-weight: 700; font-size: 13px;
+    border: 2px solid #e2e8f0; transition: background .2s, color .2s;
+}
+.orders8-step.is-done .orders8-step__dot {
+    background: #dcfce7; color: #16a34a; border-color: #86efac;
+}
+.orders8-step.is-active .orders8-step__dot {
+    background: var(--admin-accent); color: #fff; border-color: var(--admin-accent);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.18);
+}
+.orders8-step__label { font-size: 13px; font-weight: 600; color: #94a3b8; white-space: nowrap; }
+.orders8-step.is-done .orders8-step__label,
+.orders8-step.is-active .orders8-step__label { color: #1e293b; }
+.orders8-step__line {
+    flex: 1; height: 2px; background: #e2e8f0; min-width: 16px;
+    transition: background .2s;
+}
+.orders8-step__line.is-done { background: #86efac; }
+
+.orders8-pending-notice,
+.orders8-canceled-notice {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 10px; font-weight: 600; font-size: 14px;
+}
+.orders8-pending-notice { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+.orders8-canceled-notice { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* فرم تغییر وضعیت */
+.orders8-status-form { display: flex; flex-direction: column; gap: 0; }
+
+/* بج کد رهگیری */
+.orders8-tracking-badge {
+    display: inline-block; padding: 4px 12px; border-radius: 999px;
+    background: #dbeafe; color: #1d4ed8; font-weight: 700; font-size: 13.5px;
+    letter-spacing: .04em;
+}
+
+/* جدول اقلام */
+.orders8-items-table tfoot td { font-size: 14px; padding: 10px 16px; }
+.orders8-tfoot-row td { border-top: 1px solid #f1f5f9; }
+.orders8-tfoot-discount td { color: #dc2626; }
+.orders8-tfoot-final td { border-top: 2px solid var(--admin-border); }
+
+/* ── ریسپانسیو ── */
+@media (max-width: 1200px) {
+    .orders8-stats { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 900px) {
+    .orders8-stats { grid-template-columns: repeat(3, 1fr); }
+    .orders8-table { min-width: 720px; }
+    .orders8-tablebox { overflow-x: auto; }
+    .orders8-steps { gap: 8px; }
+    .orders8-step__line { min-width: 8px; }
+}
+@media (max-width: 600px) {
+    .orders8-stats { grid-template-columns: repeat(2, 1fr); }
+    .orders8-filters .form-select { min-width: 0; flex: 1 1 45%; }
+}

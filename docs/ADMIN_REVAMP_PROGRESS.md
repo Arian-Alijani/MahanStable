@@ -8,7 +8,7 @@
 ---
 
 ## وضعیت فعلی
-**فاز جاری: F7 (تب «مدیریت موجودی»: پشتیبانی کامل واریانت‌ها، کنترل تفکیکی) ✅ تمام. قدم بعد = F8 (تب «سفارش‌ها»: سورت پیشرفته + جست‌وجو + تغییر وضعیت + کد رهگیری + فاکتور).**
+**فاز جاری: F8 (تب «سفارش‌ها») ✅ تمام. قدم بعد = F9 (تب «کاربران»: جست‌وجو + حذف + ادمین‌کردن + جزییات+سفارش‌ها).**
 
 محیط: Linux sandbox، dotnet **نصب شد** (8.0.422، ~۱۷s) → build واقعی اجرا شد. JS با `node --check`.
 شاخه: `genspark_ai_developer`. baseline تمیز قبل ادمین: tag `baseline-before-admin-panel`.
@@ -26,7 +26,7 @@
 - [x] **F5b** — بخش ۱۰ «چند‌مدلی»: wizard واریانت کامل در تب «مدل‌ها».
 - [x] **F6** — تب محصولات: باکس آماری + جست‌وجو/فیلتر.
 - [x] **F7** — تب موجودی: product-group view، واریانت کامل، کنترل تفکیکی.
-- [ ] **F8** — تب سفارش‌ها: سورت/جست‌وجو/تغییر‌وضعیت/کدرهگیری/فاکتور.
+- [x] **F8** — تب سفارش‌ها: سورت/جست‌وجو/تغییر‌وضعیت/کدرهگیری/فاکتور.
 - [ ] **F9** — تب کاربران: جست‌وجو/جزئیات/حذف/ادمین‌کردن.
 - [ ] **F10** — داشبورد گرافیکی.
 - [ ] **F11** — نمایش محصول عمومی: تب ویژگی‌ها + انتخاب مدل/زیرمدل + تخفیف کارت.
@@ -35,6 +35,34 @@
 ---
 
 ## دفتر ثبت (هر فاز: چه شد / فایل‌ها / لمس فروشگاه عمومی / migration / قدم بعد)
+
+### F8 — تب «سفارش‌ها» (سورت/آمار/جست‌وجو/کدرهگیری/جزییات) ✅ (2026-06-13)
+- **چه شد:** تب «سفارش‌ها» از لیست ساده به یک کنسول کامل مدیریت سفارش بازطراحی شد.
+- **تصمیم‌های طراحی:**
+  - **سورت چهارگانه:** `OrderSortOption` enum با Newest (پیش‌فرض)/Oldest/AmountDesc/AmountAsc. لینک‌های کلیک‌پذیر روی سرستون‌های «تاریخ» و «مبلغ».
+  - **کارت‌های آمار ۷‌تایی:** Total/Pending/Paid/Processing/Shipped/Delivered/Canceled — هر کارت فیلتر سریع است. آمار روی همان query فیلترشده محاسبه می‌شود.
+  - **کد رهگیری مستقل:** `UpdateOrderTrackingCommand` جدید برای ثبت/ویرایش کد رهگیری بدون تغییر وضعیت — handler `OnPostTrackingAsync` در Detail. انعکاس خودکار در پنل کاربر (`Order.TrackingCode` خوانده می‌شود).
+  - **Progress bar وضعیت:** در صفحه جزییات نوار گرافیکی Paid→Processing→Shipped→Delivered با حالت‌های done/active/pending. برای لغو و در انتظار، notice رنگی جداگانه.
+  - **فرم تغییر وضعیت:** حفظ `ChangeOrderStatusCommand` + bind جداگانه `StatusTrackingCode` برای ثبت همزمان.
+  - **ستون روش ارسال:** `ShippingMethodName` به `AdminOrderListItemDto` و پروجکشن `GetOrdersQuery` اضافه شد.
+  - **چیپس فیلتر فعال:** جست‌وجو/وضعیت/بازه تاریخ با لینک حذف تفکیکی.
+  - **تغییر وضعیت → سمت کاربر:** `Order.Status` در هر دو پنل کاربر و ادمین از همان جدول خوانده می‌شود → تغییر ادمین خودکار منعکس است (صفر تغییر لازم نبود).
+  - **فاکتور:** کامل است از F4 (ShippingMethodName در PDF) — در این فاز دکمه فاکتور در detail بهتر طراحی شد.
+- **فایل‌های جدید:**
+  - `src/MahanShop.Application/Features/Admin/Orders/UpdateOrderTrackingCommand.cs` — command + validator جدید.
+- **فایل‌های تغییریافته:**
+  - `src/MahanShop.Application/Features/Admin/Orders/GetOrdersQuery.cs` — سورت + آمار.
+  - `src/MahanShop.Application/Features/Admin/Orders/OrderAdminDtos.cs` — `AdminOrderStatsDto` + `OrderSortOption` + `ShippingMethodName`.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Orders/Index.cshtml.cs` — Sort + HasFilter.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Orders/Index.cshtml` — بازنویسی کامل.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Orders/Detail.cshtml.cs` — handler رهگیری جدید.
+  - `src/MahanShop.Web/Areas/Admin/Pages/Orders/Detail.cshtml` — بازنویسی کامل.
+  - `src/MahanShop.Web/wwwroot/admin/admin.css` — بلوک `orders8-*`.
+- **لمس فروشگاه عمومی:** هیچ. فقط `Areas/Admin/Orders`, `Features/Admin/Orders`, `wwwroot/admin`.
+- **migration:** هیچ. صفر تغییر Domain/DB.
+- **build:** ✅ `dotnet build` = **0 Error** (5 warning همگی pre-existing). `node --check` = 8 ok. JS tests = 10 passed. Domestic-only: صفر URL خارجی.
+- **PR:** https://github.com/Arian-Alijani/MahanStable/pull/27
+- **قدم بعد = F9** (تب «کاربران»: جست‌وجو + حذف (منع اگر سفارش دارد) + ادمین‌کردن/سلب (محافظت آخرین ادمین) + جزییات+سفارش‌ها).
 
 ### F7 — تب «مدیریت موجودی» (product-group view + کنترل تفکیکی) ✅ (2026-06-13)
 - **چه شد:** تب «مدیریت موجودی» از نمای واریانت‌محور قدیمی به نمای **product-group** بازطراحی شد. هر ردیف یک محصول است. محصول ساده با ویرایش inline قیمت/تخفیف/موجودی، محصول واریانتی با expand قابل کلیک که جدول همهٔ واریانت‌هایش را با کنترل تفکیکی نشان می‌دهد.
