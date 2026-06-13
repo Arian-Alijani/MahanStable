@@ -1,7 +1,7 @@
 @model List<HomeBannerDto>
 @if (Model.Count == 0) { return; }
 
-<section class="hero" data-hero aria-label="بنرهای ویژه">
+<section class="hero" data-hero aria-label="بنرهای ویژه" aria-roledescription="carousel">
     <div class="hero__viewport">
         @for (var i = 0; i < Model.Count; i++)
         {
@@ -18,5 +18,18 @@
         }
     </div>
 
-    @* دکمه‌های جابجایی (فلش/نقطه) به‌خواست کاربر حذف شدند؛ بنر هر ۱۵ ثانیه خودکار عوض می‌شود. *@
+    @if (Model.Count > 1)
+    {
+        @* نوار نشانگر — هر قطعه یک اسلاید؛ قطعهٔ فعال پُر می‌شود و با کلیک جابجا می‌شود *@
+        <div class="hero__bars" role="tablist" aria-label="انتخاب بنر">
+            @for (var i = 0; i < Model.Count; i++)
+            {
+                <button type="button" class="hero__bar @(i == 0 ? "is-active" : "")" data-hero-bar
+                        role="tab" aria-selected="@(i == 0 ? "true" : "false")"
+                        aria-label="بنر @(i + 1) از @Model.Count">
+                    <span class="hero__bar-fill"></span>
+                </button>
+            }
+        </div>
+    }
 </section>

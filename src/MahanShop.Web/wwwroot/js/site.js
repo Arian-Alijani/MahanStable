@@ -4,9 +4,11 @@
 
     /* ---------- Mobile drawer ---------- */
     const drawer = document.querySelector('[data-drawer]');
-    function openDrawer() { if (drawer) { drawer.hidden = false; document.body.style.overflow = 'hidden'; } }
-    function closeDrawer() { if (drawer) { drawer.hidden = true; document.body.style.overflow = ''; } }
-    document.querySelectorAll('[data-drawer-open]').forEach(b => b.addEventListener('click', openDrawer));
+    const drawerToggles = document.querySelectorAll('[data-drawer-open]');
+    function setToggleState(on) { drawerToggles.forEach(b => b.setAttribute('aria-expanded', on ? 'true' : 'false')); }
+    function openDrawer() { if (drawer) { drawer.hidden = false; document.body.style.overflow = 'hidden'; setToggleState(true); } }
+    function closeDrawer() { if (drawer) { drawer.hidden = true; document.body.style.overflow = ''; setToggleState(false); } }
+    drawerToggles.forEach(b => b.addEventListener('click', openDrawer));
     document.querySelectorAll('[data-drawer-close]').forEach(b => b.addEventListener('click', closeDrawer));
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
@@ -20,26 +22,51 @@
         });
     }
 
-    /* ---------- Hero slider (crossfade خودکار — بدون دکمهٔ جابجایی، هر ۱۵ ثانیه) ---------- */
+    /* ---------- Hero slider (crossfade خودکار + نوار نشانگر کلیک‌پذیر) ---------- */
+    const HERO_INTERVAL = 6000; // مدت نمایش هر بنر
     document.querySelectorAll('[data-hero]').forEach(hero => {
         const slides = Array.from(hero.querySelectorAll('[data-hero-slide]'));
         if (slides.length < 2) return;
+        const bars = Array.from(hero.querySelectorAll('[data-hero-bar]'));
+        const fills = bars.map(b => b.querySelector('.hero__bar-fill'));
         let idx = 0, timer = null;
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        function go(i) {
-            idx = (i + slides.length) % slides.length;
+        function paint() {
             slides.forEach((s, k) => {
                 const on = k === idx;
                 s.classList.toggle('is-active', on);
                 s.setAttribute('aria-hidden', on ? 'false' : 'true');
             });
+            bars.forEach((b, k) => {
+                const on = k === idx;
+                b.classList.toggle('is-active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+                const f = fills[k];
+                if (!f) return;
+                // ریست انیمیشن پُرشدن: فقط نوار فعال انیمیت می‌شود
+                f.style.transition = 'none';
+                f.style.width = on ? '0%' : (k < idx ? '100%' : '0%');
+                if (on && !reduce) {
+                    // force reflow سپس شروع انیمیشن پُرشدن
+                    void f.offsetWidth;
+                    f.style.transition = 'width ' + HERO_INTERVAL + 'ms linear';
+                    f.style.width = '100%';
+                } else if (on) {
+                    f.style.width = '100%';
+                }
+            });
         }
-        function start() { stop(); timer = setInterval(() => go(idx + 1), 15000); }
-        function stop() { if (timer) clearInterval(timer); }
+        function go(i) { idx = (i + slides.length) % slides.length; paint(); }
+        function start() { stop(); timer = setInterval(() => go(idx + 1), HERO_INTERVAL); }
+        function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+        bars.forEach((b, k) => b.addEventListener('click', () => { go(k); start(); }));
 
         // توقف هنگام hover، ادامه با خروج موس (UX استاندارد اسلایدر خودکار)
-        hero.addEventListener('mouseenter', stop);
-        hero.addEventListener('mouseleave', start);
+        hero.addEventListener('mouseenter', () => { stop(); const f = fills[idx]; if (f) { const w = getComputedStyle(f).width; f.style.transition = 'none'; f.style.width = w; } });
+        hero.addEventListener('mouseleave', () => { paint(); start(); });
+        paint();
         start();
     });
 
