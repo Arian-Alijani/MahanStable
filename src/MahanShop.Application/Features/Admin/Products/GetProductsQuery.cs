@@ -11,6 +11,9 @@ public enum ProductActiveFilter { All = 0, Active = 1, Inactive = 2 }
 /// <summary>فیلتر وضعیت موجودی محصول.</summary>
 public enum ProductStockFilter { All = 0, InStock = 1, Low = 2, Out = 3 }
 
+/// <summary>فیلتر نوع محصول: ساده یا چندمدلی (دارای گزینه).</summary>
+public enum ProductTypeFilter { All = 0, Simple = 1, Variant = 2 }
+
 /// <summary>گزینه‌های مرتب‌سازی لیست محصولات.</summary>
 public enum ProductSort { Newest = 0, Oldest = 1, PriceAsc = 2, PriceDesc = 3, StockAsc = 4, StockDesc = 5, TitleAsc = 6 }
 
@@ -26,6 +29,7 @@ public record GetProductsQuery(
     ProductActiveFilter Active = ProductActiveFilter.All,
     ProductStockFilter Stock = ProductStockFilter.All,
     bool? Featured = null,
+    ProductTypeFilter Type = ProductTypeFilter.All,
     ProductSort Sort = ProductSort.Newest,
     int Page = 1,
     int PageSize = 20) : IRequest<ProductListResult>;
@@ -71,6 +75,14 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Product
 
         // ---- فیلتر منتخب ----
         if (request.Featured is bool f) baseQ = baseQ.Where(p => p.IsFeatured == f);
+
+        // ---- فیلتر نوع محصول (ساده/چندمدلی) ----
+        baseQ = request.Type switch
+        {
+            ProductTypeFilter.Simple => baseQ.Where(p => !p.HasVariants),
+            ProductTypeFilter.Variant => baseQ.Where(p => p.HasVariants),
+            _ => baseQ
+        };
 
         // ---- فیلتر موجودی (روی موجودی واقعی) ----
         baseQ = request.Stock switch
@@ -142,6 +154,9 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Product
         var total = await all.CountAsync(ct);
         var active = await all.CountAsync(p => p.IsActive, ct);
 
+        var inStock = await all.CountAsync(p =>
+            (p.HasVariants ? p.Variants.Sum(v => v.Stock) : p.Stock) > LowStockThreshold, ct);
+
         var lowStock = await all.CountAsync(p =>
             (p.HasVariants ? p.Variants.Sum(v => v.Stock) : p.Stock) > 0 &&
             (p.HasVariants ? p.Variants.Sum(v => v.Stock) : p.Stock) <= LowStockThreshold, ct);
@@ -149,13 +164,19 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Product
         var outOfStock = await all.CountAsync(p =>
             (p.HasVariants ? p.Variants.Sum(v => v.Stock) : p.Stock) == 0, ct);
 
+        var simpleCount = await all.CountAsync(p => !p.HasVariants, ct);
+        var variantCount = await all.CountAsync(p => p.HasVariants, ct);
+
         return new ProductStatsDto
         {
             Total = total,
             Active = active,
             Inactive = total - active,
+            InStock = inStock,
             LowStock = lowStock,
-            OutOfStock = outOfStock
+            OutOfStock = outOfStock,
+            SimpleCount = simpleCount,
+            VariantCount = variantCount
         };
     }
 }

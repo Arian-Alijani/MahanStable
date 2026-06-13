@@ -32,8 +32,11 @@ public class ProductStatsDto
     public int Total { get; set; }
     public int Active { get; set; }
     public int Inactive { get; set; }
+    public int InStock { get; set; }    // موجودی کافی (> آستانه)
     public int LowStock { get; set; }   // 1..5
     public int OutOfStock { get; set; } // 0
+    public int SimpleCount { get; set; }   // محصول ساده (بدون گزینه)
+    public int VariantCount { get; set; }  // محصول چندمدلی (دارای گزینه)
 }
 
 /// <summary>نتیجهٔ صفحه‌بندی‌شدهٔ لیست محصولات ادمین + آمار + گزینه‌های فیلتر.</summary>
