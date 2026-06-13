@@ -16,6 +16,7 @@
 ## 2. وضعیت (مرجع کامل: docs/PROGRESS.md)
 - P0–P8 ✅ (Scaffold, Domain+Data, Infra, Layout+Home, Catalog, Auth-OTP, Cart+Checkout, Payment-Zarinpal, UserPanel).
 - **P9 Admin Panel = پیاده‌سازی‌شده و زنده** (Areas/Admin، 32 صفحهٔ Razor، 61 فایل Feature/Admin). در حال توسعه.
+- 🔴 **ADMIN REVAMP در جریان** — بازطراحی بزرگ چندفازی (۶ تب + ساختار محصول + نوع پست). نقشه: `docs/ADMIN_REVAMP_ROADMAP.md` · وضعیت: `docs/ADMIN_REVAMP_PROGRESS.md`. **هر فاز سشن جداست.**
 - بعدی: P10 Security · P11 Perf · P12 Deploy.
 - tag بازگشت قبل ادمین: `baseline-before-admin-panel`.
 
